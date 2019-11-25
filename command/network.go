@@ -1,5 +1,5 @@
 /*
-	Copyright 2019 Whiteblock Inc.
+	Copyright 2019 whiteblock Inc.
 	This file is a part of the Definition.
 
 	Definition is free software: you can redistribute it and/or modify
@@ -8,7 +8,7 @@
 	(at your option) any later version.
 
 	Definition is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	but dock ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
@@ -16,4 +16,15 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package definition
+package command
+
+//Network represents a logic network on which containers exist
+type Network struct {
+	OrderPayload
+	//Name is the name of the network
+	Name    string            `json:"name"`
+	Subnet  string            `json:"subnet"`
+	Gateway string            `json:"gateway"`
+	Global  bool              `json:"global"`
+	Labels  map[string]string `json:"labels"`
+}

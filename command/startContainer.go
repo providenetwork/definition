@@ -1,5 +1,5 @@
 /*
-	Copyright 2019 Whiteblock Inc.
+	Copyright 2019 whiteblock Inc.
 	This file is a part of the Definition.
 
 	Definition is free software: you can redistribute it and/or modify
@@ -8,7 +8,7 @@
 	(at your option) any later version.
 
 	Definition is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	but dock ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
@@ -16,4 +16,10 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package definition
+package command
+
+//StartContainer is the command for starting a container
+type StartContainer struct {
+	Name   string `json:"name"`
+	Attach bool   `json:"attach"`
+}
