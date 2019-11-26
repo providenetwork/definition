@@ -19,6 +19,8 @@ package internal
 
 import (
 	"encoding/json"
+	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/command/biome"
 	"github.com/whiteblock/definition/schema"
 	"github.com/whiteblock/definition/validator"
 	"gopkg.in/yaml.v2"
@@ -61,4 +63,33 @@ func (d *Definition) Valid() (interface{}, error) {
 	}
 
 	return nil, nil
+}
+
+
+//Gets the UUID which uniquely identifies this Definition
+func (def Definition) GetID() string {
+	//TODO
+	return ""
+}
+
+//GetCommands gets the commands in dependency groups, so that
+//res[n+1] is the set of commands which require the execution of the commands
+//in res[n].
+func (def Definition) GetCommands() ([][]command.Command, error) {
+	//TODO
+	return nil, nil
+}
+
+//GetProvisioningRequest calculates the biome resources necessary to support
+//this test
+func (def Definition) GetProvisioningRequest() (biome.CreateBiome, error) {
+	//TODO
+	return biome.CreateBiome{}, nil
+}
+
+//Validate returns nil if it is a valid test definition, other the returned
+//error will contain an explanation for the issue
+func (def Definition) Validate() error {
+	//TODO
+	return nil
 }

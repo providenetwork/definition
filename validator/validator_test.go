@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/whiteblock/testexecution/pkg/definition/schema"
+	"github.com/whiteblock/definition/schema"
 
 	"gopkg.in/yaml.v2"
 )
