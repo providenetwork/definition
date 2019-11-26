@@ -20,6 +20,7 @@ package definition
 import(
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/command/biome"
+	"github.com/whiteblock/definition/internal"
 )
 
 //Definition is the representation of the test definition format. 
@@ -39,4 +40,10 @@ type Definition interface {
 	//Validate returns nil if it is a valid test definition, other the returned 
 	//error will contain an explanation for the issue
 	Validate() error
+}
+
+// ParseYAML takes a raw set of bytes and
+// de-serializes them to a Definition structure
+func ParseYAML(raw []byte) (Definition, error) {
+	return internal.ParseYAML(raw)
 }
