@@ -28,12 +28,12 @@ import (
 type ResourceBuckets interface {
 	Add(segments []entity.Segment) error
 	Remove(segments []entity.Segment) error
-	Resources() []Bucket
+	Resources() []*Bucket
 }
 
 type resourceBuckets struct {
 	conf    config.Bucket
-	buckets []Bucket
+	buckets []*Bucket
 }
 
 func NewResourceBuckets(conf config.Bucket) ResourceBuckets {
@@ -86,6 +86,6 @@ func (rb *resourceBuckets) Remove(segments []entity.Segment) error {
 	return nil
 }
 
-func (rb *resourceBuckets) Resources() []Bucket {
+func (rb *resourceBuckets) Resources() []*Bucket {
 	return rb.buckets
 }

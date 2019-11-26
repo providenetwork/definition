@@ -26,46 +26,79 @@ import (
 	"github.com/whiteblock/definition/internal/entity"
 
 	"github.com/stretchr/testify/assert"
-	//"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
-
-func GenerateTestSegments(n int) []entity.Segment {
+func GenerateTestSegments(n int, offset int) []entity.Segment {
 	out := make([]entity.Segment, n)
 	for i := range out {
-		out[i].Name = fmt.Sprint(i)
-		out[i].CPUs = int64(i)
-		out[i].Memory = int64(i * 100)
-		out[i].Storage = int64(i * 10000)
+		out[i].Name = fmt.Sprint(i + offset)
+		out[i].CPUs = int64((i + offset))
+		out[i].Memory = int64((i + offset) * 100)
+		out[i].Storage = int64((i + offset) * 10000)
 	}
 	return out
 }
+func GenerateTestConf(entities []entity.Segment) config.Bucket {
+	out := config.Bucket{
 
+		MinCPU:      0,
+		MinMemory:   0,
+		MinStorage:  0,
+		UnitCPU:     1,
+		UnitMemory:  128,
+		UnitStorage: 1000,
+	}
+	for _, entity := range entities {
+		out.MaxCPU += entity.CPUs + 1
+		out.MaxMemory += entity.Memory + 1
+		out.MaxStorage += entity.Storage + 1
+	}
+	out.MaxCPU = roundValueAndMax(0, out.MaxCPU, out.UnitCPU)
+	out.MaxMemory = roundValueAndMax(0, out.MaxMemory, out.UnitMemory)
+	out.MaxStorage = roundValueAndMax(0, out.MaxStorage, out.UnitStorage)
+	return out
+}
 func TestNewBucket(t *testing.T) {
 	testConf := config.Bucket{
-		MinCPU: 1,
-		MinMemory:2,
-		MinStorage:3,
+		MinCPU:     1,
+		MinMemory:  2,
+		MinStorage: 3,
 	}
 	bucket := newBucket(&testConf)
-	assert.Equal(t, bucket.CPUs,testConf.MinCPU)
-	assert.Equal(t,bucket.Memory,testConf.MinMemory)
-	assert.Equal(t,bucket.Storage,testConf.MinStorage)
+	assert.Equal(t, bucket.CPUs, testConf.MinCPU)
+	assert.Equal(t, bucket.Memory, testConf.MinMemory)
+	assert.Equal(t, bucket.Storage, testConf.MinStorage)
 }
 
 func TestBucket_GetSegments(t *testing.T) {
-	bucket := Bucket{segments: GenerateTestSegments(10)}
+	bucket := Bucket{segments: GenerateTestSegments(10, 0)}
 	assert.ElementsMatch(t, bucket.segments, bucket.GetSegments())
 }
 
-func TestBucket_ToResource(t *testing.T) {
+func TestBucket_Runthrough(t *testing.T) {
+	segments := GenerateTestSegments(10, 0)
+	conf := GenerateTestConf(segments)
+	bucket := newBucket(&conf)
 
-}
+	for _, segment := range segments {
+		require.True(t, bucket.hasSpace(segment))
+	}
 
-func TestBucket_tryAdd(t *testing.T) {
+	for _, segment := range segments {
+		assert.True(t, bucket.tryAdd(segment))
+	}
 
-}
+	require.ElementsMatch(t, segments, bucket.GetSegments())
 
-func TestBucket_tryRemove(t *testing.T) {
+	for _, segment :=  range segments {
+		assert.True(t, bucket.findSegment(segment) >= 0)
+	}
 
+	for _, segment := range segments {
+		assert.True(t, bucket.tryRemove(segment))
+	}
+	for _, segment := range GenerateTestSegments(10, 11) {
+		assert.False(t, bucket.tryRemove(segment))
+	}
 }

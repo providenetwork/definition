@@ -23,7 +23,7 @@ import (
 )
 
 type Distributor interface {
-	Distribute(spec schema.RootSchema) ([][]Bucket, error)
+	Distribute(spec schema.RootSchema) ([][]*Bucket, error)
 }
 
 type distributor struct {
@@ -36,8 +36,8 @@ func NewDistributor(calculator BiomeCalculator) Distributor {
 	}
 }
 
-func (dist *distributor) Distribute(spec schema.RootSchema) ([][]Bucket, error) {
-	out := [][]Bucket{}
+func (dist *distributor) Distribute(spec schema.RootSchema) ([][]*Bucket, error) {
+	out := [][]*Bucket{}
 	for _, test := range spec.Tests {
 		sp := dist.calculator.NewStatePack()
 		for _, phase := range test.Phases {
