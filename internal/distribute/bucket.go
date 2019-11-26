@@ -19,15 +19,8 @@
 package distribute
 
 import (
-	"github.com/whiteblock/definition/schema"
+//"github.com/whiteblock/definition/schema"
 )
 
-
-type ResourceBucket {
-
-}
-
-type Segment struct {
-	parent interface{}//pointer to the parent
-
+type ResourceBucket interface {
 }

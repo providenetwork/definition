@@ -22,7 +22,6 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-
 type Resource struct {
 	CPUs    int64
 	Memory  int64
@@ -30,9 +29,10 @@ type Resource struct {
 }
 
 //BiomeCalculator is a piecewise calculator for the state for the testnet
-//as time goes on. 
+//as time goes on.
 type BiomeCalculator interface {
-	AddNextPhase(phase scheme.Phase) error
-	GetResourcesAtIndex(index int64) ([]Resource, error)
-	GetResources() ([]Resource, error)
+	AddNextPhase(phase schema.Phase) error
+}
+
+type biomeCalculator struct {
 }

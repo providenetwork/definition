@@ -19,11 +19,10 @@
 package distribute
 
 import (
-	"github.com/whiteblock/definition/schema"
+//"github.com/whiteblock/definition/schema"
 )
 
-type SchemaParser interface {
-	NameSystemComponent(systemComponent schema.SystemComponent) string
-	ParseSystemComponent(systemComponent schema.SystemComponent) ([]Segment, error)
-	ParseTask(task schema.Task) (Segment, error)
+type Segment struct {
+	Name string
+	Resource
 }
