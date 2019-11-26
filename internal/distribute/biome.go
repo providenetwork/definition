@@ -19,67 +19,79 @@
 package distribute
 
 import (
+	"github.com/whiteblock/definition/internal/config"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 )
 
-//BiomeCalculator is a calculator for the state for the testnet
-//as time goes on.
-type BiomeCalculator interface {
-	AddNextPhase(phase schema.Phase) error
-	Resources() []Bucket
-}
-
-type biomeCalculator struct {
+type StatePack struct {
 	state     SystemState
 	buckets   ResourceBuckets
-	parser    parser.Schema
 	prevTasks []entity.Segment
 }
 
-func NewBiomeCalculator(
-	state SystemState,
-	buckets ResourceBuckets,
-	parser parser.Schema) BiomeCalculator {
-	return &biomeCalculator{state: state, buckets: buckets, parser: parser}
+//BiomeCalculator is a calculator for the state for the testnet
+//as time goes on.
+type BiomeCalculator interface {
+	NewStatePack() *StatePack
+	AddNextPhase(sp *StatePack, phase schema.Phase) error
+	Resources(sp *StatePack) []Bucket
 }
 
-func (bc *biomeCalculator) AddNextPhase(phase schema.Phase) error {
-	if bc.prevTasks != nil {
-		err := bc.buckets.Remove(bc.prevTasks)
+type biomeCalculator struct {
+	parser parser.Schema
+	conf   config.Bucket
+}
+
+func NewBiomeCalculator(conf config.Bucket, parser parser.Schema) BiomeCalculator {
+	return &biomeCalculator{conf: conf, parser: parser}
+}
+
+func (bc *biomeCalculator) NewStatePack() *StatePack {
+	return &StatePack{
+		state:     NewSystemState(bc.parser),
+		buckets:   NewResourceBuckets(bc.conf),
+		prevTasks: nil,
+	}
+}
+
+func (bc *biomeCalculator) AddNextPhase(sp *StatePack, phase schema.Phase) error {
+
+	if sp.prevTasks != nil {
+		err := sp.buckets.Remove(sp.prevTasks)
 		if err != nil {
 			return err
 		}
 	}
 
-	addSysSegs, err := bc.state.Add(phase.System)
+	addSysSegs, err := sp.state.Add(phase.System)
 	if err != nil {
 		return err
 	}
 
-	err = bc.buckets.Add(addSysSegs)
+	err = sp.buckets.Add(addSysSegs)
 	if err != nil {
 		return err
 	}
 
-	toRemove, err := bc.state.Remove(phase.Remove)
+	toRemove, err := sp.state.Remove(phase.Remove)
 	if err != nil {
 		return err
 	}
 
-	err = bc.buckets.Remove(toRemove)
+	err = sp.buckets.Remove(toRemove)
 	if err != nil {
 		return err
 	}
-	bc.prevTasks, err = bc.parser.ParseTasks(phase.Tasks)
+	sp.prevTasks, err = bc.parser.ParseTasks(phase.Tasks)
 	if err != nil {
 		return err
 	}
 
-	return bc.buckets.Add(bc.prevTasks)
+	return sp.buckets.Add(sp.prevTasks)
 }
 
-func (bc *biomeCalculator) Resources() []Bucket {
-	return bc.buckets.Resources()
+func (bc *biomeCalculator) Resources(sp *StatePack) []Bucket {
+	return sp.buckets.Resources()
 }
