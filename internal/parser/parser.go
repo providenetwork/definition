@@ -26,5 +26,5 @@ import (
 type Schema interface {
 	NameSystemComponent(systemComponent schema.SystemComponent) string
 	ParseSystemComponent(systemComponent schema.SystemComponent) ([]entity.Segment, error)
-	ParseTask(task schema.Task) (entity.Segment, error)
+	ParseTasks(tasks []schema.Task) ([]entity.Segment, error)
 }

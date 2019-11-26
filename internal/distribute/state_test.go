@@ -48,7 +48,7 @@ func TestSystemState_FullTest(t *testing.T) {
 	segments := []entity.Segment{}
 	for i, system := range systems {
 		result := make([]entity.Segment, i)
-		for  range result {
+		for range result {
 			result = append(result, entity.Segment{
 				Name: system.Name,
 			})
@@ -59,7 +59,7 @@ func TestSystemState_FullTest(t *testing.T) {
 	}
 
 	state := NewSystemState(parser)
-	
+
 	//Successful Add
 	result, err := state.Add(systems)
 	require.NotNil(t, result)
@@ -68,7 +68,7 @@ func TestSystemState_FullTest(t *testing.T) {
 	assert.Len(t, result, len(segments))
 
 	//Successful Remove
-	result, err = state.Remove([]string{"1","2","3"})
+	result, err = state.Remove([]string{"1", "2", "3"})
 	require.NotNil(t, result)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, segments, result)

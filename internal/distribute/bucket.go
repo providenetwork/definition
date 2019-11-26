@@ -19,8 +19,30 @@
 package distribute
 
 import (
-//"github.com/whiteblock/definition/schema"
+	"github.com/whiteblock/definition/internal/entity"
 )
 
-type ResourceBucket interface {
+type ResourceBuckets interface {
+	Add(segments []entity.Segment) error
+	Remove(segments []entity.Segment) error
+	Resources() []entity.Resource
+}
+
+type resourceBuckets struct {
+}
+
+func NewResourceBuckets() ResourceBuckets {
+	return &resourceBuckets{}
+}
+
+func (rb *resourceBuckets) Add(segments []entity.Segment) error {
+
+}
+
+func (rb *resourceBuckets) Remove(segments []entity.Segment) error {
+
+}
+
+func (rb *resourceBuckets) Resources() []entity.Resource {
+
 }
