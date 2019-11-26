@@ -19,30 +19,97 @@
 package distribute
 
 import (
+	"github.com/whiteblock/definition/internal/config"
 	"github.com/whiteblock/definition/internal/entity"
 )
 
-type ResourceBuckets interface {
-	Add(segments []entity.Segment) error
-	Remove(segments []entity.Segment) error
-	Resources() []entity.Resource
+/**
+ * Note: this is not the best or most efficient of algorithms, however,
+ * it should meet the criteria of good enough. Feel free to make improvements on it.
+ */
+
+type bucket struct {
+	entity.Resource //The real size it occupies
+	conf            *config.Bucket
+	segments        []entity.Segment
+	usage           entity.Resource //The combined usage of the segments
 }
 
-type resourceBuckets struct {
+func newBucket(conf *config.Bucket) bucket {
+	out := bucket{conf: conf}
+	out.CPUs = conf.MinCPU
+	out.Memory = conf.MinMemory
+	out.Storage = conf.MinStorage
+	return out
 }
 
-func NewResourceBuckets() ResourceBuckets {
-	return &resourceBuckets{}
+func (b bucket) empty() bool {
+	return len(segments) == 0
 }
 
-func (rb *resourceBuckets) Add(segments []entity.Segment) error {
-
+func (b bucket) hasSpace(segment entity.Segment) bool {
+	return (b.usage.CPUs+segment.CPUs <= b.conf.MaxCpus) &&
+		(b.usage.Memory+segment.Memory <= b.conf.MaxMemory) &&
+		(b.usage.Storage+segment.Storage <= b.conf.MaxStorage)
 }
 
-func (rb *resourceBuckets) Remove(segments []entity.Segment) error {
-
+func (b bucket) findSegment(segment entity.Segment) int {
+	for i, seggy := range b.segments {
+		if segment.Name == seggy.Name {
+			return i
+		}
+	}
+	return -1
 }
 
-func (rb *resourceBuckets) Resources() []entity.Resource {
+func max(a int, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
 
+func (b bucket) update(segment entity.Segment, positive bool) {
+	if positive {
+		b.usage.CPUs = b.usage.CPUs + segment.CPUs
+		b.usage.Memory = b.usage.Memory + segment.Memory
+		b.usage.Storage = b.usage.Storage + segment.Storage
+	} else {
+		b.usage.CPUs = b.usage.CPUs - segment.CPUs
+		b.usage.Memory = b.usage.Memory - segment.Memory
+		b.usage.Storage = b.usage.Storage - segment.Storage
+		return
+	}
+	b.CPUs = max(b.CPUs, b.usage.CPUs+(b.CPUs%b.conf.UnitCPU))
+	b.Memory = max(b.Memory, b.usage.Memory+(b.Memory%b.conf.UnitMemory))
+	b.Storage = max(b.Storage, b.usage.Storage+(b.Storage%b.conf.UnitStorage != 0))
+}
+
+func (b bucket) toResource() entity.Resource {
+	return entity.Resource{
+		CPUs:    b.CPUs,
+		Memory:  b.Memory,
+		Storage: b.Storage}
+}
+
+func (b bucket) tryAdd(segment entity.Segment) bool {
+	if !b.hasSpace(segment) {
+		return false
+	}
+	b.update(segment, true)
+	b.segments = append(b.segments, segment)
+	return true
+}
+
+func (b bucket) tryRemove(segment entity.Segment) bool {
+	loc := b.findSegment(segment)
+	if loc == -1 {
+		return false
+	}
+	b.update(segment, false)
+	if loc == len(b.segments)-1 {
+		b.segments = append(b.segments[:loc])
+	} else {
+		b.segments = append(b.segments[0:loc], b.segments[loc:])
+	}
 }

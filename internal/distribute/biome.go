@@ -34,6 +34,7 @@ type BiomeCalculator interface {
 type biomeCalculator struct {
 	state   SystemState
 	buckets ResourceBuckets
+	parser  parser.Schema
 }
 
 func NewBiomeCalculator(
