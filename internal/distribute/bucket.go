@@ -28,32 +28,40 @@ import (
  * it should meet the criteria of good enough. Feel free to make improvements on it.
  */
 
-type bucket struct {
+type Bucket struct {
 	entity.Resource //The real size it occupies
 	conf            *config.Bucket
 	segments        []entity.Segment
 	usage           entity.Resource //The combined usage of the segments
 }
 
-func newBucket(conf *config.Bucket) bucket {
-	out := bucket{conf: conf}
+func newBucket(conf *config.Bucket) Bucket {
+	out := Bucket{conf: conf}
 	out.CPUs = conf.MinCPU
 	out.Memory = conf.MinMemory
 	out.Storage = conf.MinStorage
 	return out
 }
 
-func (b bucket) empty() bool {
-	return len(segments) == 0
+func (b Bucket) GetSegments() []entity.Segment {
+	return b.segments
 }
 
-func (b bucket) hasSpace(segment entity.Segment) bool {
-	return (b.usage.CPUs+segment.CPUs <= b.conf.MaxCpus) &&
+//ToResource gets this bucket as a Resourse
+func (b Bucket) ToResource() entity.Resource {
+	return entity.Resource{
+		CPUs:    b.CPUs,
+		Memory:  b.Memory,
+		Storage: b.Storage}
+}
+
+func (b Bucket) hasSpace(segment entity.Segment) bool {
+	return (b.usage.CPUs+segment.CPUs <= b.conf.MaxCPU) &&
 		(b.usage.Memory+segment.Memory <= b.conf.MaxMemory) &&
 		(b.usage.Storage+segment.Storage <= b.conf.MaxStorage)
 }
 
-func (b bucket) findSegment(segment entity.Segment) int {
+func (b Bucket) findSegment(segment entity.Segment) int {
 	for i, seggy := range b.segments {
 		if segment.Name == seggy.Name {
 			return i
@@ -62,14 +70,14 @@ func (b bucket) findSegment(segment entity.Segment) int {
 	return -1
 }
 
-func max(a int, b int) int {
+func max(a int64, b int64) int64 {
 	if a > b {
 		return a
 	}
 	return b
 }
 
-func (b bucket) update(segment entity.Segment, positive bool) {
+func (b Bucket) update(segment entity.Segment, positive bool) {
 	if positive {
 		b.usage.CPUs = b.usage.CPUs + segment.CPUs
 		b.usage.Memory = b.usage.Memory + segment.Memory
@@ -82,17 +90,10 @@ func (b bucket) update(segment entity.Segment, positive bool) {
 	}
 	b.CPUs = max(b.CPUs, b.usage.CPUs+(b.CPUs%b.conf.UnitCPU))
 	b.Memory = max(b.Memory, b.usage.Memory+(b.Memory%b.conf.UnitMemory))
-	b.Storage = max(b.Storage, b.usage.Storage+(b.Storage%b.conf.UnitStorage != 0))
+	b.Storage = max(b.Storage, b.usage.Storage+(b.Storage%b.conf.UnitStorage))
 }
 
-func (b bucket) toResource() entity.Resource {
-	return entity.Resource{
-		CPUs:    b.CPUs,
-		Memory:  b.Memory,
-		Storage: b.Storage}
-}
-
-func (b bucket) tryAdd(segment entity.Segment) bool {
+func (b Bucket) tryAdd(segment entity.Segment) bool {
 	if !b.hasSpace(segment) {
 		return false
 	}
@@ -101,7 +102,7 @@ func (b bucket) tryAdd(segment entity.Segment) bool {
 	return true
 }
 
-func (b bucket) tryRemove(segment entity.Segment) bool {
+func (b Bucket) tryRemove(segment entity.Segment) bool {
 	loc := b.findSegment(segment)
 	if loc == -1 {
 		return false
@@ -110,6 +111,7 @@ func (b bucket) tryRemove(segment entity.Segment) bool {
 	if loc == len(b.segments)-1 {
 		b.segments = append(b.segments[:loc])
 	} else {
-		b.segments = append(b.segments[0:loc], b.segments[loc:])
+		b.segments = append(b.segments[0:loc], b.segments[loc:]...)
 	}
+	return true
 }

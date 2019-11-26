@@ -28,12 +28,12 @@ import (
 type ResourceBuckets interface {
 	Add(segments []entity.Segment) error
 	Remove(segments []entity.Segment) error
-	Resources() []entity.Resource
+	Resources() []Bucket
 }
 
 type resourceBuckets struct {
 	conf    config.Bucket
-	buckets []bucket
+	buckets []Bucket
 }
 
 func NewResourceBuckets(conf config.Bucket) ResourceBuckets {
@@ -46,7 +46,7 @@ func (rb *resourceBuckets) add(segment entity.Segment) error {
 			return nil
 		}
 	}
-	if len(rb.buckets) == conf.MaxBuckets {
+	if int64(len(rb.buckets)) == rb.conf.MaxBuckets {
 		return fmt.Errorf("size limits exceeded")
 	}
 	bucket := newBucket(&rb.conf)
@@ -73,6 +73,7 @@ func (rb *resourceBuckets) remove(segment entity.Segment) error {
 			return nil
 		}
 	}
+	return fmt.Errorf("couldn't remove segment, doesn't exist")
 }
 
 func (rb *resourceBuckets) Remove(segments []entity.Segment) error {
@@ -85,10 +86,6 @@ func (rb *resourceBuckets) Remove(segments []entity.Segment) error {
 	return nil
 }
 
-func (rb *resourceBuckets) Resources() []entity.Resource {
-	out := make([]entity.Resource, len(rb.buckets))
-	for i := range out {
-		out[i] = rb.buckets[i].toResource()
-	}
-	return out
+func (rb *resourceBuckets) Resources() []Bucket {
+	return rb.buckets
 }

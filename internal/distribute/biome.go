@@ -28,13 +28,14 @@ import (
 //as time goes on.
 type BiomeCalculator interface {
 	AddNextPhase(phase schema.Phase) error
-	Resources() []entity.Resource
+	Resources() []Bucket
 }
 
 type biomeCalculator struct {
-	state   SystemState
-	buckets ResourceBuckets
-	parser  parser.Schema
+	state     SystemState
+	buckets   ResourceBuckets
+	parser    parser.Schema
+	prevTasks []entity.Segment
 }
 
 func NewBiomeCalculator(
@@ -45,6 +46,12 @@ func NewBiomeCalculator(
 }
 
 func (bc *biomeCalculator) AddNextPhase(phase schema.Phase) error {
+	if bc.prevTasks != nil {
+		err := bc.buckets.Remove(bc.prevTasks)
+		if err != nil {
+			return err
+		}
+	}
 
 	addSysSegs, err := bc.state.Add(phase.System)
 	if err != nil {
@@ -61,20 +68,18 @@ func (bc *biomeCalculator) AddNextPhase(phase schema.Phase) error {
 		return err
 	}
 
-	err = bc.buckets.Remove(addSysSegs)
+	err = bc.buckets.Remove(toRemove)
 	if err != nil {
 		return err
 	}
-	taskSegments := bc.parser.ParseTasks(phase.Tasks)
-
-	err = bc.buckets.Add(taskSegments)
+	bc.prevTasks, err = bc.parser.ParseTasks(phase.Tasks)
 	if err != nil {
 		return err
 	}
 
-	return bc.buckets.Remove(taskSegments)
+	return bc.buckets.Add(bc.prevTasks)
 }
 
-func (bc *biomeCalculator) Resources() []entity.Resource {
+func (bc *biomeCalculator) Resources() []Bucket {
 	return bc.buckets.Resources()
 }
