@@ -19,16 +19,20 @@
 package distribute
 
 import (
-	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
 	"testing"
 
+	"github.com/whiteblock/definition/internal/entity"
+	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
+	"github.com/whiteblock/definition/schema"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
+//It would be too redundant to test in different classes due to the complexity of this
+//implementation
 func TestSystemState_FullTest(t *testing.T) {
-	parser := new(mockParser.SchemaParser)
+	parser := new(mockParser.Schema)
 	systems := []schema.SystemComponent{
 		schema.SystemComponent{
 			Name: "1",
@@ -40,24 +44,33 @@ func TestSystemState_FullTest(t *testing.T) {
 			Name: "3",
 		},
 	}
-	segments := []Segment{}
+
+	segments := []entity.Segment{}
 	for i, system := range systems {
-		result := make([]Segment, i)
-		for j := range result {
-			result = Segment{
+		result := make([]entity.Segment, i)
+		for  range result {
+			result = append(result, entity.Segment{
 				Name: system.Name,
-			}
+			})
 		}
 		segments = append(segments, result...)
-		parser.On("NameSystemComponent", system).Return(system.Name).Twice()
-		parser.On("ParseSystemComponent", system).Return(result, err).Once()
+		parser.On("NameSystemComponent", system).Return(system.Name).Times(4)
+		parser.On("ParseSystemComponent", system).Return(result, nil).Twice()
 	}
 
 	state := NewSystemState(parser)
+	
+	//Successful Add
 	result, err := state.Add(systems)
 	require.NotNil(t, result)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, segments, result)
 	assert.Len(t, result, len(segments))
 
+	//Successful Remove
+	result, err = state.Remove([]string{"1","2","3"})
+	require.NotNil(t, result)
+	assert.NoError(t, err)
+	assert.ElementsMatch(t, segments, result)
+	assert.Len(t, result, len(segments))
 }
