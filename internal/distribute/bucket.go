@@ -22,6 +22,12 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type Distributor interface{
-	Distribute(spec schema.RootSchema) ([]Resource, error)
+
+type ResourceBucket {
+
+}
+
+type Segment struct {
+	parent interface{}//pointer to the parent
+
 }

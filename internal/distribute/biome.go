@@ -22,6 +22,17 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type Distributor interface{
-	Distribute(spec schema.RootSchema) ([]Resource, error)
+
+type Resource struct {
+	CPUs    int64
+	Memory  int64
+	Storage int64
+}
+
+//BiomeCalculator is a piecewise calculator for the state for the testnet
+//as time goes on. 
+type BiomeCalculator interface {
+	AddNextPhase(phase scheme.Phase) error
+	GetResourcesAtIndex(index int64) ([]Resource, error)
+	GetResources() ([]Resource, error)
 }

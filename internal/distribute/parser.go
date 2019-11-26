@@ -18,10 +18,12 @@
 
 package distribute
 
+
 import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type Distributor interface{
-	Distribute(spec schema.RootSchema) ([]Resource, error)
+type SchemaParser interface{
+	ParseSystemComponent(systemComponent schema.SystemComponent) (Resource, error)
+	ParseTask(task schema.Task) (Resource, error)
 }

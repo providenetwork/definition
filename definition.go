@@ -17,13 +17,13 @@
 */
 package definition
 
-import(
+import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/command/biome"
 	"github.com/whiteblock/definition/internal"
 )
 
-//Definition is the representation of the test definition format. 
+//Definition is the representation of the test definition format.
 type Definition interface {
 	//Gets the UUID which uniquely identifies this Definition
 	GetID() string
@@ -31,13 +31,13 @@ type Definition interface {
 	//GetCommands gets the commands in dependency groups, so that
 	//res[n+1] is the set of commands which require the execution of the commands
 	//in res[n].
-	GetCommands() ([][]command.Command,error)
+	GetCommands() ([][]command.Command, error)
 
 	//GetProvisioningRequest calculates the biome resources necessary to support
 	//this test
 	GetProvisioningRequest() (biome.CreateBiome, error)
 
-	//Validate returns nil if it is a valid test definition, other the returned 
+	//Validate returns nil if it is a valid test definition, other the returned
 	//error will contain an explanation for the issue
 	Validate() error
 }
