@@ -65,7 +65,6 @@ func (d *Definition) Valid() (interface{}, error) {
 	return nil, nil
 }
 
-
 //Gets the UUID which uniquely identifies this Definition
 func (def Definition) GetID() string {
 	//TODO

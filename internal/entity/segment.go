@@ -16,17 +16,9 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package entity
 
-import (
-	"github.com/whiteblock/definition/schema"
-)
-
-//BiomeCalculator is a piecewise calculator for the state for the testnet
-//as time goes on.
-type BiomeCalculator interface {
-	AddNextPhase(phase schema.Phase) error
-}
-
-type biomeCalculator struct {
+type Segment struct {
+	Name string
+	Resource
 }

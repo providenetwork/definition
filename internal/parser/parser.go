@@ -16,14 +16,15 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package parser
 
 import (
+	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
-type SchemaParser interface {
+type Schema interface {
 	NameSystemComponent(systemComponent schema.SystemComponent) string
-	ParseSystemComponent(systemComponent schema.SystemComponent) ([]Segment, error)
-	ParseTask(task schema.Task) (Segment, error)
+	ParseSystemComponent(systemComponent schema.SystemComponent) ([]entity.Segment, error)
+	ParseTask(task schema.Task) (entity.Segment, error)
 }

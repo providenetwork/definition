@@ -16,13 +16,10 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package entity
 
-import (
-//"github.com/whiteblock/definition/schema"
-)
-
-type Segment struct {
-	Name string
-	Resource
+type Resource struct {
+	CPUs    int64
+	Memory  int64
+	Storage int64
 }

@@ -21,27 +21,29 @@ package distribute
 import (
 	"fmt"
 
+	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 )
 
 type SystemState interface {
-	Add(systems []schema.SystemComponent) ([]Segment, error)
-	Remove(systems []string) ([]Segment, error)
+	Add(systems []schema.SystemComponent) ([]entity.Segment, error)
+	Remove(systems []string) ([]entity.Segment, error)
 }
 
 type systemState struct {
 	totalSystemState map[string]schema.SystemComponent
-	parser           SchemaParser
+	parser           parser.Schema
 }
 
-func NewSystemState(parser SchemaParser) SystemState {
+func NewSystemState(parser parser.Schema) SystemState {
 	return &systemState{
 		totalSystemState: map[string]schema.SystemComponent{},
 		parser:           parser}
 }
 
-func (state *systemState) Add(systems []schema.SystemComponent) ([]Segment, error) {
-	out := []Segment{}
+func (state *systemState) Add(systems []schema.SystemComponent) ([]entity.Segment, error) {
+	out := []entity.Segment{}
 	for _, system := range systems {
 		name := state.parser.NameSystemComponent(system)
 		_, exists := state.totalSystemState[name]
@@ -63,8 +65,8 @@ func (state *systemState) Add(systems []schema.SystemComponent) ([]Segment, erro
 	return out, nil
 }
 
-func (state *systemState) Remove(systems []string) ([]Segment, error) {
-	out := []Segment{}
+func (state *systemState) Remove(systems []string) ([]entity.Segment, error) {
+	out := []entity.Segment{}
 	for _, toRemove := range systems {
 		system, exists := state.totalSystemState[toRemove]
 		if !exists {

@@ -19,9 +19,10 @@
 package distribute
 
 import (
+	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
 type Distributor interface {
-	Distribute(spec schema.RootSchema) ([]Resource, error)
+	Distribute(spec schema.RootSchema) ([]entity.Segment, error)
 }
