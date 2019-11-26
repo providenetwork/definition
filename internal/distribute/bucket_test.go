@@ -91,7 +91,7 @@ func TestBucket_Runthrough(t *testing.T) {
 
 	require.ElementsMatch(t, segments, bucket.GetSegments())
 
-	for _, segment :=  range segments {
+	for _, segment := range segments {
 		assert.True(t, bucket.findSegment(segment) >= 0)
 	}
 
