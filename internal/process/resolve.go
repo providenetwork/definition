@@ -18,12 +18,21 @@
 
 package process
 
-/*import (
+import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/distribute"
+	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
-type Element interface {
-	//schema.SystemComponent
-}*/
+type Resolve interface {
+	CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error)
+
+	CreateServices(spec schema.RootSchema, dist *distribute.ResourceDist, index int,
+		services []entity.Service) ([][]command.Command, error)
+
+	RemoveServices(dist *distribute.ResourceDist, services []entity.Service) ([][]command.Command, error)
+}
+
+type resolve struct {
+}

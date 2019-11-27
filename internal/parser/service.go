@@ -24,5 +24,6 @@ import (
 )
 
 type Service interface {
-	FromSystem(system schema.SystemComponent) ([]entity.Service, error)
+	FromSystem(spec schema.RootSchema, system schema.SystemComponent) ([]entity.Service, error)
+	FromTask(spec schema.RootSchema, task schema.Task, index int) ([]entity.Service, error)
 }

@@ -19,6 +19,8 @@
 package process
 
 import (
+	"fmt"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/schema"
@@ -26,20 +28,35 @@ import (
 
 type TestCommands [][]command.Command
 
+func (cmds TestCommands) Append(commands [][]command.Command) TestCommands {
+	return TestCommands(append([][]command.Command(cmds), commands...))
+}
+
 type Commands interface {
-	Interpret(spec schema.RootSchema, dist []*distribute.ResourceDist) ([]TestCommands, error)
+	Interpret(spec schema.RootSchema, dists []*distribute.ResourceDist) ([]TestCommands, error)
 }
 
 type commandProc struct {
+	calc TestCalculator
 }
 
-func NewCommands() Commands {
-	return &commandProc{}
+func NewCommands(calc TestCalculator) Commands {
+	return &commandProc{calc: calc}
 }
 
 func (cmdProc *commandProc) Interpret(spec schema.RootSchema,
-	dist []*distribute.ResourceDist) ([]TestCommands, error) {
+	dists []*distribute.ResourceDist) ([]TestCommands, error) {
 
-	//TODO
-	return nil, nil
+	if len(dists) == len(spec.Tests) {
+		return nil, fmt.Errorf("dists does not match the tests")
+	}
+	out := []TestCommands{}
+	for i, dist := range dists {
+		testCommands, err := cmdProc.calc.Commands(spec, dist, i)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, testCommands)
+	}
+	return out, nil
 }

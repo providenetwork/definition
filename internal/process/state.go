@@ -30,16 +30,18 @@ type State struct {
 	systemState map[string]schema.SystemComponent
 }
 
-func NewState() State {
-	return State{systemState: map[string]schema.SystemComponent{}}
+func NewState() *State {
+	return &State{systemState: map[string]schema.SystemComponent{}}
 }
 
 //System is for diff calculations
 type System interface {
 	//Add modifies State
-	Add(state *State, systems []schema.SystemComponent) ([]entity.Service, error)
+	Add(state *State, spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Service, error)
 	//Remove modifies state
-	Remove(state *State, systems []string) ([]entity.Service, error)
+	Remove(state *State, spec schema.RootSchema, systems []string) ([]entity.Service, error)
+
+	Tasks(state *State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error)
 }
 
 type system struct {
@@ -52,7 +54,8 @@ func NewSystem(namer parser.Names, parser parser.Service) System {
 }
 
 //Add modifies State
-func (sys system) Add(state *State, systems []schema.SystemComponent) ([]entity.Service, error) {
+func (sys system) Add(state *State, spec schema.RootSchema,
+	systems []schema.SystemComponent) ([]entity.Service, error) {
 	out := []entity.Service{}
 
 	for _, system := range systems {
@@ -61,7 +64,7 @@ func (sys system) Add(state *State, systems []schema.SystemComponent) ([]entity.
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
 		}
-		services, err := sys.parser.FromSystem(system)
+		services, err := sys.parser.FromSystem(spec, system)
 		if err != nil {
 			return nil, err
 		}
@@ -77,14 +80,14 @@ func (sys system) Add(state *State, systems []schema.SystemComponent) ([]entity.
 }
 
 //Remove modifies state
-func (sys system) Remove(state *State, systems []string) ([]entity.Service, error) {
+func (sys system) Remove(state *State, spec schema.RootSchema, systems []string) ([]entity.Service, error) {
 	out := []entity.Service{}
 	for _, toRemove := range systems {
 		system, exists := state.systemState[toRemove]
 		if !exists {
 			return nil, fmt.Errorf("system not found")
 		}
-		services, err := sys.parser.FromSystem(system)
+		services, err := sys.parser.FromSystem(spec, system)
 		if err != nil {
 			return nil, err
 		}
@@ -92,6 +95,18 @@ func (sys system) Remove(state *State, systems []string) ([]entity.Service, erro
 	}
 	for _, toRemove := range systems {
 		delete(state.systemState, toRemove)
+	}
+	return out, nil
+}
+
+func (sys system) Tasks(state *State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error) {
+	out := []entity.Service{}
+	for i, task := range tasks {
+		services, err := sys.parser.FromTask(spec, task, i)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, services...)
 	}
 	return out, nil
 }

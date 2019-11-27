@@ -19,33 +19,15 @@
 package parser
 
 import (
+	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/schema"
 )
 
-type Names interface {
-	SystemComponent(systemComponent schema.SystemComponent) string
-	SystemService(systemComponent schema.SystemComponent, index int) string
-	Task(task schema.Task, index int) string
-}
-
-type namer struct {
-}
-
-func NewNames() Names {
-	return &namer{}
-}
-
-func (n *namer) SystemComponent(systemComponent schema.SystemComponent) string {
-	//TODO
-	return ""
-}
-
-func (n *namer) SystemService(systemComponent schema.SystemComponent, index int) string {
-	//TODO
-	return ""
-}
-
-func (n *namer) Task(task schema.Task, index int) string {
-	//TODO
-	return ""
+//Command handles the simple schema -> order conversions
+type Command interface {
+	CreateNetwork(network schema.Network, endpoint string) command.Order
+	CreateVolume(volume schema.SharedVolume, endpoint string) command.Order
+	CreateContainer(service schema.Service, endpoint string) command.Order
+	StartContainer(service schema.Service, endpoint string) command.Order
+	AttachNetwork(service schema.Service, network schema.Network, endpoint string) command.Order
 }
