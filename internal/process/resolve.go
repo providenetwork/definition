@@ -52,8 +52,8 @@ func NewResolve(cmdMaker parser.Command, deps Dependency, log logrus.Ext1FieldLo
 func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error) {
 	out := []command.Command{}
 	for _, system := range systems {
-		for _, network := range system.Resources.Network {
-			order := resolver.cmdMaker.CreateNetwork(network)
+		for _, network := range system.Resources.Networks {
+			order := resolver.cmdMaker.CreateNetwork(network) //TODO handle the emulation
 			cmd, err := resolver.cmdMaker.New(order, "0", 0)
 			if err != nil {
 				return nil, err
@@ -67,10 +67,10 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]comm
 func (resolver resolve) CreateServices(spec schema.RootSchema,
 	dist distribute.PhaseDist, services []entity.Service) ([][]command.Command, error) {
 
-	out := make([][]command.Command, 4)
+	out := make([][]command.Command, 5)
 	for _, service := range services {
 
-		containerCmds, err := resolver.deps.Container(spec, dist, service)
+		createCmd, startCmd, err := resolver.deps.Container(spec, dist, service)
 		if err != nil {
 			return nil, err
 		}
@@ -85,10 +85,17 @@ func (resolver resolve) CreateServices(spec schema.RootSchema,
 			return nil, err
 		}
 
+		emulationCmds, err := resolver.deps.Emulation(spec, dist, service)
+		if err != nil {
+			return nil, err
+		}
+
 		out[0] = append(out[0], volumeCmds...)
-		out[1] = append(out[1], containerCmds[0])
-		out[2] = append(out[2], containerCmds[1])
-		out[3] = append(out[3], sidecarCmds...)
+		out[1] = append(out[1], createCmd)
+		out[2] = append(out[2], startCmd)
+		out[3] = append(out[3], sidecarCmds[0]...)
+		out[3] = append(out[3], emulationCmds...)
+		out[4] = append(out[4], sidecarCmds[1]...)
 	}
 
 	return out, nil

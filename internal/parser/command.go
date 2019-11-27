@@ -22,17 +22,20 @@ import (
 	"time"
 
 	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
 //Command handles the simple schema -> order conversions
 type Command interface {
 	New(order command.Order, endpoint string, timeout time.Duration) (command.Command, error)
+
 	CreateNetwork(network schema.Network) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
-	CreateContainer(service schema.Service) command.Order
-	StartContainer(service schema.Service) command.Order
-	AttachNetwork(service schema.Service, network schema.Network) command.Order
+	CreateContainer(spec schema.RootSchema, service entity.Service) (command.Order, error)
+	StartContainer(service entity.Service) command.Order
+	AttachNetwork(service entity.Service, network schema.Network) command.Order
+	Emulation(network schema.Network) command.Order
 
-	RemoveContainer(service schema.Service) command.Order
+	RemoveContainer(service entity.Service) command.Order
 }

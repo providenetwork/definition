@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
-	"reflect"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -71,26 +71,15 @@ func TestCommand_ParseOrderPayloadInto_Failure(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestCommand_GetRetryCommand(t *testing.T) {
-	cmd := Command{
-		Retry: 4,
-	}
-	newCmd := cmd.GetRetryCommand(6)
-	assert.Equal(t, cmd.Retry+1, newCmd.Retry)
-	assert.Equal(t, int64(6), newCmd.Timestamp)
-}
-
 func TestDeserSerRoundtripCommand(t *testing.T) {
 	command := Command{
-		ID:           "",
-		Timestamp:    0,
-		Timeout:      0,
-		Retry:        0,
-		Target:       Target{},
-		Dependencies: nil,
+		ID:        "",
+		Timestamp: 0,
+		Timeout:   0,
+		Target:    Target{},
 		Order: Order{
 			Type:    Startcontainer,
-			Payload: SimpleName{Name: "test"},
+			Payload: map[string]interface{}{"name": "test"},
 		},
 	}
 	bytes, err := json.Marshal(command)
@@ -99,19 +88,13 @@ func TestDeserSerRoundtripCommand(t *testing.T) {
 	}
 	read := Command{}
 	err = json.Unmarshal(bytes, &read)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if reflect.DeepEqual(command, read) {
-		t.Fatal("cannot read back command")
-	}
+	require.NoError(t, err)
+
+	require.Equal(t, command, read)
 
 	payload := SimpleName{}
 	err = mapstructure.Decode(read.Order.Payload, &payload)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if payload.Name != "test" {
-		t.Fatal("cannot read back payload name")
-	}
+	require.NoError(t, err)
+
+	require.Equal(t, "test", payload.Name)
 }

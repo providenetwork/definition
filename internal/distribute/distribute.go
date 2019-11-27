@@ -19,8 +19,6 @@
 package distribute
 
 import (
-	"fmt"
-
 	"github.com/whiteblock/definition/schema"
 )
 

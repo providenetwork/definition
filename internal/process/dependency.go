@@ -18,20 +18,121 @@
 package process
 
 import (
+	"fmt"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Dependency interface {
 	Container(spec schema.RootSchema, dist distribute.PhaseDist,
 		service entity.Service) (create command.Command, start command.Command, err error)
 
-	Sidecars(spec schema.RootSchema, dist distribute.PhaseDist,
+	Emulation(spec schema.RootSchema, dist distribute.PhaseDist,
 		service entity.Service) ([]command.Command, error)
+
+	Sidecars(spec schema.RootSchema, dist distribute.PhaseDist,
+		service entity.Service) ([][]command.Command, error)
 
 	Volumes(spec schema.RootSchema, dist distribute.PhaseDist,
 		service entity.Service) ([]command.Command, error)
+}
+
+type dependency struct {
+	parser   parser.Service
+	cmdMaker parser.Command
+	log      logrus.Ext1FieldLogger
+}
+
+func NewDependency(
+	cmdMaker parser.Command,
+	parser parser.Service,
+	log logrus.Ext1FieldLogger) Dependency {
+	return &dependency{cmdMaker: cmdMaker, parser: parser, log: log}
+}
+
+func (dep dependency) Emulation(spec schema.RootSchema, dist distribute.PhaseDist,
+	service entity.Service) ([]command.Command, error) {
+
+	bucket := dist.FindBucket(service.Name)
+	if bucket == -1 {
+		return nil, fmt.Errorf("could not find bucket")
+	}
+	out := []command.Command{}
+	for _, network := range service.Networks {
+		order := dep.cmdMaker.Emulation(network)
+		cmd, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	return out, nil
+}
+
+func (dep dependency) Container(spec schema.RootSchema, dist distribute.PhaseDist,
+	service entity.Service) (create command.Command, start command.Command, err error) {
+
+	bucket := dist.FindBucket(service.Name)
+	if bucket == -1 {
+		err = fmt.Errorf("could not find bucket")
+		return
+	}
+
+	order, err := dep.cmdMaker.CreateContainer(spec, service)
+	if err != nil {
+		return
+	}
+	create, err = dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
+	if err != nil {
+		return
+	}
+
+	order = dep.cmdMaker.StartContainer(service)
+
+	start, err = dep.cmdMaker.New(order, fmt.Sprint(bucket), service.Timeout)
+	return
+}
+
+func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist,
+	service entity.Service) ([][]command.Command, error) {
+
+	bucket := dist.FindBucket(service.Name)
+	if bucket == -1 {
+		return nil, fmt.Errorf("could not find bucket")
+	}
+	out := make([][]command.Command, 2)
+	for _, sidecar := range service.Sidecars {
+		serv, err := dep.parser.FromSidecar(service, sidecar)
+		if err != nil {
+			return nil, err
+		}
+		order, err := dep.cmdMaker.CreateContainer(spec, serv)
+		if err != nil {
+			return nil, err
+		}
+		create, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
+		if err != nil {
+			return nil, err
+		}
+		out[0] = append(out[0], create)
+		order = dep.cmdMaker.StartContainer(serv)
+
+		start, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
+		if err != nil {
+			return nil, err
+		}
+		out[1] = append(out[1], start)
+	}
+	return out, nil
+}
+
+func (dep dependency) Volumes(spec schema.RootSchema, dist distribute.PhaseDist,
+	service entity.Service) ([]command.Command, error) {
+	return nil, nil
 }

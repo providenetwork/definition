@@ -63,13 +63,18 @@ func (calc *testCalculator) handlePhase(state *State, spec schema.RootSchema,
 	}
 	out := [][]command.Command{networkCommands}
 
-	removalCommands, err := calc.resolver.RemoveServices(dist, servicesToRemove)
+	phaseDist, err := dist.GetPhase(index)
+	if err != nil {
+		return nil, err
+	}
+
+	removalCommands, err := calc.resolver.RemoveServices(phaseDist, servicesToRemove)
 	if err != nil {
 		return nil, err
 	}
 	out = append(out, removalCommands...)
 
-	addCommands, err := calc.resolver.CreateServices(spec, dist, index, servicesToRemove)
+	addCommands, err := calc.resolver.CreateServices(spec, phaseDist, servicesToRemove)
 	if err != nil {
 		return nil, err
 	}

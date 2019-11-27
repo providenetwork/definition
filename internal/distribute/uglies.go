@@ -20,8 +20,6 @@ package distribute
 
 import (
 	"fmt"
-
-	"github.com/whiteblock/definition/schema"
 )
 
 type PhaseDist []Bucket
@@ -41,7 +39,7 @@ func (rd *ResourceDist) Add(buckets []Bucket) {
 	if rd == nil {
 		rd = &ResourceDist{}
 	}
-	tmp := ResourceDist(append([][]Bucket(*rd), PhaseDist(buckets)))
+	tmp := ResourceDist(append([]PhaseDist(*rd), PhaseDist(buckets)))
 	*rd = tmp
 }
 

@@ -19,6 +19,8 @@
 package entity
 
 import (
+	"time"
+
 	"github.com/whiteblock/definition/schema"
 )
 
@@ -27,4 +29,6 @@ type Service struct {
 	Bucket          int64
 	SquashedService schema.Service
 	Networks        []schema.Network
+	Sidecars        []schema.Sidecar
+	Timeout         time.Duration
 }
