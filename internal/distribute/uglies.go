@@ -17,3 +17,37 @@
 */
 
 package distribute
+
+import (
+	"fmt"
+
+	"github.com/whiteblock/definition/schema"
+)
+
+type PhaseDist []Bucket
+
+func (pd PhaseDist) FindBucket(name string) int {
+	for i, bucket := range []Bucket(pd) {
+		if bucket.FindByName(name) != -1 {
+			return i
+		}
+	}
+	return -1
+}
+
+type ResourceDist []PhaseDist
+
+func (rd *ResourceDist) Add(buckets []Bucket) {
+	if rd == nil {
+		rd = &ResourceDist{}
+	}
+	tmp := ResourceDist(append([][]Bucket(*rd), PhaseDist(buckets)))
+	*rd = tmp
+}
+
+func (rd ResourceDist) GetPhase(index int) (PhaseDist, error) {
+	if rd == nil || len(rd) <= index {
+		return nil, fmt.Errorf("index out of bounds")
+	}
+	return rd[index], nil
+}

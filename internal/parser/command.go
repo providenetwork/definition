@@ -19,15 +19,20 @@
 package parser
 
 import (
+	"time"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/schema"
 )
 
 //Command handles the simple schema -> order conversions
 type Command interface {
-	CreateNetwork(network schema.Network, endpoint string) command.Order
-	CreateVolume(volume schema.SharedVolume, endpoint string) command.Order
-	CreateContainer(service schema.Service, endpoint string) command.Order
-	StartContainer(service schema.Service, endpoint string) command.Order
-	AttachNetwork(service schema.Service, network schema.Network, endpoint string) command.Order
+	New(order command.Order, endpoint string, timeout time.Duration) (command.Command, error)
+	CreateNetwork(network schema.Network) command.Order
+	CreateVolume(volume schema.SharedVolume) command.Order
+	CreateContainer(service schema.Service) command.Order
+	StartContainer(service schema.Service) command.Order
+	AttachNetwork(service schema.Service, network schema.Network) command.Order
+
+	RemoveContainer(service schema.Service) command.Order
 }

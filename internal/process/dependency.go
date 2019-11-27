@@ -15,5 +15,23 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+package process
 
-package distribute
+import (
+	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/internal/distribute"
+	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/schema"
+)
+
+type Dependency interface {
+	Container(spec schema.RootSchema, dist distribute.PhaseDist,
+		service entity.Service) (create command.Command, start command.Command, err error)
+
+	Sidecars(spec schema.RootSchema, dist distribute.PhaseDist,
+		service entity.Service) ([]command.Command, error)
+
+	Volumes(spec schema.RootSchema, dist distribute.PhaseDist,
+		service entity.Service) ([]command.Command, error)
+}

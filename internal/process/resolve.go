@@ -19,20 +19,98 @@
 package process
 
 import (
+	"fmt"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Resolve interface {
 	CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error)
 
-	CreateServices(spec schema.RootSchema, dist *distribute.ResourceDist, index int,
+	CreateServices(spec schema.RootSchema, dist distribute.PhaseDist,
 		services []entity.Service) ([][]command.Command, error)
 
-	RemoveServices(dist *distribute.ResourceDist, services []entity.Service) ([][]command.Command, error)
+	RemoveServices(dist distribute.PhaseDist, services []entity.Service) ([][]command.Command, error)
 }
 
 type resolve struct {
+	cmdMaker parser.Command
+	deps     Dependency
+	log      logrus.Ext1FieldLogger
+}
+
+func NewResolve(cmdMaker parser.Command, deps Dependency, log logrus.Ext1FieldLogger) Resolve {
+	return &resolve{cmdMaker: cmdMaker, deps: deps}
+}
+
+func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error) {
+	out := []command.Command{}
+	for _, system := range systems {
+		for _, network := range system.Resources.Network {
+			order := resolver.cmdMaker.CreateNetwork(network)
+			cmd, err := resolver.cmdMaker.New(order, "0", 0)
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, cmd)
+		}
+	}
+	return out, nil
+}
+
+func (resolver resolve) CreateServices(spec schema.RootSchema,
+	dist distribute.PhaseDist, services []entity.Service) ([][]command.Command, error) {
+
+	out := make([][]command.Command, 4)
+	for _, service := range services {
+
+		containerCmds, err := resolver.deps.Container(spec, dist, service)
+		if err != nil {
+			return nil, err
+		}
+
+		sidecarCmds, err := resolver.deps.Sidecars(spec, dist, service)
+		if err != nil {
+			return nil, err
+		}
+
+		volumeCmds, err := resolver.deps.Volumes(spec, dist, service)
+		if err != nil {
+			return nil, err
+		}
+
+		out[0] = append(out[0], volumeCmds...)
+		out[1] = append(out[1], containerCmds[0])
+		out[2] = append(out[2], containerCmds[1])
+		out[3] = append(out[3], sidecarCmds...)
+	}
+
+	return out, nil
+}
+
+func (resolver resolve) RemoveServices(dist distribute.PhaseDist,
+	services []entity.Service) ([][]command.Command, error) {
+
+	out := []command.Command{}
+	for _, service := range services {
+		order := resolver.cmdMaker.RemoveContainer(service)
+		bucket := dist.FindBucket(service.Name)
+		if bucket == -1 {
+			return nil, fmt.Errorf("could not find bucket")
+		}
+
+		cmd, err := resolver.cmdMaker.New(order, fmt.Sprint(bucket), 0)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	//TODO: If needed, we can also add commands for removing volumes and networks
+	return [][]command.Command{out}, nil
 }
