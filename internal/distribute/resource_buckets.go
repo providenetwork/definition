@@ -28,7 +28,7 @@ import (
 type ResourceBuckets interface {
 	Add(segments []entity.Segment) error
 	Remove(segments []entity.Segment) error
-	Resources() []*Bucket
+	Resources() []Bucket
 }
 
 type resourceBuckets struct {
@@ -86,6 +86,10 @@ func (rb *resourceBuckets) Remove(segments []entity.Segment) error {
 	return nil
 }
 
-func (rb *resourceBuckets) Resources() []*Bucket {
-	return rb.buckets
+func (rb *resourceBuckets) Resources() []Bucket {
+	out := make([]Bucket, len(rb.buckets))
+	for i := range out {
+		out[i] = rb.buckets[i].Clone()
+	}
+	return out
 }

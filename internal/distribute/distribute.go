@@ -24,17 +24,17 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type ResourceDist [][]*Bucket
+type ResourceDist [][]Bucket
 
-func (rd *ResourceDist) Add(buckets []*Bucket) {
+func (rd *ResourceDist) Add(buckets []Bucket) {
 	if rd == nil {
 		rd = &ResourceDist{}
 	}
-	tmp := ResourceDist(append([][]*Bucket(*rd), buckets))
+	tmp := ResourceDist(append([][]Bucket(*rd), buckets))
 	*rd = tmp
 }
 
-func (rd ResourceDist) GetPhase(index int) ([]*Bucket, error) {
+func (rd ResourceDist) GetPhase(index int) ([]Bucket, error) {
 	if rd == nil || len(rd) <= index {
 		return nil, fmt.Errorf("index out of bounds")
 	}

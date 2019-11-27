@@ -21,6 +21,8 @@ package distribute
 import (
 	"github.com/whiteblock/definition/internal/config"
 	"github.com/whiteblock/definition/internal/entity"
+
+	"github.com/jinzhu/copier"
 )
 
 /**
@@ -44,31 +46,40 @@ func newBucket(conf *config.Bucket) *Bucket {
 	return out
 }
 
-func (b *Bucket) GetSegments() []entity.Segment {
+func (b Bucket) GetSegments() []entity.Segment {
 	return b.segments
 }
 
 //ToResource gets this *Bucket as a Resourse
-func (b *Bucket) ToResource() entity.Resource {
+func (b Bucket) ToResource() entity.Resource {
 	return entity.Resource{
 		CPUs:    b.CPUs,
 		Memory:  b.Memory,
 		Storage: b.Storage}
 }
 
-func (b *Bucket) hasSpace(segment entity.Segment) bool {
+func (b Bucket) FindByName(name string) int {
+	for i, segment := range b.segments {
+		if segment.Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func (b Bucket) Clone() (out Bucket) {
+	copier.Copy(&out, &b)
+	return
+}
+
+func (b Bucket) hasSpace(segment entity.Segment) bool {
 	return (b.usage.CPUs+segment.CPUs <= b.conf.MaxCPU) &&
 		(b.usage.Memory+segment.Memory <= b.conf.MaxMemory) &&
 		(b.usage.Storage+segment.Storage <= b.conf.MaxStorage)
 }
 
-func (b *Bucket) findSegment(segment entity.Segment) int {
-	for i, seggy := range b.segments {
-		if segment.Name == seggy.Name {
-			return i
-		}
-	}
-	return -1
+func (b Bucket) findSegment(segment entity.Segment) int {
+	return b.FindByName(segment.Name)
 }
 
 func max(a int64, b int64) int64 {

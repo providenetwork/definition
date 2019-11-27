@@ -36,7 +36,7 @@ type StatePack struct {
 type BiomeCalculator interface {
 	NewStatePack() *StatePack
 	AddNextPhase(sp *StatePack, phase schema.Phase) error
-	Resources(sp *StatePack) []*Bucket
+	Resources(sp *StatePack) []Bucket
 }
 
 type biomeCalculator struct {
@@ -97,6 +97,6 @@ func (bc *biomeCalculator) AddNextPhase(sp *StatePack, phase schema.Phase) error
 	return sp.buckets.Add(sp.prevTasks)
 }
 
-func (bc *biomeCalculator) Resources(sp *StatePack) []*Bucket {
+func (bc *biomeCalculator) Resources(sp *StatePack) []Bucket {
 	return sp.buckets.Resources()
 }

@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/docker/docker v1.13.1
 	github.com/docker/go-connections v0.4.0
+	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/stretchr/testify v1.4.0
 	github.com/xeipuuv/gojsonschema v1.2.0
