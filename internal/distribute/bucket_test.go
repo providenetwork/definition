@@ -39,7 +39,7 @@ func GenerateTestSegments(n int, offset int) []entity.Segment {
 	}
 	return out
 }
-func GenerateTestConf(entities []entity.Segment) config.Bucket {
+func GenerateTestConf(entities []entity.Segment, minBuckets int64) config.Bucket {
 	out := config.Bucket{
 
 		MinCPU:      0,
@@ -48,15 +48,16 @@ func GenerateTestConf(entities []entity.Segment) config.Bucket {
 		UnitCPU:     1,
 		UnitMemory:  128,
 		UnitStorage: 1000,
+		MaxBuckets:  minBuckets * 2,
 	}
 	for _, entity := range entities {
 		out.MaxCPU += entity.CPUs + 1
 		out.MaxMemory += entity.Memory + 1
 		out.MaxStorage += entity.Storage + 1
 	}
-	out.MaxCPU = roundValueAndMax(0, out.MaxCPU, out.UnitCPU)
-	out.MaxMemory = roundValueAndMax(0, out.MaxMemory, out.UnitMemory)
-	out.MaxStorage = roundValueAndMax(0, out.MaxStorage, out.UnitStorage)
+	out.MaxCPU = roundValueAndMax(0, out.MaxCPU/minBuckets, out.UnitCPU)
+	out.MaxMemory = roundValueAndMax(0, out.MaxMemory/minBuckets, out.UnitMemory)
+	out.MaxStorage = roundValueAndMax(0, out.MaxStorage/minBuckets, out.UnitStorage)
 	return out
 }
 func TestNewBucket(t *testing.T) {
@@ -78,7 +79,7 @@ func TestBucket_GetSegments(t *testing.T) {
 
 func TestBucket_Runthrough(t *testing.T) {
 	segments := GenerateTestSegments(10, 0)
-	conf := GenerateTestConf(segments)
+	conf := GenerateTestConf(segments, 1)
 	bucket := newBucket(&conf)
 
 	for _, segment := range segments {

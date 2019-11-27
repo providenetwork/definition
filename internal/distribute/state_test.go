@@ -29,7 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//It would be too redundant to test in different classes due to the complexity of this
+//It would be too redundant to test in different funcs due to the complexity of this
 //implementation
 func TestSystemState_FullTest(t *testing.T) {
 	parser := new(mockParser.Schema)
