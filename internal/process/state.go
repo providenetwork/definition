@@ -16,7 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package process
 
 import (
 	"fmt"
@@ -26,62 +26,72 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type SystemState interface {
-	Add(systems []schema.SystemComponent) ([]entity.Segment, error)
-	Remove(systems []string) ([]entity.Segment, error)
+type State struct {
+	systemState map[string]schema.SystemComponent
 }
 
-type systemState struct {
-	totalSystemState map[string]schema.SystemComponent
-	parser           parser.Resources
-	namer            parser.Names
+func NewState() State {
+	return State{systemState: map[string]schema.SystemComponent{}}
 }
 
-func NewSystemState(parser parser.Resources, namer parser.Names) SystemState {
-	return &systemState{
-		totalSystemState: map[string]schema.SystemComponent{},
-		parser:           parser,
-		namer:            namer}
+//System is for diff calculations
+type System interface {
+	//Add modifies State
+	Add(state *State, systems []schema.SystemComponent) ([]entity.Service, error)
+	//Remove modifies state
+	Remove(state *State, systems []string) ([]entity.Service, error)
 }
 
-func (state *systemState) Add(systems []schema.SystemComponent) ([]entity.Segment, error) {
-	out := []entity.Segment{}
+type system struct {
+	namer  parser.Names
+	parser parser.Service
+}
+
+func NewSystem(namer parser.Names, parser parser.Service) System {
+	return &system{namer: namer, parser: parser}
+}
+
+//Add modifies State
+func (sys system) Add(state *State, systems []schema.SystemComponent) ([]entity.Service, error) {
+	out := []entity.Service{}
+
 	for _, system := range systems {
-		name := state.namer.SystemComponent(system)
-		_, exists := state.totalSystemState[name]
+		name := sys.namer.SystemComponent(system)
+		_, exists := state.systemState[name]
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
 		}
-		segments, err := state.parser.SystemComponent(system)
+		services, err := sys.parser.FromSystem(system)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, segments...)
+		out = append(out, services...)
 	}
 
 	for _, system := range systems {
-		name := state.namer.SystemComponent(system)
-		state.totalSystemState[name] = system
+		name := sys.namer.SystemComponent(system)
+		state.systemState[name] = system
 	}
 
 	return out, nil
 }
 
-func (state *systemState) Remove(systems []string) ([]entity.Segment, error) {
-	out := []entity.Segment{}
+//Remove modifies state
+func (sys system) Remove(state *State, systems []string) ([]entity.Service, error) {
+	out := []entity.Service{}
 	for _, toRemove := range systems {
-		system, exists := state.totalSystemState[toRemove]
+		system, exists := state.systemState[toRemove]
 		if !exists {
 			return nil, fmt.Errorf("system not found")
 		}
-		segments, err := state.parser.SystemComponent(system)
+		services, err := sys.parser.FromSystem(system)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, segments...)
+		out = append(out, services...)
 	}
 	for _, toRemove := range systems {
-		delete(state.totalSystemState, toRemove)
+		delete(state.systemState, toRemove)
 	}
 	return out, nil
 }

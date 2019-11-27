@@ -39,6 +39,7 @@ func GenerateTestSegments(n int, offset int) []entity.Segment {
 	}
 	return out
 }
+
 func GenerateTestConf(entities []entity.Segment, minBuckets int64) config.Bucket {
 	out := config.Bucket{
 
@@ -60,6 +61,7 @@ func GenerateTestConf(entities []entity.Segment, minBuckets int64) config.Bucket
 	out.MaxStorage = roundValueAndMax(0, out.MaxStorage/minBuckets, out.UnitStorage)
 	return out
 }
+
 func TestNewBucket(t *testing.T) {
 	testConf := config.Bucket{
 		MinCPU:     1,

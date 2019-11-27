@@ -23,8 +23,6 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type Schema interface {
-	NameSystemComponent(systemComponent schema.SystemComponent) string
-	ParseSystemComponent(systemComponent schema.SystemComponent) ([]entity.Segment, error)
-	ParseTasks(tasks []schema.Task) ([]entity.Segment, error)
+type Service interface {
+	FromSystem(system schema.SystemComponent) ([]entity.Service, error)
 }

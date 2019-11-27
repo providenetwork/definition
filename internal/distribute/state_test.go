@@ -32,7 +32,7 @@ import (
 //It would be too redundant to test in different funcs due to the complexity of this
 //implementation
 func TestSystemState_FullTest(t *testing.T) {
-	parser := new(mockParser.Schema)
+	parser := new(mockParser.Resources)
 	systems := []schema.SystemComponent{
 		schema.SystemComponent{
 			Name: "1",
@@ -45,6 +45,8 @@ func TestSystemState_FullTest(t *testing.T) {
 		},
 	}
 
+	namer := new(mockParser.Names)
+
 	segments := []entity.Segment{}
 	for i, system := range systems {
 		result := make([]entity.Segment, i)
@@ -54,11 +56,11 @@ func TestSystemState_FullTest(t *testing.T) {
 			})
 		}
 		segments = append(segments, result...)
-		parser.On("NameSystemComponent", system).Return(system.Name).Times(4)
-		parser.On("ParseSystemComponent", system).Return(result, nil).Twice()
+		namer.On("SystemComponent", system).Return(system.Name).Times(4)
+		parser.On("SystemComponent", system).Return(result, nil).Twice()
 	}
 
-	state := NewSystemState(parser)
+	state := NewSystemState(parser, namer)
 
 	//Successful Add
 	result, err := state.Add(systems)

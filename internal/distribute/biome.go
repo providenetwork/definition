@@ -40,17 +40,22 @@ type BiomeCalculator interface {
 }
 
 type biomeCalculator struct {
-	parser parser.Schema
 	conf   config.Bucket
+	parser parser.Resources
+	namer  parser.Names
 }
 
-func NewBiomeCalculator(conf config.Bucket, parser parser.Schema) BiomeCalculator {
-	return &biomeCalculator{conf: conf, parser: parser}
+func NewBiomeCalculator(
+	conf config.Bucket,
+	parser parser.Resources,
+	namer parser.Names) BiomeCalculator {
+
+	return &biomeCalculator{conf: conf, parser: parser, namer: namer}
 }
 
 func (bc *biomeCalculator) NewStatePack() *StatePack {
 	return &StatePack{
-		state:     NewSystemState(bc.parser),
+		state:     NewSystemState(bc.parser, bc.namer),
 		buckets:   NewResourceBuckets(bc.conf),
 		prevTasks: nil,
 	}
@@ -84,7 +89,7 @@ func (bc *biomeCalculator) AddNextPhase(sp *StatePack, phase schema.Phase) error
 	if err != nil {
 		return err
 	}
-	sp.prevTasks, err = bc.parser.ParseTasks(phase.Tasks)
+	sp.prevTasks, err = bc.parser.Tasks(phase.Tasks)
 	if err != nil {
 		return err
 	}

@@ -19,11 +19,30 @@
 package distribute
 
 import (
+	"fmt"
+
 	"github.com/whiteblock/definition/schema"
 )
 
+type ResourceDist [][]*Bucket
+
+func (rd *ResourceDist) Add(buckets []*Bucket) {
+	if rd == nil {
+		rd = &ResourceDist{}
+	}
+	tmp := ResourceDist(append([][]*Bucket(*rd), buckets))
+	*rd = tmp
+}
+
+func (rd ResourceDist) GetPhase(index int) ([]*Bucket, error) {
+	if rd == nil || len(rd) <= index {
+		return nil, fmt.Errorf("index out of bounds")
+	}
+	return rd[index], nil
+}
+
 type Distributor interface {
-	Distribute(spec schema.RootSchema) ([][]*Bucket, error)
+	Distribute(spec schema.RootSchema) ([]*ResourceDist, error)
 }
 
 type distributor struct {
@@ -36,17 +55,19 @@ func NewDistributor(calculator BiomeCalculator) Distributor {
 	}
 }
 
-func (dist *distributor) Distribute(spec schema.RootSchema) ([][]*Bucket, error) {
-	out := [][]*Bucket{}
+func (dist *distributor) Distribute(spec schema.RootSchema) ([]*ResourceDist, error) {
+	out := []*ResourceDist{}
 	for _, test := range spec.Tests {
 		sp := dist.calculator.NewStatePack()
+		testResources := &ResourceDist{}
 		for _, phase := range test.Phases {
 			err := dist.calculator.AddNextPhase(sp, phase)
 			if err != nil {
 				return nil, err
 			}
+			testResources.Add(dist.calculator.Resources(sp))
 		}
-		out = append(out, dist.calculator.Resources(sp))
+		out = append(out, testResources)
 	}
 	return out, nil
 }
