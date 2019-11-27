@@ -134,5 +134,19 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist
 
 func (dep dependency) Volumes(spec schema.RootSchema, dist distribute.PhaseDist,
 	service entity.Service) ([]command.Command, error) {
-	return nil, nil
+
+	bucket := dist.FindBucket(service.Name)
+	if bucket == -1 {
+		return nil, fmt.Errorf("could not find bucket")
+	}
+	out := []command.Command{}
+	for _, volume := range service.SquashedService.SharedVolumes {
+		order := dep.cmdMaker.CreateVolume(volume)
+		cmd, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	return out, nil
 }

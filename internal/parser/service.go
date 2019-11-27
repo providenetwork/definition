@@ -20,11 +20,49 @@ package parser
 
 import (
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/search"
 	"github.com/whiteblock/definition/schema"
+	//"github.com/imdario/mergo"
 )
 
 type Service interface {
 	FromSystem(spec schema.RootSchema, system schema.SystemComponent) ([]entity.Service, error)
 	FromTask(spec schema.RootSchema, task schema.Task, index int) ([]entity.Service, error)
 	FromSidecar(parent entity.Service, sidecar schema.Sidecar) (entity.Service, error)
+}
+
+type serviceParser struct {
+	namer    Names
+	searcher search.Schema
+}
+
+func NewService(namer Names, searcher search.Schema) Service {
+	return &serviceParser{namer: namer, searcher: searcher}
+}
+
+func (sp *serviceParser) FromSystem(spec schema.RootSchema,
+	system schema.SystemComponent) ([]entity.Service, error) {
+
+	squashed, err := sp.searcher.FindServiceByType(spec, system.Type)
+	if err != nil {
+		return nil, err
+	}
+	//TODO: nate left off here
+	if len(squashed.SharedVolumes) == 0 { //just make it compile
+		return nil, nil
+	}
+
+	return nil, nil
+
+}
+
+func (sp *serviceParser) FromTask(spec schema.RootSchema,
+	task schema.Task, index int) ([]entity.Service, error) {
+
+	return nil, nil
+}
+
+func (sp *serviceParser) FromSidecar(parent entity.Service,
+	sidecar schema.Sidecar) (entity.Service, error) {
+	return entity.Service{}, nil
 }
