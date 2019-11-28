@@ -19,17 +19,19 @@
 package parser
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
-	"strings"
 )
 
 type Names interface {
 	InputFileVolume(input schema.InputFile) string
 	Sidecar(parent entity.Service, sidecar schema.Sidecar) string
 	SidecarNetwork(parent entity.Service) string
-	SystemComponent(systemComponent schema.SystemComponent) string
-	SystemService(systemComponent schema.SystemComponent, index int) string
+	SystemComponent(sys schema.SystemComponent) string
+	SystemService(sys schema.SystemComponent, index int) string
 	Task(task schema.Task, index int) string
 }
 
@@ -45,26 +47,24 @@ func (n *namer) InputFileVolume(input schema.InputFile) string {
 }
 
 func (n *namer) Sidecar(parent entity.Service, sidecar schema.Sidecar) string {
-	//TODO
-	return ""
+	return fmt.Sprintf("%s-%s", parent.Name, sidecar.Name)
 }
 
 func (n *namer) SidecarNetwork(parent entity.Service) string {
-	//TODO
-	return ""
+	return fmt.Sprintf("%s-sidecar-net", parent.Name)
 }
 
-func (n *namer) SystemComponent(systemComponent schema.SystemComponent) string {
-	//TODO
-	return ""
+func (n *namer) SystemComponent(sys schema.SystemComponent) string {
+	if sys.Name != "" {
+		return sys.Name
+	}
+	return sys.Type
 }
 
-func (n *namer) SystemService(systemComponent schema.SystemComponent, index int) string {
-	//TODO
-	return ""
+func (n *namer) SystemService(sys schema.SystemComponent, index int) string {
+	return fmt.Sprintf("%s-service%d", n.SystemComponent(sys), index)
 }
 
 func (n *namer) Task(task schema.Task, index int) string {
-	//TODO
-	return ""
+	return fmt.Sprintf("%s-task%d", task.Type, index)
 }

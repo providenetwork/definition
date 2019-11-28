@@ -70,7 +70,7 @@ func (sp *serviceParser) GetImage(service entity.Service) string {
 
 func (sp *serviceParser) GetNetworks(service entity.Service) []string {
 	out := make([]string, len(service.Networks)+1)
-	out[0] = GetSidecarNetwork(service)
+	out[0] = sp.GetSidecarNetwork(service)
 	for i := range service.Networks {
 		out[i+1] = service.Networks[i].Name
 	}

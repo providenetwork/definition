@@ -20,6 +20,7 @@ package parser
 
 import (
 	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/internal/config/defaults"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 
@@ -79,7 +80,7 @@ func (sp sidecarParser) GetLabels(parent entity.Service, sidecar schema.Sidecar)
 }
 
 func (sp sidecarParser) GetNetwork(parent entity.Service) strslice.StrSlice {
-	return strslice.StrSlice([]string{sp.namer.SidecarNetwork(service)})
+	return strslice.StrSlice([]string{sp.namer.SidecarNetwork(parent)})
 }
 
 func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
