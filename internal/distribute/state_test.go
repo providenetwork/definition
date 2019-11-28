@@ -44,7 +44,7 @@ func TestSystemState_FullTest(t *testing.T) {
 			Name: "3",
 		},
 	}
-
+	spec := schema.RootSchema{}
 	namer := new(mockParser.Names)
 
 	segments := []entity.Segment{}
@@ -56,14 +56,15 @@ func TestSystemState_FullTest(t *testing.T) {
 			})
 		}
 		segments = append(segments, result...)
-		namer.On("SystemComponent", system).Return(system.Name).Times(4)
-		parser.On("SystemComponent", system).Return(result, nil).Twice()
+		namer.On("SystemComponent", system).Return(system.Name).Twice()
+		parser.On("SystemComponent", spec, system).Return(result, nil).Once()
+		parser.On("SystemComponentNamesOnly", system).Return(result, nil).Once()
 	}
 
 	state := NewSystemState(parser, namer)
 
 	//Successful Add
-	result, err := state.Add(systems)
+	result, err := state.Add(spec, systems)
 	require.NotNil(t, result)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, segments, result)
@@ -75,4 +76,7 @@ func TestSystemState_FullTest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, segments, result)
 	assert.Len(t, result, len(segments))
+
+	parser.AssertExpectations(t)
+	namer.AssertExpectations(t)
 }

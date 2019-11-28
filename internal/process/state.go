@@ -102,11 +102,11 @@ func (sys system) Remove(state *State, spec schema.RootSchema, systems []string)
 func (sys system) Tasks(state *State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error) {
 	out := []entity.Service{}
 	for i, task := range tasks {
-		services, err := sys.parser.FromTask(spec, task, i)
+		service, err := sys.parser.FromTask(spec, task, i)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, services...)
+		out = append(out, service)
 	}
 	return out, nil
 }

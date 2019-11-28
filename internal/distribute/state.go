@@ -27,7 +27,7 @@ import (
 )
 
 type SystemState interface {
-	Add(systems []schema.SystemComponent) ([]entity.Segment, error)
+	Add(spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Segment, error)
 	Remove(systems []string) ([]entity.Segment, error)
 }
 
@@ -44,7 +44,9 @@ func NewSystemState(parser parser.Resources, namer parser.Names) SystemState {
 		namer:            namer}
 }
 
-func (state *systemState) Add(systems []schema.SystemComponent) ([]entity.Segment, error) {
+func (state *systemState) Add(spec schema.RootSchema,
+	systems []schema.SystemComponent) ([]entity.Segment, error) {
+
 	out := []entity.Segment{}
 	for _, system := range systems {
 		name := state.namer.SystemComponent(system)
@@ -52,7 +54,7 @@ func (state *systemState) Add(systems []schema.SystemComponent) ([]entity.Segmen
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
 		}
-		segments, err := state.parser.SystemComponent(system)
+		segments, err := state.parser.SystemComponent(spec, system)
 		if err != nil {
 			return nil, err
 		}
@@ -68,13 +70,14 @@ func (state *systemState) Add(systems []schema.SystemComponent) ([]entity.Segmen
 }
 
 func (state *systemState) Remove(systems []string) ([]entity.Segment, error) {
+
 	out := []entity.Segment{}
 	for _, toRemove := range systems {
 		system, exists := state.totalSystemState[toRemove]
 		if !exists {
 			return nil, fmt.Errorf("system not found")
 		}
-		segments, err := state.parser.SystemComponent(system)
+		segments, err := state.parser.SystemComponentNamesOnly(system)
 		if err != nil {
 			return nil, err
 		}

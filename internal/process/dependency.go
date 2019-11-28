@@ -108,11 +108,8 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist
 	}
 	out := make([][]command.Command, 2)
 	for _, sidecar := range service.Sidecars {
-		serv, err := dep.parser.FromSidecar(service, sidecar)
-		if err != nil {
-			return nil, err
-		}
-		order, err := dep.cmdMaker.CreateContainer(spec, serv)
+
+		order, err := dep.cmdMaker.CreateSidecar(spec, sidecar)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +118,7 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist
 			return nil, err
 		}
 		out[0] = append(out[0], create)
-		order = dep.cmdMaker.StartContainer(serv)
+		order = dep.cmdMaker.StartSidecar(sidecar)
 
 		start, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 		if err != nil {

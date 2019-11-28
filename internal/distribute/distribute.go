@@ -39,7 +39,7 @@ func NewDistributor(calculator BiomeCalculator) Distributor {
 func (dist *distributor) Distribute(spec schema.RootSchema) ([]*ResourceDist, error) {
 	out := []*ResourceDist{}
 	for _, test := range spec.Tests {
-		sp := dist.calculator.NewStatePack()
+		sp := dist.calculator.NewStatePack(spec)
 		testResources := &ResourceDist{}
 		for _, phase := range test.Phases {
 			err := dist.calculator.AddNextPhase(sp, phase)

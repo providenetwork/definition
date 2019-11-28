@@ -25,8 +25,9 @@ import (
 
 // Resources presents methods for extracting named resources from parts of the schema
 type Resources interface {
-	SystemComponent(systemComponent schema.SystemComponent) ([]entity.Segment, error)
-	Tasks(tasks []schema.Task) ([]entity.Segment, error)
+	SystemComponentNamesOnly(systemComponent schema.SystemComponent) ([]entity.Segment, error)
+	SystemComponent(spec schema.RootSchema, systemComponent schema.SystemComponent) ([]entity.Segment, error)
+	Tasks(spec schema.RootSchema, tasks []schema.Task) ([]entity.Segment, error)
 }
 
 type resources struct {
@@ -43,7 +44,13 @@ func (res *resources) SystemComponent(spec schema.RootSchema,
 	//TODO
 	return nil, nil
 }
-func (res *resources) Tasks(tasks []schema.Task) ([]entity.Segment, error) {
+func (res *resources) Tasks(spec schema.RootSchema, tasks []schema.Task) ([]entity.Segment, error) {
+	//TODO
+	return nil, nil
+}
+
+func (res *resources) SystemComponentNamesOnly(
+	systemComponent schema.SystemComponent) ([]entity.Segment, error) {
 	//TODO
 	return nil, nil
 }

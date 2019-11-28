@@ -19,6 +19,9 @@
 package parser
 
 import (
+	"time"
+
+	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/search"
 	"github.com/whiteblock/definition/schema"
@@ -29,17 +32,17 @@ import (
 
 type Service interface {
 	FromSystem(spec schema.RootSchema, system schema.SystemComponent) ([]entity.Service, error)
-	FromTask(spec schema.RootSchema, task schema.Task, index int) ([]entity.Service, error)
-	FromSidecar(parent entity.Service, sidecar schema.Sidecar) (entity.Service, error)
+	FromTask(spec schema.RootSchema, task schema.Task, index int) (entity.Service, error)
 }
 
 type serviceParser struct {
 	namer    Names
 	searcher search.Schema
+	convert  converter.Service
 }
 
-func NewService(namer Names, searcher search.Schema) Service {
-	return &serviceParser{namer: namer, searcher: searcher}
+func NewService(namer Names, searcher search.Schema, convert converter.Service) Service {
+	return &serviceParser{namer: namer, searcher: searcher, convert: convert}
 }
 
 func (sp *serviceParser) FromSystem(spec schema.RootSchema,
@@ -70,7 +73,7 @@ func (sp *serviceParser) FromSystem(spec schema.RootSchema,
 	if system.Resources.Storage != "" {
 		squashed.Resources.Storage = system.Resources.Storage
 	}
-	systemName := ps.namer.SystemComponent(system)
+	systemName := sp.namer.SystemComponent(system)
 	externalSidecars, err := sp.searcher.FindSidecarsBySystem(spec, systemName)
 	if err != nil {
 		return nil, err
@@ -111,19 +114,38 @@ func (sp *serviceParser) FromSystem(spec schema.RootSchema,
 
 	for i := range out {
 		copier.Copy(&out[i], base)
-		out[i].Name = ps.namer.SystemService(system, i)
+		out[i].Name = sp.namer.SystemService(system, i)
 	}
 	return out, nil
-
 }
 
 func (sp *serviceParser) FromTask(spec schema.RootSchema,
-	task schema.Task, index int) ([]entity.Service, error) {
+	task schema.Task, index int) (entity.Service, error) {
 
-	return nil, nil
-}
+	taskRunner, err := sp.searcher.FindTaskRunnerByType(spec, task.Type)
+	if err != nil {
+		return entity.Service{}, err
+	}
 
-func (sp *serviceParser) FromSidecar(parent entity.Service,
-	sidecar schema.Sidecar) (entity.Service, error) {
-	return entity.Service{}, nil
+	service := sp.convert.FromTaskRunner(taskRunner)
+	if task.Args != nil {
+		copier.Copy(&service.Args, task.Args)
+	}
+
+	if task.Environment != nil {
+		err = mergo.Map(&service.Environment, task.Environment, mergo.WithOverride)
+		if err != nil {
+			return entity.Service{}, err
+		}
+	}
+
+	timeout, err := time.ParseDuration(task.Timeout)
+	return entity.Service{
+		Name:            sp.namer.Task(task, index),
+		Networks:        task.Networks,
+		SquashedService: service,
+		Sidecars:        nil,
+		IgnoreExitCode:  task.IgnoreExitCode,
+		Timeout:         timeout,
+	}, err
 }

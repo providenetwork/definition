@@ -34,6 +34,10 @@ type Command interface {
 	CreateVolume(volume schema.SharedVolume) command.Order
 	CreateContainer(spec schema.RootSchema, service entity.Service) (command.Order, error)
 	StartContainer(service entity.Service) command.Order
+
+	CreateSidecar(spec schema.RootSchema, sidecar schema.Sidecar) (command.Order, error)
+	StartSidecar(sidecar schema.Sidecar) command.Order
+
 	AttachNetwork(service entity.Service, network schema.Network) command.Order
 	Emulation(network schema.Network) command.Order
 

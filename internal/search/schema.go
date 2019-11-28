@@ -25,5 +25,6 @@ import (
 type Schema interface {
 	FindServiceByType(spec schema.RootSchema, serviceType string) (schema.Service, error)
 	FindSidecarByType(spec schema.RootSchema, sidecarType string) (schema.Sidecar, error)
+	FindTaskRunnerByType(spec schema.RootSchema, taskRunnerType string) (schema.TaskRunner, error)
 	FindSidecarsBySystem(spec schema.RootSchema, name string) ([]schema.Sidecar, error)
 }

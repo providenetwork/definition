@@ -29,12 +29,13 @@ type StatePack struct {
 	state     SystemState
 	buckets   ResourceBuckets
 	prevTasks []entity.Segment
+	spec      schema.RootSchema
 }
 
 //BiomeCalculator is a calculator for the state for the testnet
 //as time goes on.
 type BiomeCalculator interface {
-	NewStatePack() *StatePack
+	NewStatePack(spec schema.RootSchema) *StatePack
 	AddNextPhase(sp *StatePack, phase schema.Phase) error
 	Resources(sp *StatePack) []Bucket
 }
@@ -53,11 +54,12 @@ func NewBiomeCalculator(
 	return &biomeCalculator{conf: conf, parser: parser, namer: namer}
 }
 
-func (bc *biomeCalculator) NewStatePack() *StatePack {
+func (bc *biomeCalculator) NewStatePack(spec schema.RootSchema) *StatePack {
 	return &StatePack{
 		state:     NewSystemState(bc.parser, bc.namer),
 		buckets:   NewResourceBuckets(bc.conf),
 		prevTasks: nil,
+		spec:      spec,
 	}
 }
 
@@ -70,7 +72,7 @@ func (bc *biomeCalculator) AddNextPhase(sp *StatePack, phase schema.Phase) error
 		}
 	}
 
-	addSysSegs, err := sp.state.Add(phase.System)
+	addSysSegs, err := sp.state.Add(sp.spec, phase.System)
 	if err != nil {
 		return err
 	}
@@ -89,7 +91,7 @@ func (bc *biomeCalculator) AddNextPhase(sp *StatePack, phase schema.Phase) error
 	if err != nil {
 		return err
 	}
-	sp.prevTasks, err = bc.parser.Tasks(phase.Tasks)
+	sp.prevTasks, err = bc.parser.Tasks(sp.spec, phase.Tasks)
 	if err != nil {
 		return err
 	}
