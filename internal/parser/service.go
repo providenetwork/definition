@@ -22,7 +22,9 @@ import (
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/search"
 	"github.com/whiteblock/definition/schema"
-	//"github.com/imdario/mergo"
+
+	"github.com/imdario/mergo"
+	"github.com/jinzhu/copier"
 )
 
 type Service interface {
@@ -47,12 +49,71 @@ func (sp *serviceParser) FromSystem(spec schema.RootSchema,
 	if err != nil {
 		return nil, err
 	}
-	//TODO: nate left off here
-	if len(squashed.SharedVolumes) == 0 { //just make it compile
-		return nil, nil
+
+	err = mergo.Map(&squashed.Environment, system.Environment, mergo.WithOverride)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	if system.Args != nil {
+		squashed.Args = system.Args
+	}
+
+	if system.Resources.Cpus != 0 {
+		squashed.Resources.Cpus = system.Resources.Cpus
+	}
+
+	if system.Resources.Memory != "" {
+		squashed.Resources.Memory = system.Resources.Memory
+	}
+
+	if system.Resources.Storage != "" {
+		squashed.Resources.Storage = system.Resources.Storage
+	}
+	systemName := ps.namer.SystemComponent(system)
+	externalSidecars, err := sp.searcher.FindSidecarsBySystem(spec, systemName)
+	if err != nil {
+		return nil, err
+	}
+
+	base := entity.Service{
+		Name:            "",
+		Bucket:          -1,
+		SquashedService: squashed,
+		Networks:        system.Resources.Networks,
+		Sidecars:        externalSidecars,
+		Timeout:         0,
+	}
+
+	for _, sidecar := range system.Sidecars {
+		realSidecar, err := sp.searcher.FindSidecarByType(spec, sidecar.Type)
+		if err != nil {
+			return nil, err
+		}
+
+		err = mergo.Map(&realSidecar.Environment, sidecar.Environment, mergo.WithOverride)
+		if err != nil {
+			return nil, err
+		}
+
+		err = mergo.Map(&realSidecar.Resources, sidecar.Resources, mergo.WithOverride)
+		if err != nil {
+			return nil, err
+		}
+
+		if sidecar.Args != nil {
+			realSidecar.Args = sidecar.Args
+		}
+		base.Sidecars = append(base.Sidecars, realSidecar)
+	}
+
+	out := make([]entity.Service, system.Count)
+
+	for i := range out {
+		copier.Copy(&out[i], base)
+		out[i].Name = ps.namer.SystemService(system, i)
+	}
+	return out, nil
 
 }
 

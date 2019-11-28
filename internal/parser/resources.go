@@ -38,7 +38,8 @@ func NewResources(namer Names) Resources {
 	return &resources{namer: namer}
 }
 
-func (res *resources) SystemComponent(systemComponent schema.SystemComponent) ([]entity.Segment, error) {
+func (res *resources) SystemComponent(spec schema.RootSchema,
+	systemComponent schema.SystemComponent) ([]entity.Segment, error) {
 	//TODO
 	return nil, nil
 }
