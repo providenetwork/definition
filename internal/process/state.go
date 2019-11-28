@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 )
@@ -46,10 +47,10 @@ type System interface {
 
 type system struct {
 	namer  parser.Names
-	parser parser.Service
+	parser maker.Service
 }
 
-func NewSystem(namer parser.Names, parser parser.Service) System {
+func NewSystem(namer parser.Names, parser maker.Service) System {
 	return &system{namer: namer, parser: parser}
 }
 

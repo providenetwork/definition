@@ -19,133 +19,59 @@
 package parser
 
 import (
-	"time"
-
-	"github.com/whiteblock/definition/internal/converter"
+	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/entity"
-	"github.com/whiteblock/definition/internal/search"
-	"github.com/whiteblock/definition/schema"
-
-	"github.com/imdario/mergo"
-	"github.com/jinzhu/copier"
 )
 
 type Service interface {
-	FromSystem(spec schema.RootSchema, system schema.SystemComponent) ([]entity.Service, error)
-	FromTask(spec schema.RootSchema, task schema.Task, index int) (entity.Service, error)
+	GetEntrypoint(service entity.Service) string
+	GetImage(service entity.Service) string
+	GetNetworks(service entity.Service) []string
+	GetVolumes(service entity.Service) []command.Mount
 }
 
 type serviceParser struct {
-	namer    Names
-	searcher search.Schema
-	convert  converter.Service
 }
 
-func NewService(namer Names, searcher search.Schema, convert converter.Service) Service {
-	return &serviceParser{namer: namer, searcher: searcher, convert: convert}
+func NewService() Service {
+	return &serviceParser{}
 }
 
-func (sp *serviceParser) FromSystem(spec schema.RootSchema,
-	system schema.SystemComponent) ([]entity.Service, error) {
-
-	squashed, err := sp.searcher.FindServiceByType(spec, system.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	err = mergo.Map(&squashed.Environment, system.Environment, mergo.WithOverride)
-	if err != nil {
-		return nil, err
-	}
-
-	if system.Args != nil {
-		squashed.Args = system.Args
-	}
-
-	if system.Resources.Cpus != 0 {
-		squashed.Resources.Cpus = system.Resources.Cpus
-	}
-
-	if system.Resources.Memory != "" {
-		squashed.Resources.Memory = system.Resources.Memory
-	}
-
-	if system.Resources.Storage != "" {
-		squashed.Resources.Storage = system.Resources.Storage
-	}
-	systemName := sp.namer.SystemComponent(system)
-	externalSidecars, err := sp.searcher.FindSidecarsBySystem(spec, systemName)
-	if err != nil {
-		return nil, err
-	}
-
-	base := entity.Service{
-		Name:            "",
-		Bucket:          -1,
-		SquashedService: squashed,
-		Networks:        system.Resources.Networks,
-		Sidecars:        externalSidecars,
-		Timeout:         0,
-	}
-
-	for _, sidecar := range system.Sidecars {
-		realSidecar, err := sp.searcher.FindSidecarByType(spec, sidecar.Type)
-		if err != nil {
-			return nil, err
-		}
-
-		err = mergo.Map(&realSidecar.Environment, sidecar.Environment, mergo.WithOverride)
-		if err != nil {
-			return nil, err
-		}
-
-		err = mergo.Map(&realSidecar.Resources, sidecar.Resources, mergo.WithOverride)
-		if err != nil {
-			return nil, err
-		}
-
-		if sidecar.Args != nil {
-			realSidecar.Args = sidecar.Args
-		}
-		base.Sidecars = append(base.Sidecars, realSidecar)
-	}
-
-	out := make([]entity.Service, system.Count)
-
-	for i := range out {
-		copier.Copy(&out[i], base)
-		out[i].Name = sp.namer.SystemService(system, i)
-	}
-	return out, nil
+func (sp *serviceParser) GetEntrypoint(service entity.Service) string {
+	//TODO
+	return ""
 }
 
-func (sp *serviceParser) FromTask(spec schema.RootSchema,
-	task schema.Task, index int) (entity.Service, error) {
-
-	taskRunner, err := sp.searcher.FindTaskRunnerByType(spec, task.Type)
-	if err != nil {
-		return entity.Service{}, err
-	}
-
-	service := sp.convert.FromTaskRunner(taskRunner)
-	if task.Args != nil {
-		copier.Copy(&service.Args, task.Args)
-	}
-
-	if task.Environment != nil {
-		err = mergo.Map(&service.Environment, task.Environment, mergo.WithOverride)
-		if err != nil {
-			return entity.Service{}, err
-		}
-	}
-
-	timeout, err := time.ParseDuration(task.Timeout)
-	return entity.Service{
-		Name:            sp.namer.Task(task, index),
-		Networks:        task.Networks,
-		SquashedService: service,
-		Sidecars:        nil,
-		IgnoreExitCode:  task.IgnoreExitCode,
-		Timeout:         timeout,
-	}, err
+func (sp *serviceParser) GetImage(service entity.Service) string {
+	//TODO
+	return ""
 }
+
+func (sp *serviceParser) GetNetworks(service entity.Service) []string {
+	//TODO
+	return nil
+}
+
+func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
+	//TODO
+	return nil
+}
+
+/*
+type Script struct {
+	SourcePath string `yaml:"source-path,omitempty" json:"source-path,omitempty"`
+	Inline     string `yaml:"inline,omitempty" json:"inline,omitempty"`
+}
+
+type Service struct {
+	Name          string            `yaml:"name,omitempty" json:"name,omitempty"`
+	Description   string            `yaml:"description,omitempty" json:"description,omitempty"`
+	SharedVolumes []SharedVolume    `yaml:"shared-volumes,omitempty" json:"shared-volumes,omitempty"`
+	Resources     Resources         `yaml:"resources,omitempty" json:"resources,omitempty"`
+	Args          []string          `yaml:"args,omitempty" json:"args,omitempty"`
+	Environment   map[string]string `yaml:"environment,omitempty" json:"environment,omitempty"`
+	Image         string            `yaml:"image,omitempty" json:"image,omitempty"`
+	Script        Script            `yaml:"script,omitempty" json:"script,omitempty"`
+	InputFiles    []InputFile       `yaml:"input-files,omitempty" json:"input-files,omitempty"`
+}
+*/

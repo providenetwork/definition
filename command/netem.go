@@ -20,7 +20,6 @@ package command
 
 //Netconf represents network impairments which are to be applied to a network
 type Netconf struct {
-	OrderPayload
 	//Container is the target container
 	Container string `json:"container"`
 	//Network is the target network

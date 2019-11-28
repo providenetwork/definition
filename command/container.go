@@ -38,8 +38,6 @@ type NetworkConfig struct {
 type Container struct {
 	// BoundCpus are the cpus which the container will be set with an affinity for.
 	BoundCPUs []int `json:"boundCPUs,omitonempty"`
-	// Detach indicates that we should wait for the containers entrypoint to finish execution
-	Detach bool `json:"detach"`
 	// EntryPoint overrides the docker containers entrypoint if non-empty
 	EntryPoint string `json:"entrypoint"`
 	// Environment represents the environment kv which will be provided to the container

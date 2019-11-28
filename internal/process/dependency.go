@@ -23,7 +23,7 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
-	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/sirupsen/logrus"
@@ -44,14 +44,14 @@ type Dependency interface {
 }
 
 type dependency struct {
-	parser   parser.Service
-	cmdMaker parser.Command
+	parser   maker.Service
+	cmdMaker maker.Command
 	log      logrus.Ext1FieldLogger
 }
 
 func NewDependency(
-	cmdMaker parser.Command,
-	parser parser.Service,
+	cmdMaker maker.Command,
+	parser maker.Service,
 	log logrus.Ext1FieldLogger) Dependency {
 	return &dependency{cmdMaker: cmdMaker, parser: parser, log: log}
 }
@@ -65,7 +65,10 @@ func (dep dependency) Emulation(spec schema.RootSchema, dist distribute.PhaseDis
 	}
 	out := []command.Command{}
 	for _, network := range service.Networks {
-		order := dep.cmdMaker.Emulation(network)
+		order, err := dep.cmdMaker.Emulation(service, network)
+		if err != nil {
+			return nil, err
+		}
 		cmd, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 		if err != nil {
 			return nil, err
@@ -84,10 +87,8 @@ func (dep dependency) Container(spec schema.RootSchema, dist distribute.PhaseDis
 		return
 	}
 
-	order, err := dep.cmdMaker.CreateContainer(spec, service)
-	if err != nil {
-		return
-	}
+	order := dep.cmdMaker.CreateContainer(service)
+
 	create, err = dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 	if err != nil {
 		return
@@ -109,16 +110,13 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist
 	out := make([][]command.Command, 2)
 	for _, sidecar := range service.Sidecars {
 
-		order, err := dep.cmdMaker.CreateSidecar(spec, sidecar)
-		if err != nil {
-			return nil, err
-		}
+		order := dep.cmdMaker.CreateSidecar(service, sidecar)
 		create, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 		if err != nil {
 			return nil, err
 		}
 		out[0] = append(out[0], create)
-		order = dep.cmdMaker.StartSidecar(sidecar)
+		order = dep.cmdMaker.StartSidecar(service,sidecar)
 
 		start, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 		if err != nil {

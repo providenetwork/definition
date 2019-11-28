@@ -24,7 +24,7 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
-	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/sirupsen/logrus"
@@ -40,12 +40,12 @@ type Resolve interface {
 }
 
 type resolve struct {
-	cmdMaker parser.Command
+	cmdMaker maker.Command
 	deps     Dependency
 	log      logrus.Ext1FieldLogger
 }
 
-func NewResolve(cmdMaker parser.Command, deps Dependency, log logrus.Ext1FieldLogger) Resolve {
+func NewResolve(cmdMaker maker.Command, deps Dependency, log logrus.Ext1FieldLogger) Resolve {
 	return &resolve{cmdMaker: cmdMaker, deps: deps}
 }
 

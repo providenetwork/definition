@@ -30,6 +30,7 @@ type Service struct {
 	SquashedService schema.Service
 	Networks        []schema.Network
 	Sidecars        []schema.Sidecar
+	Labels          map[string]string
 
 	Timeout        time.Duration
 	IgnoreExitCode bool

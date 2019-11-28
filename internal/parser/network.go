@@ -19,40 +19,35 @@
 package parser
 
 import (
-	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
-type Names interface {
-	Sidecar(parent entity.Service, sidecar schema.Sidecar) string
-	SystemComponent(systemComponent schema.SystemComponent) string
-	SystemService(systemComponent schema.SystemComponent, index int) string
-	Task(task schema.Task, index int) string
+type Network interface {
+	GetBandwidth(network schema.Network) string
+	GetLatency(network schema.Network) (int, error)
+	GetPacketLoss(network schema.Network) (float64, error)
 }
 
-type namer struct {
+type networkParser struct {
 }
 
-func NewNames() Names {
-	return &namer{}
+func NewNetwork() Network {
+	return &networkParser{}
 }
 
-func (n *namer) Sidecar(parent entity.Service, sidecar schema.Sidecar) string {
+func (np networkParser) GetBandwidth(network schema.Network) string {
+	return network.Bandwidth
+}
+
+func (np networkParser) GetLatency(network schema.Network) (int, error) {
 	//TODO
-	return ""
+	return 0, nil
+}
+func (np networkParser) GetPacketLoss(network schema.Network) (float64, error) {
+	//TODO
+	return 0, nil
 }
 
-func (n *namer) SystemComponent(systemComponent schema.SystemComponent) string {
-	//TODO
-	return ""
-}
-
-func (n *namer) SystemService(systemComponent schema.SystemComponent, index int) string {
-	//TODO
-	return ""
-}
-
-func (n *namer) Task(task schema.Task, index int) string {
-	//TODO
-	return ""
-}
+/*Bandwidth  string `yaml:"bandwidth,omitempty" json:"bandwidth,omitempty"`
+Latency    string `yaml:"latency,omitempty" json:"latency,omitempty"`
+PacketLoss string `yaml:"packet-loss,omitempty" json:"packet-loss,omitempty"`*/
