@@ -35,7 +35,7 @@ import (
 type Command interface {
 	New(order command.Order, endpoint string, timeout time.Duration) (command.Command, error)
 
-	CreateNetwork(network schema.Network) command.Order
+	CreateNetwork(network schema.Network, global bool) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
 	CreateContainer(service entity.Service) command.Order
 	StartContainer(service entity.Service) command.Order
@@ -87,15 +87,12 @@ func (cmd commandMaker) New(order command.Order, endpoint string,
 	}, nil
 }
 
-func (cmd commandMaker) CreateNetwork(network schema.Network) command.Order {
+func (cmd commandMaker) CreateNetwork(network schema.Network, global bool) command.Order {
 	return command.Order{
 		Type: command.Createnetwork,
 		Payload: command.Network{
-			Name:    network.Name,
-			Subnet:  "",                  //TODO
-			Gateway: "",                  //TODO
-			Global:  true,                //TODO
-			Labels:  map[string]string{}, //TODO
+			Name:   network.Name,
+			Global: global,
 		},
 	}
 }
@@ -105,7 +102,7 @@ func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
 		Type: command.Createvolume,
 		Payload: command.Volume{
 			Name:   volume.Name,
-			Labels: map[string]string{}, //TODO
+			Labels: map[string]string{},
 		},
 	}
 }

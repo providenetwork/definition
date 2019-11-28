@@ -18,6 +18,15 @@
 
 package defaults
 
+import (
+	"github.com/spf13/viper"
+)
+
 type Service struct {
-	Image string
+	Image string `mapstructure:"defaultServiceImage"`
+}
+
+func NewService(v *viper.Viper) (Service, error) {
+	out := Service{}
+	return out, v.Unmarshal(&out)
 }

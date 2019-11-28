@@ -19,27 +19,26 @@
 package config
 
 import (
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-//Bucket represents the basic configuration for a bucket
-type Bucket struct {
-	MaxCPU     int64 `mapstructure:"maxCPU"`
-	MaxMemory  int64 `mapstructure:"maxMemory"`
-	MaxStorage int64 `mapstructure:"maxStorage"`
-
-	MinCPU     int64 `mapstructure:"minCPU"`
-	MinMemory  int64 `mapstructure:"minMemory"`
-	MinStorage int64 `mapstructure:"minStorage"`
-
-	UnitCPU     int64 `mapstructure:"unitCPU"`
-	UnitMemory  int64 `mapstructure:"unitMemory"`
-	UnitStorage int64 `mapstructure:"unitStorage"`
-
-	MaxBuckets int64 `mapstructure:"maxBuckets"`
+type Logger struct {
+	Verbosity string `mapstructure:"verbosity"`
 }
 
-func NewBucket(v *viper.Viper) (Bucket, error) {
-	out := Bucket{}
+func NewLogger(v *viper.Viper) (Logger, error) {
+	out := Logger{}
 	return out, v.Unmarshal(&out)
+}
+
+//GetLogger gets a logger according to the config
+func (l Logger) GetLogger() (*logrus.Logger, error) {
+	logger := logrus.New()
+	lvl, err := logrus.ParseLevel(l.Verbosity)
+	if err != nil {
+		return nil, err
+	}
+	logger.SetLevel(lvl)
+	return logger, nil
 }

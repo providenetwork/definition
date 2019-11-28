@@ -53,7 +53,7 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]comm
 	out := []command.Command{}
 	for _, system := range systems {
 		for _, network := range system.Resources.Networks {
-			order := resolver.cmdMaker.CreateNetwork(network) //TODO handle the emulation
+			order := resolver.cmdMaker.CreateNetwork(network, true)
 			cmd, err := resolver.cmdMaker.New(order, "0", 0)
 			if err != nil {
 				return nil, err
@@ -118,6 +118,6 @@ func (resolver resolve) RemoveServices(dist distribute.PhaseDist,
 		}
 		out = append(out, cmd)
 	}
-	//TODO: If needed, we can also add commands for removing volumes and networks
+	//If needed, we can also add commands for removing volumes and networks
 	return [][]command.Command{out}, nil
 }
