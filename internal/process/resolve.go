@@ -46,7 +46,7 @@ type resolve struct {
 }
 
 func NewResolve(cmdMaker maker.Command, deps Dependency, log logrus.Ext1FieldLogger) Resolve {
-	return &resolve{cmdMaker: cmdMaker, deps: deps}
+	return &resolve{cmdMaker: cmdMaker, deps: deps, log:log}
 }
 
 func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error) {

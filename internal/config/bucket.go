@@ -24,17 +24,17 @@ import (
 
 //Bucket represents the basic configuration for a bucket
 type Bucket struct {
-	MaxCPU     int64 `mapstructure:"maxCPU"`
-	MaxMemory  int64 `mapstructure:"maxMemory"`
-	MaxStorage int64 `mapstructure:"maxStorage"`
+	MaxCPU     int64 `mapstructure:"bucketMaxCPU"`
+	MaxMemory  int64 `mapstructure:"bucketMaxMemory"`
+	MaxStorage int64 `mapstructure:"bucketMaxStorage"`
 
-	MinCPU     int64 `mapstructure:"minCPU"`
-	MinMemory  int64 `mapstructure:"minMemory"`
-	MinStorage int64 `mapstructure:"minStorage"`
+	MinCPU     int64 `mapstructure:"bucketMinCPU"`
+	MinMemory  int64 `mapstructure:"bucketMinMemory"`
+	MinStorage int64 `mapstructure:"bucketMinStorage"`
 
-	UnitCPU     int64 `mapstructure:"unitCPU"`
-	UnitMemory  int64 `mapstructure:"unitMemory"`
-	UnitStorage int64 `mapstructure:"unitStorage"`
+	UnitCPU     int64 `mapstructure:"bucketUnitCPU"`
+	UnitMemory  int64 `mapstructure:"bucketUnitMemory"`
+	UnitStorage int64 `mapstructure:"bucketUnitStorage"`
 
 	MaxBuckets int64 `mapstructure:"maxBuckets"`
 }
