@@ -16,20 +16,33 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package entity
+package util
 
-type Resource struct {
-	CPUs    int64
-	Memory  int64
-	Storage int64
-}
+import (
+	"strconv"
+	"strings"
+)
 
-func (res Resource) GetResources() Resource {
-	return res
-}
+func Memconv(mem string) (int64, error) {
 
-func (res *Resource) UpdateResources(newRes Resource) {
-	res.CPUs = newRes.CPUs
-	res.Memory = newRes.Memory
-	res.Storage = newRes.Storage
+	m := strings.ToLower(mem)
+
+	var multiplier int64 = 1
+
+	if strings.HasSuffix(m, "kb") || strings.HasSuffix(m, "k") {
+		multiplier = 1000
+	} else if strings.HasSuffix(m, "mb") || strings.HasSuffix(m, "m") {
+		multiplier = 1000000
+	} else if strings.HasSuffix(m, "gb") || strings.HasSuffix(m, "g") {
+		multiplier = 1000000000
+	} else if strings.HasSuffix(m, "tb") || strings.HasSuffix(m, "t") {
+		multiplier = 1000000000000
+	}
+
+	i, err := strconv.ParseInt(strings.Trim(m, "bgkmt"), 10, 64)
+	if err != nil {
+		return -1, err
+	}
+
+	return i * multiplier, nil
 }

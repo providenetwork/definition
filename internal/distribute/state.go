@@ -77,10 +77,7 @@ func (state *systemState) Remove(systems []string) ([]entity.Segment, error) {
 		if !exists {
 			return nil, fmt.Errorf("system not found")
 		}
-		segments, err := state.parser.SystemComponentNamesOnly(system)
-		if err != nil {
-			return nil, err
-		}
+		segments := state.parser.SystemComponentNamesOnly(system)
 		out = append(out, segments...)
 	}
 	for _, toRemove := range systems {

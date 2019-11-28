@@ -58,7 +58,7 @@ func TestSystemState_FullTest(t *testing.T) {
 		segments = append(segments, result...)
 		namer.On("SystemComponent", system).Return(system.Name).Twice()
 		parser.On("SystemComponent", spec, system).Return(result, nil).Once()
-		parser.On("SystemComponentNamesOnly", system).Return(result, nil).Once()
+		parser.On("SystemComponentNamesOnly", system).Return(result).Once()
 	}
 
 	state := NewSystemState(parser, namer)
