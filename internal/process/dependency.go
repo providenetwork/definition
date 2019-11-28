@@ -116,7 +116,7 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist
 			return nil, err
 		}
 		out[0] = append(out[0], create)
-		order = dep.cmdMaker.StartSidecar(service,sidecar)
+		order = dep.cmdMaker.StartSidecar(service, sidecar)
 
 		start, err := dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 		if err != nil {

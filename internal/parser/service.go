@@ -20,58 +20,85 @@ package parser
 
 import (
 	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/internal/config/defaults"
 	"github.com/whiteblock/definition/internal/entity"
+	//shell "github.com/kballard/go-shellquote"
 )
 
 type Service interface {
+	GetArgs(service entity.Service) []string
 	GetEntrypoint(service entity.Service) string
 	GetImage(service entity.Service) string
+	GetSidecarNetwork(service entity.Service) string
 	GetNetworks(service entity.Service) []string
 	GetVolumes(service entity.Service) []command.Mount
 }
 
 type serviceParser struct {
+	defaults defaults.Service
+	namer    Names
 }
 
-func NewService() Service {
-	return &serviceParser{}
+func NewService(defaults defaults.Service, namer Names) Service {
+	return &serviceParser{defaults: defaults, namer: namer}
+}
+
+func (sp *serviceParser) GetArgs(service entity.Service) []string {
+	if service.SquashedService.Script.Inline != "" {
+		return []string{"-c", service.SquashedService.Script.Inline}
+	}
+	return service.SquashedService.Args
 }
 
 func (sp *serviceParser) GetEntrypoint(service entity.Service) string {
-	//TODO
+	if service.SquashedService.Script.SourcePath != "" {
+		return service.SquashedService.Script.SourcePath
+	}
+	if service.SquashedService.Script.Inline != "" {
+		return "/bin/sh"
+	}
 	return ""
 }
 
 func (sp *serviceParser) GetImage(service entity.Service) string {
-	//TODO
-	return ""
+	if service.SquashedService.Image == "" {
+		return sp.defaults.Image
+	}
+
+	return service.SquashedService.Image
 }
 
 func (sp *serviceParser) GetNetworks(service entity.Service) []string {
-	//TODO
-	return nil
+	out := make([]string, len(service.Networks)+1)
+	out[0] = GetSidecarNetwork(service)
+	for i := range service.Networks {
+		out[i+1] = service.Networks[i].Name
+	}
+	return out
+}
+
+func (sp *serviceParser) GetSidecarNetwork(service entity.Service) string {
+	return sp.namer.SidecarNetwork(service)
 }
 
 func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
-	//TODO
-	return nil
-}
 
-/*
-type Script struct {
-	SourcePath string `yaml:"source-path,omitempty" json:"source-path,omitempty"`
-	Inline     string `yaml:"inline,omitempty" json:"inline,omitempty"`
-}
+	out := []command.Mount{}
 
-type Service struct {
-	Name          string            `yaml:"name,omitempty" json:"name,omitempty"`
-	Description   string            `yaml:"description,omitempty" json:"description,omitempty"`
-	SharedVolumes []SharedVolume    `yaml:"shared-volumes,omitempty" json:"shared-volumes,omitempty"`
-	Resources     Resources         `yaml:"resources,omitempty" json:"resources,omitempty"`
-	Args          []string          `yaml:"args,omitempty" json:"args,omitempty"`
-	Environment   map[string]string `yaml:"environment,omitempty" json:"environment,omitempty"`
-	Image         string            `yaml:"image,omitempty" json:"image,omitempty"`
-	Script        Script            `yaml:"script,omitempty" json:"script,omitempty"`
-	InputFiles    []InputFile       `yaml:"input-files,omitempty" json:"input-files,omitempty"`
+	for _, sharedVol := range service.SquashedService.SharedVolumes {
+		out = append(out, command.Mount{
+			Name:      sharedVol.Name,
+			Directory: sharedVol.SourcePath,
+			ReadOnly:  false,
+		})
+	}
+
+	for _, inputVol := range service.SquashedService.InputFiles {
+		out = append(out, command.Mount{
+			Name:      sp.namer.InputFileVolume(inputVol),
+			Directory: inputVol.DestinationPath,
+			ReadOnly:  false,
+		})
+	}
+	return out
 }
-*/

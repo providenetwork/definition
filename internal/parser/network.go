@@ -19,6 +19,8 @@
 package parser
 
 import (
+	"strconv"
+
 	"github.com/whiteblock/definition/schema"
 )
 
@@ -40,14 +42,9 @@ func (np networkParser) GetBandwidth(network schema.Network) string {
 }
 
 func (np networkParser) GetLatency(network schema.Network) (int, error) {
-	//TODO
-	return 0, nil
-}
-func (np networkParser) GetPacketLoss(network schema.Network) (float64, error) {
-	//TODO
-	return 0, nil
+	return strconv.Atoi(network.Latency)
 }
 
-/*Bandwidth  string `yaml:"bandwidth,omitempty" json:"bandwidth,omitempty"`
-Latency    string `yaml:"latency,omitempty" json:"latency,omitempty"`
-PacketLoss string `yaml:"packet-loss,omitempty" json:"packet-loss,omitempty"`*/
+func (np networkParser) GetPacketLoss(network schema.Network) (float64, error) {
+	return strconv.ParseFloat(network.PacketLoss, 64)
+}

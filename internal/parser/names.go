@@ -21,10 +21,13 @@ package parser
 import (
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
+	"strings"
 )
 
 type Names interface {
+	InputFileVolume(input schema.InputFile) string
 	Sidecar(parent entity.Service, sidecar schema.Sidecar) string
+	SidecarNetwork(parent entity.Service) string
 	SystemComponent(systemComponent schema.SystemComponent) string
 	SystemService(systemComponent schema.SystemComponent, index int) string
 	Task(task schema.Task, index int) string
@@ -37,7 +40,16 @@ func NewNames() Names {
 	return &namer{}
 }
 
+func (n *namer) InputFileVolume(input schema.InputFile) string {
+	return strings.Replace(input.DestinationPath, "/", "-", 0)
+}
+
 func (n *namer) Sidecar(parent entity.Service, sidecar schema.Sidecar) string {
+	//TODO
+	return ""
+}
+
+func (n *namer) SidecarNetwork(parent entity.Service) string {
 	//TODO
 	return ""
 }

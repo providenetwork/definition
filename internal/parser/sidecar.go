@@ -24,9 +24,11 @@ import (
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/docker/docker/api/types/strslice"
+	"github.com/jinzhu/copier"
 )
 
 type Sidecar interface {
+	GetArgs(sidecar schema.Sidecar) []string
 	GetEntrypoint(sidecar schema.Sidecar) string
 	GetImage(sidecar schema.Sidecar) string
 	GetLabels(parent entity.Service, sidecar schema.Sidecar) map[string]string
@@ -35,33 +37,72 @@ type Sidecar interface {
 }
 
 type sidecarParser struct {
+	defaults defaults.Service
+	namer    Names
 }
 
-func NewSidecar() Sidecar {
-	return &sidecarParser{}
+func NewSidecar(defaults defaults.Service, namer Names) Sidecar {
+	return &sidecarParser{defaults: defaults, namer: namer}
+}
+
+func (sp sidecarParser) GetArgs(sidecar schema.Sidecar) []string {
+	if sidecar.Script.Inline != "" {
+		return []string{"-c", sidecar.Script.Inline}
+	}
+	return sidecar.Args
 }
 
 func (sp sidecarParser) GetEntrypoint(sidecar schema.Sidecar) string {
-	//TODO
+	if sidecar.Script.SourcePath != "" {
+		return sidecar.Script.SourcePath
+	}
+	if sidecar.Script.Inline != "" {
+		return "/bin/sh"
+	}
 	return ""
 }
 
 func (sp sidecarParser) GetImage(sidecar schema.Sidecar) string {
-	//TODO
-	return ""
+	if sidecar.Image == "" {
+		return sp.defaults.Image
+	}
+
+	return sidecar.Image
 }
 
 func (sp sidecarParser) GetLabels(parent entity.Service, sidecar schema.Sidecar) map[string]string {
-	//TODO
-	return nil
+	var labels map[string]string
+	copier.Copy(&labels, parent.Labels)
+	labels["name"] = sidecar.Name
+	labels["service"] = parent.Name
+	return labels
 }
 
 func (sp sidecarParser) GetNetwork(parent entity.Service) strslice.StrSlice {
-	//TODO
-	return nil
+	return strslice.StrSlice([]string{sp.namer.SidecarNetwork(service)})
 }
 
 func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
-	//TODO
-	return nil
+	out := []command.Mount{}
+
+	for _, mntVol := range sidecar.MountedVolumes {
+		readOnly := false
+		if mntVol.Permissions == "r" || mntVol.Permissions == "read" {
+			readOnly = true
+		}
+		out = append(out, command.Mount{
+			Name:      mntVol.VolumeName,
+			Directory: mntVol.DestinationPath,
+			ReadOnly:  readOnly,
+		})
+	}
+
+	for _, inputVol := range sidecar.InputFiles {
+		out = append(out, command.Mount{
+			Name:      sp.namer.InputFileVolume(inputVol),
+			Directory: inputVol.DestinationPath,
+			ReadOnly:  false,
+		})
+	}
+	return out
 }

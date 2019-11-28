@@ -125,7 +125,7 @@ func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
 			Cpus:        fmt.Sprint(service.SquashedService.Resources.Cpus),
 			Memory:      fmt.Sprint(service.SquashedService.Resources.Memory),
 			Image:       cmd.service.GetImage(service),
-			Args:        service.SquashedService.Args,
+			Args:        cmd.service.GetArgs(service),
 		},
 	}
 }
@@ -147,7 +147,7 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			Cpus:        fmt.Sprint(sidecar.Resources.Cpus),
 			Memory:      fmt.Sprint(sidecar.Resources.Memory),
 			Image:       cmd.sidecar.GetImage(sidecar),
-			Args:        sidecar.Args,
+			Args:        cmd.sidecar.GetArgs(sidecar),
 		},
 	}
 }
