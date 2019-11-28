@@ -74,18 +74,13 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 	if system.Resources.Storage != "" {
 		squashed.Resources.Storage = system.Resources.Storage
 	}
-	systemName := sp.namer.SystemComponent(system)
-	externalSidecars, err := sp.searcher.FindSidecarsBySystem(spec, systemName)
-	if err != nil {
-		return nil, err
-	}
 
 	base := entity.Service{
 		Name:            "",
 		Bucket:          -1,
 		SquashedService: squashed,
 		Networks:        system.Resources.Networks,
-		Sidecars:        externalSidecars,
+		Sidecars:        sp.searcher.FindSidecarsByService(spec, system.Type),
 		Timeout:         0,
 	}
 
