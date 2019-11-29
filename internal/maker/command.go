@@ -38,6 +38,7 @@ type Command interface {
 	CreateNetwork(network schema.Network, global bool) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
 	CreateContainer(service entity.Service) command.Order
+	CreateSidecarNetwork(service entity.Service) command.Order
 	StartContainer(service entity.Service) command.Order
 
 	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
@@ -95,6 +96,10 @@ func (cmd commandMaker) CreateNetwork(network schema.Network, global bool) comma
 			Global: global,
 		},
 	}
+}
+
+func (cmd commandMaker) CreateSidecarNetwork(service entity.Service) command.Order {
+	return cmd.CreateNetwork(schema.Network{Name: cmd.namer.SidecarNetwork(service)}, false)
 }
 
 func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {

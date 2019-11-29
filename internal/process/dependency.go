@@ -39,6 +39,9 @@ type Dependency interface {
 	Sidecars(spec schema.RootSchema, dist distribute.PhaseDist,
 		service entity.Service) ([][]command.Command, error)
 
+	SidecarNetwork(spec schema.RootSchema, dist distribute.PhaseDist,
+		service entity.Service) (command.Command, error)
+
 	Volumes(spec schema.RootSchema, dist distribute.PhaseDist,
 		service entity.Service) ([]command.Command, error)
 }
@@ -125,6 +128,17 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist
 		out[1] = append(out[1], start)
 	}
 	return out, nil
+}
+
+func (dep dependency) SidecarNetwork(spec schema.RootSchema, dist distribute.PhaseDist,
+	service entity.Service) (command.Command, error) {
+
+	bucket := dist.FindBucket(service.Name)
+	if bucket == -1 {
+		return command.Command{}, fmt.Errorf("could not find bucket")
+	}
+	order := dep.cmdMaker.CreateSidecarNetwork(service)
+	return dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 }
 
 func (dep dependency) Volumes(spec schema.RootSchema, dist distribute.PhaseDist,

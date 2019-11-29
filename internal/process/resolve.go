@@ -46,7 +46,7 @@ type resolve struct {
 }
 
 func NewResolve(cmdMaker maker.Command, deps Dependency, log logrus.Ext1FieldLogger) Resolve {
-	return &resolve{cmdMaker: cmdMaker, deps: deps, log:log}
+	return &resolve{cmdMaker: cmdMaker, deps: deps, log: log}
 }
 
 func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error) {
@@ -85,12 +85,18 @@ func (resolver resolve) CreateServices(spec schema.RootSchema,
 			return nil, err
 		}
 
+		sidecarNetworkCmd, err := resolver.deps.SidecarNetwork(spec, dist, service)
+		if err != nil {
+			return nil, err
+		}
+
 		emulationCmds, err := resolver.deps.Emulation(spec, dist, service)
 		if err != nil {
 			return nil, err
 		}
 
 		out[0] = append(out[0], volumeCmds...)
+		out[0] = append(out[0], sidecarNetworkCmd)
 		out[1] = append(out[1], createCmd)
 		out[2] = append(out[2], startCmd)
 		out[3] = append(out[3], sidecarCmds[0]...)
