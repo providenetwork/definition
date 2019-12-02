@@ -1,5 +1,5 @@
 /*
-	Copyright 2019 whiteblock Inc.
+	Copyright 2019 Whiteblock Inc.
 	This file is a part of the definition.
 
 	definition is free software: you can redistribute it and/or modify
@@ -87,4 +87,3 @@ func (def Definition) Validate() []error {
 	}
 	return out
 }
-
