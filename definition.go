@@ -87,3 +87,4 @@ func (def Definition) Validate() []error {
 	}
 	return out
 }
+
