@@ -21,11 +21,12 @@ package process
 import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/distribute"
+	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
 type TestCalculator interface {
-	Commands(spec schema.RootSchema, dist *distribute.ResourceDist, index int) (TestCommands, error)
+	Commands(spec schema.RootSchema, dist *distribute.ResourceDist, index int) (entity.TestCommands, error)
 }
 
 type testCalculator struct {
@@ -37,7 +38,7 @@ func NewTestCalculator(sys System, resolver Resolve) TestCalculator {
 	return &testCalculator{sys: sys, resolver: resolver}
 }
 
-func (calc *testCalculator) handlePhase(state *State, spec schema.RootSchema,
+func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSchema,
 	phase schema.Phase, dist *distribute.ResourceDist, index int) ([][]command.Command, error) {
 
 	servicesToAdd, err := calc.sys.Add(state, spec, phase.System)
@@ -83,11 +84,11 @@ func (calc *testCalculator) handlePhase(state *State, spec schema.RootSchema,
 }
 
 func (calc *testCalculator) Commands(spec schema.RootSchema,
-	dist *distribute.ResourceDist, index int) (TestCommands, error) {
+	dist *distribute.ResourceDist, index int) (entity.TestCommands, error) {
 
-	state := NewState()
+	state := entity.NewState()
 	phase := schema.Phase{System: spec.Tests[index].System}
-	out := TestCommands{}
+	out := entity.TestCommands{}
 	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
 	if err != nil {
 		return nil, err

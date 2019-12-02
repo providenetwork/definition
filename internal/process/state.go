@@ -27,22 +27,14 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type State struct {
-	systemState map[string]schema.SystemComponent
-}
-
-func NewState() *State {
-	return &State{systemState: map[string]schema.SystemComponent{}}
-}
-
 //System is for diff calculations
 type System interface {
 	//Add modifies State
-	Add(state *State, spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Service, error)
+	Add(state *entity.State, spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Service, error)
 	//Remove modifies state
-	Remove(state *State, spec schema.RootSchema, systems []string) ([]entity.Service, error)
+	Remove(state *entity.State, spec schema.RootSchema, systems []string) ([]entity.Service, error)
 
-	Tasks(state *State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error)
+	Tasks(state *entity.State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error)
 }
 
 type system struct {
@@ -55,13 +47,13 @@ func NewSystem(namer parser.Names, parser maker.Service) System {
 }
 
 //Add modifies State
-func (sys system) Add(state *State, spec schema.RootSchema,
+func (sys system) Add(state *entity.State, spec schema.RootSchema,
 	systems []schema.SystemComponent) ([]entity.Service, error) {
 	out := []entity.Service{}
 
 	for _, system := range systems {
 		name := sys.namer.SystemComponent(system)
-		_, exists := state.systemState[name]
+		_, exists := state.SystemState[name]
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
 		}
@@ -74,17 +66,17 @@ func (sys system) Add(state *State, spec schema.RootSchema,
 
 	for _, system := range systems {
 		name := sys.namer.SystemComponent(system)
-		state.systemState[name] = system
+		state.SystemState[name] = system
 	}
 
 	return out, nil
 }
 
 //Remove modifies state
-func (sys system) Remove(state *State, spec schema.RootSchema, systems []string) ([]entity.Service, error) {
+func (sys system) Remove(state *entity.State, spec schema.RootSchema, systems []string) ([]entity.Service, error) {
 	out := []entity.Service{}
 	for _, toRemove := range systems {
-		system, exists := state.systemState[toRemove]
+		system, exists := state.SystemState[toRemove]
 		if !exists {
 			return nil, fmt.Errorf("system not found")
 		}
@@ -95,12 +87,12 @@ func (sys system) Remove(state *State, spec schema.RootSchema, systems []string)
 		out = append(out, services...)
 	}
 	for _, toRemove := range systems {
-		delete(state.systemState, toRemove)
+		delete(state.SystemState, toRemove)
 	}
 	return out, nil
 }
 
-func (sys system) Tasks(state *State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error) {
+func (sys system) Tasks(state *entity.State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error) {
 	out := []entity.Service{}
 	for i, task := range tasks {
 		service, err := sys.parser.FromTask(spec, task, i)

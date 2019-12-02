@@ -19,38 +19,40 @@
 package process
 
 import (
-	"fmt"
+	"testing"
 
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/mocks/process"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
-type Commands interface {
-	Interpret(spec schema.RootSchema, dists []*distribute.ResourceDist) ([]entity.TestCommands, error)
-}
-
-type commandProc struct {
-	calc TestCalculator
-}
-
-func NewCommands(calc TestCalculator) Commands {
-	return &commandProc{calc: calc}
-}
-
-func (cmdProc *commandProc) Interpret(spec schema.RootSchema,
-	dists []*distribute.ResourceDist) ([]entity.TestCommands, error) {
-
-	if len(dists) != len(spec.Tests) {
-		return nil, fmt.Errorf("dists does not match the tests")
+func TestCommands_Interpret(t *testing.T) {
+	testSpec := schema.RootSchema{
+		Tests: []schema.Test{
+			schema.Test{},
+			schema.Test{},
+			schema.Test{},
+		},
 	}
-	out := []entity.TestCommands{}
-	for i, dist := range dists {
-		testCommands, err := cmdProc.calc.Commands(spec, dist, i)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, testCommands)
+
+	testDists := []*distribute.ResourceDist{
+		nil,
+		nil,
+		nil,
 	}
-	return out, nil
+	calcMock := new(mocks.TestCalculator)
+	calcMock.On("Commands", mock.Anything, mock.Anything, mock.Anything).Return(
+		entity.TestCommands{}, nil).Times(len(testDists))
+
+	cmdProc := NewCommands(calcMock)
+	res, err := cmdProc.Interpret(testSpec, testDists)
+	assert.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Len(t, res, len(testDists))
+	calcMock.AssertExpectations(t)
 }
