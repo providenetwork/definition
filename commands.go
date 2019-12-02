@@ -32,6 +32,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var globalCommands Commands
+
 //Commands is the interface of a parser that extracts commands from a definition
 type Commands interface {
 	//GetCommands gets all of the commands, for both provisioner and genesis.
@@ -48,22 +50,27 @@ type commands struct {
 
 //NewCommands creates a new command extractor from the given viper config
 func NewCommands(v *viper.Viper) (Commands, error) {
-	GetFunctionality(v*viper.Viper)(process.Commands, distribute.Distributor, error)
+	proc, dist, err := internal.GetFunctionality(v)
+	if err != nil {
+		return nil, err
+	}
+	return &commands{proc: proc, dist: dist}
 }
 
 //GetCommands gets all of the commands, for both provisioner and genesis.
 //The genesis commands will be in dependency groups, so that
 //res[n+1] is the set of commands which require the execution of the commands
-//in res[n].
+//in res[n]. We get both at once, since we have to compute the commands for provisioning to produce
+//the commands for Genesis.
 func (cmdParser commands) GetCommands(def Definition) (biome.CreateBiome, [][]command.Command, error) {
 	//TODO
 	return biome.CreateBiome{}, nil, nil
 }
 
 //ConfigureGlobal allows you to tie in configuration for this library from viper.
-func ConfigureGlobal(v *viper.Viper) error {
-	//TODO
-	return nil
+func ConfigureGlobal(v *viper.Viper) (err error) {
+	globalCommands, err = NewCommands(v)
+	return
 }
 
 //GetCommands gets all of the commands, for both provisioner and genesis.
@@ -71,6 +78,14 @@ func ConfigureGlobal(v *viper.Viper) error {
 //res[n+1] is the set of commands which require the execution of the commands
 //in res[n].
 func GetCommands(def Definition) (biome.CreateBiome, [][]command.Command, error) {
-	//TODO
-	return biome.CreateBiome{}, nil, nil
+	return globalCommands.GetCommands(def)
+}
+
+func init() {
+	//This may fail if the default configuration is bad, perhaps we might want to just
+	//error out if ConfigureGlobal is not called.
+	err := ConfigureGlobal(viper.New())
+	if err != nil {
+		panic(err)
+	}
 }

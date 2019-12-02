@@ -18,8 +18,8 @@
 package internal
 
 import (
-	"github.com/whiteblock/definition/internal/config"
-	"github.com/whiteblock/definition/internal/config/defaults"
+	"github.com/whiteblock/definition/config"
+	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/maker"
@@ -30,31 +30,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-func GetFunctionality(v *viper.Viper) (process.Commands, distribute.Distributor, error) {
+func GetFunctionality(conf config.Config) (process.Commands, distribute.Distributor, error) {
+	logger, err := conf.Logger.GetLogger()
+	if err != nil {
+		return nil, nil, err
+	}
 	//Distribute
-	bucketConfig, err := config.NewBucket(v)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	loggerConfig, err := config.NewLogger(v)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	logger, err := loggerConfig.GetLogger()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	serviceDefaults, err := defaults.NewService(v)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	dist := distribute.NewDistributor(
 		distribute.NewBiomeCalculator(
-			bucketConfig,
+			conf.Bucket,
 			parser.NewResources(
 				parser.NewNames(),
 				search.NewSchema(),
@@ -79,11 +63,11 @@ func GetFunctionality(v *viper.Viper) (process.Commands, distribute.Distributor,
 			process.NewResolve(
 				maker.NewCommand(
 					parser.NewService(
-						serviceDefaults,
+						conf.Defaults.Service,
 						parser.NewNames(),
 					),
 					parser.NewSidecar(
-						serviceDefaults,
+						conf.Defaults.Service,
 						parser.NewNames(),
 					),
 					parser.NewNetwork(),
@@ -92,11 +76,11 @@ func GetFunctionality(v *viper.Viper) (process.Commands, distribute.Distributor,
 				process.NewDependency(
 					maker.NewCommand(
 						parser.NewService(
-							serviceDefaults,
+							conf.Defaults.Service,
 							parser.NewNames(),
 						),
 						parser.NewSidecar(
-							serviceDefaults,
+							conf.Defaults.Service,
 							parser.NewNames(),
 						),
 						parser.NewNetwork(),

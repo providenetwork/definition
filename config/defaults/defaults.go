@@ -16,30 +16,27 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package config
+//package defaults provides structures for the defaults of the test definition format
+package defaults
 
 import (
 	"github.com/spf13/viper"
 )
 
-//Bucket represents the basic configuration for a bucket
-type Bucket struct {
-	MaxCPU     int64 `mapstructure:"bucketMaxCPU"`
-	MaxMemory  int64 `mapstructure:"bucketMaxMemory"`
-	MaxStorage int64 `mapstructure:"bucketMaxStorage"`
-
-	MinCPU     int64 `mapstructure:"bucketMinCPU"`
-	MinMemory  int64 `mapstructure:"bucketMinMemory"`
-	MinStorage int64 `mapstructure:"bucketMinStorage"`
-
-	UnitCPU     int64 `mapstructure:"bucketUnitCPU"`
-	UnitMemory  int64 `mapstructure:"bucketUnitMemory"`
-	UnitStorage int64 `mapstructure:"bucketUnitStorage"`
-
-	MaxBuckets int64 `mapstructure:"maxBuckets"`
+//Defaults is a top level contain for all of the defaults so that they all
+//may be passed into this library by the user. This is not to be confused with configuration
+//defaults, which are the default values for configurations. These are the default values for the
+//test definition schema
+type Defaults struct {
+	Service Service
 }
 
-func NewBucket(v *viper.Viper) (Bucket, error) {
-	out := Bucket{}
-	return out, v.Unmarshal(&out)
+//New creates a Defaults by generating each field from the given viper config
+//provider
+func New(v *viper.Viper) (def Defaults, err error) {
+	def.Service, err = NewService(v)
+	if err != nil {
+		return Defaults{}, err
+	}
+	return
 }

@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/whiteblock/definition/internal/config"
+	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
 
 	"github.com/stretchr/testify/assert"

@@ -19,7 +19,7 @@
 package distribute
 
 import (
-	"github.com/whiteblock/definition/internal/config"
+	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
 
 	"github.com/jinzhu/copier"

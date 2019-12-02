@@ -21,7 +21,7 @@ package distribute
 import (
 	"fmt"
 
-	"github.com/whiteblock/definition/internal/config"
+	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
 )
 
