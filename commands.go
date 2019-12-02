@@ -100,11 +100,11 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 	return ConfigureGlobal(conf)
 }
 
-//GetCommands gets all of the commands, for both provisioner and genesis.
+//GetTests gets all of the commands, for both provisioner and genesis.
 //The genesis commands will be in dependency groups, so that
 //res[n+1] is the set of commands which require the execution of the commands
 //in res[n].
-func GetCommands(def Definition) ([]Test, error) {
+func GetTests(def Definition) ([]Test, error) {
 	return globalCommands.GetTests(def)
 }
 
