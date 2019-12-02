@@ -16,14 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package command
+package entity
 
-//Network represents a logic network on which containers exist
-type Network struct {
-	//Name is the name of the network
-	Name    string            `json:"name"`
-	Subnet  string            `json:"subnet"`
-	Gateway string            `json:"gateway"`
-	Global  bool              `json:"global"`
-	Labels  map[string]string `json:"labels"`
+type Resource struct {
+	CPUs    int64
+	Memory  int64
+	Storage int64
+}
+
+func (res Resource) GetResources() Resource {
+	return res
+}
+
+func (res *Resource) UpdateResources(newRes Resource) {
+	res.CPUs = newRes.CPUs
+	res.Memory = newRes.Memory
+	res.Storage = newRes.Storage
 }

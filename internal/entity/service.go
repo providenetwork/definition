@@ -16,39 +16,22 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package entity
 
 import (
+	"time"
+
 	"github.com/whiteblock/definition/schema"
 )
 
-type Distributor interface {
-	Distribute(spec schema.RootSchema) ([]*ResourceDist, error)
-}
+type Service struct {
+	Name            string
+	Bucket          int64
+	SquashedService schema.Service
+	Networks        []schema.Network
+	Sidecars        []schema.Sidecar
+	Labels          map[string]string
 
-type distributor struct {
-	calculator BiomeCalculator
-}
-
-func NewDistributor(calculator BiomeCalculator) Distributor {
-	return &distributor{
-		calculator: calculator,
-	}
-}
-
-func (dist *distributor) Distribute(spec schema.RootSchema) ([]*ResourceDist, error) {
-	out := []*ResourceDist{}
-	for _, test := range spec.Tests {
-		sp := dist.calculator.NewStatePack(spec)
-		testResources := &ResourceDist{}
-		for _, phase := range test.Phases {
-			err := dist.calculator.AddNextPhase(sp, phase)
-			if err != nil {
-				return nil, err
-			}
-			testResources.Add(dist.calculator.Resources(sp))
-		}
-		out = append(out, testResources)
-	}
-	return out, nil
+	Timeout        time.Duration
+	IgnoreExitCode bool
 }

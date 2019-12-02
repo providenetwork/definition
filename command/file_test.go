@@ -21,18 +21,20 @@ package command
 import (
 	"archive/tar"
 	"errors"
+	"path/filepath"
+	"testing"
+
+	mocks "github.com/whiteblock/definition/mocks/command"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	mocks "github.com/whiteblockdefinition/mocks/pkg/command"
-	"path/filepath"
-	"testing"
 )
 
 func TestFile_writeToTar_Success(t *testing.T) {
 	testFile := File{
 		Mode:        0644,
-		Destination: "pkg/test",
+		Destination: "internal/test",
 		Data:        []byte("test"),
 	}
 	tw := new(mocks.TarWriter)
@@ -62,7 +64,7 @@ func TestFile_writeToTar_Success(t *testing.T) {
 func TestFile_writeToTar_Failure(t *testing.T) {
 	testFile := File{
 		Mode:        0644,
-		Destination: "pkg/test",
+		Destination: "internal/test",
 		Data:        []byte("test"),
 	}
 	tw := new(mocks.TarWriter)
@@ -84,7 +86,7 @@ func TestFile_writeToTar_Failure(t *testing.T) {
 func TestFile_GetTarReader(t *testing.T) {
 	testFile := File{
 		Mode:        0644,
-		Destination: "pkg/test",
+		Destination: "internal/test",
 		Data:        []byte("test"),
 	}
 	rdr, err := testFile.GetTarReader()
@@ -95,9 +97,9 @@ func TestFile_GetTarReader(t *testing.T) {
 func TestFile_GetDir(t *testing.T) {
 	testFile := File{
 		Mode:        0644,
-		Destination: "pkg/test",
+		Destination: "internal/test",
 		Data:        []byte("test"),
 	}
 	dir := testFile.GetDir()
-	assert.Equal(t, "pkg", dir)
+	assert.Equal(t, "internal", dir)
 }

@@ -15,50 +15,38 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package internal
+
+package converter
 
 import (
-	"encoding/json"
+	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/util"
 	"github.com/whiteblock/definition/schema"
-	"github.com/whiteblock/definition/validator"
-	"gopkg.in/yaml.v2"
 )
 
-// Definition is the top level container for the test definition
-// specification
-type Definition struct {
-	ID   string
-	spec schema.RootSchema
+type Resource interface {
+	FromResources(sRes schema.Resources) (entity.Resource, error)
 }
 
-// ParseYAML takes a raw set of bytes and
-// de-serializes them to a Definition structure
-func ParseYAML(raw []byte) (Definition, error) {
-	data := Definition{}
-	err := yaml.Unmarshal(raw, &data)
-
-	if err != nil {
-		return data, err
-	}
-
-	return data, nil
+type resourceCovnverter struct {
 }
 
-func (d *Definition) Valid() (interface{}, error) {
-	v, err := validator.NewValidator()
-	if err != nil {
-		return nil, err
-	}
+func NewResource() Resource {
+	return &resourceCovnverter{}
+}
 
-	data, err := json.Marshal(d.spec)
+func (rc resourceCovnverter) FromResources(sRes schema.Resources) (entity.Resource, error) {
+	out := entity.Resource{CPUs: int64(sRes.Cpus)}
+	mem, err := util.Memconv(sRes.Memory)
 	if err != nil {
-		return nil, err
+		return entity.Resource{}, err
 	}
+	out.Memory = mem
 
-	err = v.Validate(data)
+	storage, err := util.Memconv(sRes.Storage)
 	if err != nil {
-		return v.Errors(), err
+		return entity.Resource{}, err
 	}
-
-	return nil, nil
+	out.Storage = storage
+	return out, nil
 }

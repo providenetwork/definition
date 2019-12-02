@@ -16,14 +16,37 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package command
+package config
 
-//Network represents a logic network on which containers exist
-type Network struct {
-	//Name is the name of the network
-	Name    string            `json:"name"`
-	Subnet  string            `json:"subnet"`
-	Gateway string            `json:"gateway"`
-	Global  bool              `json:"global"`
-	Labels  map[string]string `json:"labels"`
+import (
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+)
+
+type Logger struct {
+	Verbosity string `mapstructure:"verbosity"`
+}
+
+func NewLogger(v *viper.Viper) (Logger, error) {
+	out := Logger{}
+	return out, v.Unmarshal(&out)
+}
+
+//GetLogger gets a logger according to the config
+func (l Logger) GetLogger() (*logrus.Logger, error) {
+	logger := logrus.New()
+	lvl, err := logrus.ParseLevel(l.Verbosity)
+	if err != nil {
+		return nil, err
+	}
+	logger.SetLevel(lvl)
+	return logger, nil
+}
+
+func setLoggerBindings(v *viper.Viper) error {
+	return v.BindEnv("verbosity", "VERBOSITY")
+}
+
+func setLoggerDefaults(v *viper.Viper) {
+	v.SetDefault("verbosity", "INFO")
 }

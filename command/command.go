@@ -110,12 +110,8 @@ type Command struct {
 	Timestamp int64 `json:"timestamp"`
 	// Timeout is the maximum amount of time a command can take before being aborted
 	Timeout time.Duration `json:"timeout"`
-	//Retry is the number of times this command has been retried
-	Retry uint8 `json:"retry"`
 	//Target represents the target of this command
 	Target Target `json:"target"`
-	//Dependencies is an array of ids of commands which must execute before this one
-	Dependencies []string `json:"dependencies"`
 	//Order is the action of the command, it represents what needs to be done
 	Order Order `json:"order"`
 }
@@ -130,11 +126,4 @@ func (cmd Command) ParseOrderPayloadInto(out interface{}) error {
 	decoder := json.NewDecoder(rdr)
 	decoder.DisallowUnknownFields()
 	return decoder.Decode(out)
-}
-
-//GetRetryCommand creates a copy of this command which has been modified to be requeued after an error
-func (cmd Command) GetRetryCommand(newTimestamp int64) Command {
-	cmd.Timestamp = newTimestamp
-	cmd.Retry++
-	return cmd
 }

@@ -16,14 +16,25 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package command
+package defaults
 
-//Network represents a logic network on which containers exist
-type Network struct {
-	//Name is the name of the network
-	Name    string            `json:"name"`
-	Subnet  string            `json:"subnet"`
-	Gateway string            `json:"gateway"`
-	Global  bool              `json:"global"`
-	Labels  map[string]string `json:"labels"`
+import (
+	"github.com/spf13/viper"
+)
+
+type Service struct {
+	Image string `mapstructure:"defaultServiceImage"`
+}
+
+func NewService(v *viper.Viper) (Service, error) {
+	out := Service{}
+	return out, v.Unmarshal(&out)
+}
+
+func setServiceBindings(v *viper.Viper) error {
+	return v.BindEnv("defaultServiceImage", "DEFAULT_SERVICE_IMAGE")
+}
+
+func setServiceDefaults(v *viper.Viper) {
+	v.SetDefault("defaultServiceImage", "INFO")
 }
