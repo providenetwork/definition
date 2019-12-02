@@ -30,13 +30,19 @@ import (
 
 var globalCommands Commands
 
+//Test contains the instructions necessary for the execution of a single test
+type Test struct {
+	ProvisionCommand biome.CreateBiome
+	Commands         [][]command.Command
+}
+
 //Commands is the interface of a parser that extracts commands from a definition
 type Commands interface {
-	//GetCommands gets all of the commands, for both provisioner and genesis.
+	//GetTests gets all of the commands, for both provisioner and genesis.
 	//The genesis commands will be in dependency groups, so that
 	//res[n+1] is the set of commands which require the execution of the commands
 	//in res[n].
-	GetCommands(def Definition) (biome.CreateBiome, [][]command.Command, error)
+	GetTests(def Definition) ([]Test, error)
 }
 
 type commands struct {
@@ -50,14 +56,29 @@ func NewCommands(conf config.Config) (Commands, error) {
 	return &commands{proc: proc, dist: dist}, err
 }
 
-//GetCommands gets all of the commands, for both provisioner and genesis.
+//GetTests gets all of the commands, for both provisioner and genesis.
 //The genesis commands will be in dependency groups, so that
 //res[n+1] is the set of commands which require the execution of the commands
 //in res[n]. We get both at once, since we have to compute the commands for provisioning to produce
 //the commands for Genesis.
-func (cmdParser commands) GetCommands(def Definition) (biome.CreateBiome, [][]command.Command, error) {
-	//TODO
-	return biome.CreateBiome{}, nil, nil
+func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
+	resDist, err := cmdParser.dist.Distribute(def.spec)
+	if err != nil {
+		return nil, err
+	}
+
+	testCmds, err := cmdParser.proc.Interpret(def.spec, resDist)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Test, len(testCmds))
+	for i := range testCmds {
+		out[i] = Test{
+			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID),
+			Commands:         [][]command.Command(testCmds[i]),
+		}
+	}
+	return out, nil
 }
 
 //ConfigureGlobal allows you to provide the global config for this library
@@ -83,8 +104,8 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 //The genesis commands will be in dependency groups, so that
 //res[n+1] is the set of commands which require the execution of the commands
 //in res[n].
-func GetCommands(def Definition) (biome.CreateBiome, [][]command.Command, error) {
-	return globalCommands.GetCommands(def)
+func GetCommands(def Definition) ([]Test, error) {
+	return globalCommands.GetTests(def)
 }
 
 func init() {

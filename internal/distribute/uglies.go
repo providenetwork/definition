@@ -20,6 +20,7 @@ package distribute
 
 import (
 	"fmt"
+	"github.com/whiteblock/definition/command/biome"
 )
 
 type PhaseDist []Bucket
@@ -34,6 +35,25 @@ func (pd PhaseDist) FindBucket(name string) int {
 }
 
 type ResourceDist []PhaseDist
+
+func (rd ResourceDist) ToBiomeCommand(provider biome.CloudProvider, testnetID string, orgID int64) biome.CreateBiome {
+
+	finalDist := rd[len(rd)-1]
+	out := biome.CreateBiome{
+		TestnetID: testnetID,
+		OrgID:     orgID,
+		Instances: make([]biome.Instance, len(finalDist)),
+	}
+	for i, bucket := range finalDist {
+		out.Instances[i] = biome.Instance{
+			Provider: provider,
+			CPUs:     bucket.CPUs,
+			Memory:   bucket.Memory,
+			Storage:  bucket.Storage,
+		}
+	}
+	return out
+}
 
 func (rd *ResourceDist) Add(buckets []Bucket) {
 	if rd == nil {
