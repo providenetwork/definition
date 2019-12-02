@@ -30,7 +30,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func getFunctionality(v *viper.Viper) (process.Commands, distribute.Distributor, error) {
+func GetFunctionality(v *viper.Viper) (process.Commands, distribute.Distributor, error) {
 	//Distribute
 	bucketConfig, err := config.NewBucket(v)
 	if err != nil {
