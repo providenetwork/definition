@@ -34,14 +34,21 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 	}
 	//Distribute
 	dist := distribute.NewDistributor(
+		conf.Bucket,
 		distribute.NewBiomeCalculator(
-			conf.Bucket,
 			parser.NewResources(
 				parser.NewNames(),
 				search.NewSchema(),
 				converter.NewResource(),
 			),
-			parser.NewNames(),
+			distribute.NewSystemState(
+				parser.NewResources(
+					parser.NewNames(),
+					search.NewSchema(),
+					converter.NewResource(),
+				),
+				parser.NewNames(),
+			),
 		),
 	)
 

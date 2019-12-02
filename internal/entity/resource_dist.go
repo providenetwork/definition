@@ -16,23 +16,12 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package entity
 
 import (
 	"fmt"
 	"github.com/whiteblock/definition/command/biome"
 )
-
-type PhaseDist []Bucket
-
-func (pd PhaseDist) FindBucket(name string) int {
-	for i, bucket := range []Bucket(pd) {
-		if bucket.FindByName(name) != -1 {
-			return i
-		}
-	}
-	return -1
-}
 
 type ResourceDist []PhaseDist
 

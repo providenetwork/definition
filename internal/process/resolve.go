@@ -22,7 +22,6 @@ import (
 	"fmt"
 
 	"github.com/whiteblock/definition/command"
-	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/schema"
@@ -33,10 +32,10 @@ import (
 type Resolve interface {
 	CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error)
 
-	CreateServices(spec schema.RootSchema, dist distribute.PhaseDist,
+	CreateServices(spec schema.RootSchema, dist entity.PhaseDist,
 		services []entity.Service) ([][]command.Command, error)
 
-	RemoveServices(dist distribute.PhaseDist, services []entity.Service) ([][]command.Command, error)
+	RemoveServices(dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error)
 }
 
 type resolve struct {
@@ -65,7 +64,7 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]comm
 }
 
 func (resolver resolve) CreateServices(spec schema.RootSchema,
-	dist distribute.PhaseDist, services []entity.Service) ([][]command.Command, error) {
+	dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 5)
 	for _, service := range services {
@@ -107,7 +106,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema,
 	return out, nil
 }
 
-func (resolver resolve) RemoveServices(dist distribute.PhaseDist,
+func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 	services []entity.Service) ([][]command.Command, error) {
 
 	out := []command.Command{}

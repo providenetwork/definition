@@ -25,80 +25,66 @@ import (
 	"github.com/whiteblock/definition/schema"
 )
 
-type StatePack struct {
-	state     SystemState
-	buckets   ResourceBuckets
-	prevTasks []entity.Segment
-	spec      schema.RootSchema
-}
-
 //BiomeCalculator is a calculator for the state for the testnet
 //as time goes on.
 type BiomeCalculator interface {
-	NewStatePack(spec schema.RootSchema) *StatePack
-	AddNextPhase(sp *StatePack, phase schema.Phase) error
-	Resources(sp *StatePack) []Bucket
+	NewStatePack(spec schema.RootSchema, conf config.Bucket) *entity.StatePack
+	AddNextPhase(sp *entity.StatePack, phase schema.Phase) error
+	Resources(sp *entity.StatePack) []entity.Bucket
 }
 
 type biomeCalculator struct {
-	conf   config.Bucket
 	parser parser.Resources
-	namer  parser.Names
+	state  SystemState
 }
 
 func NewBiomeCalculator(
-	conf config.Bucket,
 	parser parser.Resources,
-	namer parser.Names) BiomeCalculator {
+	state SystemState) BiomeCalculator {
 
-	return &biomeCalculator{conf: conf, parser: parser, namer: namer}
+	return &biomeCalculator{parser: parser, state: state}
 }
 
-func (bc *biomeCalculator) NewStatePack(spec schema.RootSchema) *StatePack {
-	return &StatePack{
-		state:     NewSystemState(bc.parser, bc.namer),
-		buckets:   NewResourceBuckets(bc.conf),
-		prevTasks: nil,
-		spec:      spec,
-	}
+func (bc *biomeCalculator) NewStatePack(spec schema.RootSchema, conf config.Bucket) *entity.StatePack {
+	return entity.NewStatePack(spec, conf)
 }
 
-func (bc *biomeCalculator) AddNextPhase(sp *StatePack, phase schema.Phase) error {
+func (bc *biomeCalculator) AddNextPhase(sp *entity.StatePack, phase schema.Phase) error {
 
-	if sp.prevTasks != nil {
-		err := sp.buckets.Remove(sp.prevTasks)
+	if sp.PrevTasks != nil {
+		err := sp.Buckets.Remove(sp.PrevTasks)
 		if err != nil {
 			return err
 		}
 	}
 
-	addSysSegs, err := sp.state.Add(sp.spec, phase.System)
+	addSysSegs, err := bc.state.Add(sp, sp.Spec, phase.System)
 	if err != nil {
 		return err
 	}
 
-	err = sp.buckets.Add(addSysSegs)
+	err = sp.Buckets.Add(addSysSegs)
 	if err != nil {
 		return err
 	}
 
-	toRemove, err := sp.state.Remove(phase.Remove)
+	toRemove, err := bc.state.Remove(sp, phase.Remove)
 	if err != nil {
 		return err
 	}
 
-	err = sp.buckets.Remove(toRemove)
+	err = sp.Buckets.Remove(toRemove)
 	if err != nil {
 		return err
 	}
-	sp.prevTasks, err = bc.parser.Tasks(sp.spec, phase.Tasks)
+	sp.PrevTasks, err = bc.parser.Tasks(sp.Spec, phase.Tasks)
 	if err != nil {
 		return err
 	}
 
-	return sp.buckets.Add(sp.prevTasks)
+	return sp.Buckets.Add(sp.PrevTasks)
 }
 
-func (bc *biomeCalculator) Resources(sp *StatePack) []Bucket {
-	return sp.buckets.Resources()
+func (bc *biomeCalculator) Resources(sp *entity.StatePack) []entity.Bucket {
+	return sp.Buckets.Resources()
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/process"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -64,12 +65,12 @@ func NewCommands(conf config.Config) (Commands, error) {
 func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	resDist, err := cmdParser.dist.Distribute(def.spec)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "distribute")
 	}
 
 	testCmds, err := cmdParser.proc.Interpret(def.spec, resDist)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "interpret")
 	}
 	out := make([]Test, len(testCmds))
 	for i := range testCmds {

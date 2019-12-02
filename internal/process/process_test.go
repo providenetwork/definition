@@ -21,7 +21,6 @@ package process
 import (
 	"testing"
 
-	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/mocks/process"
 	"github.com/whiteblock/definition/schema"
@@ -40,7 +39,7 @@ func TestCommands_Interpret(t *testing.T) {
 		},
 	}
 
-	testDists := []*distribute.ResourceDist{
+	testDists := []*entity.ResourceDist{
 		nil,
 		nil,
 		nil,

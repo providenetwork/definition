@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/whiteblock/definition/command"
-	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/schema"
@@ -30,19 +29,19 @@ import (
 )
 
 type Dependency interface {
-	Container(spec schema.RootSchema, dist distribute.PhaseDist,
+	Container(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) (create command.Command, start command.Command, err error)
 
-	Emulation(spec schema.RootSchema, dist distribute.PhaseDist,
+	Emulation(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) ([]command.Command, error)
 
-	Sidecars(spec schema.RootSchema, dist distribute.PhaseDist,
+	Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) ([][]command.Command, error)
 
-	SidecarNetwork(spec schema.RootSchema, dist distribute.PhaseDist,
+	SidecarNetwork(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) (command.Command, error)
 
-	Volumes(spec schema.RootSchema, dist distribute.PhaseDist,
+	Volumes(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) ([]command.Command, error)
 }
 
@@ -59,7 +58,7 @@ func NewDependency(
 	return &dependency{cmdMaker: cmdMaker, parser: parser, log: log}
 }
 
-func (dep dependency) Emulation(spec schema.RootSchema, dist distribute.PhaseDist,
+func (dep dependency) Emulation(spec schema.RootSchema, dist entity.PhaseDist,
 	service entity.Service) ([]command.Command, error) {
 
 	bucket := dist.FindBucket(service.Name)
@@ -81,7 +80,7 @@ func (dep dependency) Emulation(spec schema.RootSchema, dist distribute.PhaseDis
 	return out, nil
 }
 
-func (dep dependency) Container(spec schema.RootSchema, dist distribute.PhaseDist,
+func (dep dependency) Container(spec schema.RootSchema, dist entity.PhaseDist,
 	service entity.Service) (create command.Command, start command.Command, err error) {
 
 	bucket := dist.FindBucket(service.Name)
@@ -103,7 +102,7 @@ func (dep dependency) Container(spec schema.RootSchema, dist distribute.PhaseDis
 	return
 }
 
-func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist,
+func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 	service entity.Service) ([][]command.Command, error) {
 
 	bucket := dist.FindBucket(service.Name)
@@ -130,7 +129,7 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist distribute.PhaseDist
 	return out, nil
 }
 
-func (dep dependency) SidecarNetwork(spec schema.RootSchema, dist distribute.PhaseDist,
+func (dep dependency) SidecarNetwork(spec schema.RootSchema, dist entity.PhaseDist,
 	service entity.Service) (command.Command, error) {
 
 	bucket := dist.FindBucket(service.Name)
@@ -141,7 +140,7 @@ func (dep dependency) SidecarNetwork(spec schema.RootSchema, dist distribute.Pha
 	return dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 }
 
-func (dep dependency) Volumes(spec schema.RootSchema, dist distribute.PhaseDist,
+func (dep dependency) Volumes(spec schema.RootSchema, dist entity.PhaseDist,
 	service entity.Service) ([]command.Command, error) {
 
 	bucket := dist.FindBucket(service.Name)

@@ -20,13 +20,12 @@ package process
 
 import (
 	"github.com/whiteblock/definition/command"
-	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
 type TestCalculator interface {
-	Commands(spec schema.RootSchema, dist *distribute.ResourceDist, index int) (entity.TestCommands, error)
+	Commands(spec schema.RootSchema, dist *entity.ResourceDist, index int) (entity.TestCommands, error)
 }
 
 type testCalculator struct {
@@ -39,7 +38,7 @@ func NewTestCalculator(sys System, resolver Resolve) TestCalculator {
 }
 
 func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSchema,
-	phase schema.Phase, dist *distribute.ResourceDist, index int) ([][]command.Command, error) {
+	phase schema.Phase, dist *entity.ResourceDist, index int) ([][]command.Command, error) {
 
 	servicesToAdd, err := calc.sys.Add(state, spec, phase.System)
 	if err != nil {
@@ -84,7 +83,7 @@ func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSch
 }
 
 func (calc *testCalculator) Commands(spec schema.RootSchema,
-	dist *distribute.ResourceDist, index int) (entity.TestCommands, error) {
+	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
 
 	state := entity.NewState()
 	phase := schema.Phase{System: spec.Tests[index].System}

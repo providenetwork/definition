@@ -16,21 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package entity
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/internal/entity"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func GenerateTestSegments(n int, offset int) []entity.Segment {
-	out := make([]entity.Segment, n)
+func GenerateTestSegments(n int, offset int) []Segment {
+	out := make([]Segment, n)
 	for i := range out {
 		out[i].Name = fmt.Sprint(i + offset)
 		out[i].CPUs = int64((i + offset))
@@ -40,9 +39,8 @@ func GenerateTestSegments(n int, offset int) []entity.Segment {
 	return out
 }
 
-func GenerateTestConf(entities []entity.Segment, minBuckets int64) config.Bucket {
+func GenerateTestConf(entities []Segment, minBuckets int64) config.Bucket {
 	out := config.Bucket{
-
 		MinCPU:      0,
 		MinMemory:   0,
 		MinStorage:  0,
@@ -51,10 +49,10 @@ func GenerateTestConf(entities []entity.Segment, minBuckets int64) config.Bucket
 		UnitStorage: 1000,
 		MaxBuckets:  minBuckets * 2,
 	}
-	for _, entity := range entities {
-		out.MaxCPU += entity.CPUs + 1
-		out.MaxMemory += entity.Memory + 1
-		out.MaxStorage += entity.Storage + 1
+	for _, e := range entities {
+		out.MaxCPU += e.CPUs + 1
+		out.MaxMemory += e.Memory + 1
+		out.MaxStorage += e.Storage + 1
 	}
 	out.MaxCPU = roundValueAndMax(0, out.MaxCPU/minBuckets, out.UnitCPU)
 	out.MaxMemory = roundValueAndMax(0, out.MaxMemory/minBuckets, out.UnitMemory)
@@ -68,7 +66,7 @@ func TestNewBucket(t *testing.T) {
 		MinMemory:  2,
 		MinStorage: 3,
 	}
-	bucket := newBucket(&testConf)
+	bucket := NewBucket(&testConf)
 	assert.Equal(t, bucket.CPUs, testConf.MinCPU)
 	assert.Equal(t, bucket.Memory, testConf.MinMemory)
 	assert.Equal(t, bucket.Storage, testConf.MinStorage)
@@ -82,7 +80,7 @@ func TestBucket_GetSegments(t *testing.T) {
 func TestBucket_Runthrough(t *testing.T) {
 	segments := GenerateTestSegments(10, 0)
 	conf := GenerateTestConf(segments, 1)
-	bucket := newBucket(&conf)
+	bucket := NewBucket(&conf)
 
 	for _, segment := range segments {
 		require.True(t, bucket.hasSpace(segment))

@@ -16,18 +16,17 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package entity
 
 import (
 	"fmt"
 
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/internal/entity"
 )
 
 type ResourceBuckets interface {
-	Add(segments []entity.Segment) error
-	Remove(segments []entity.Segment) error
+	Add(segments []Segment) error
+	Remove(segments []Segment) error
 	Resources() []Bucket
 }
 
@@ -40,7 +39,7 @@ func NewResourceBuckets(conf config.Bucket) ResourceBuckets {
 	return &resourceBuckets{conf: conf}
 }
 
-func (rb *resourceBuckets) add(segment entity.Segment) error {
+func (rb *resourceBuckets) add(segment Segment) error {
 	for i := range rb.buckets {
 		if rb.buckets[i].tryAdd(segment) {
 			return nil
@@ -49,7 +48,7 @@ func (rb *resourceBuckets) add(segment entity.Segment) error {
 	if int64(len(rb.buckets)) == rb.conf.MaxBuckets {
 		return fmt.Errorf("size limits exceeded")
 	}
-	bucket := newBucket(&rb.conf)
+	bucket := NewBucket(&rb.conf)
 	if !bucket.tryAdd(segment) {
 		return fmt.Errorf("segment size too large")
 	}
@@ -57,7 +56,7 @@ func (rb *resourceBuckets) add(segment entity.Segment) error {
 	return nil
 }
 
-func (rb *resourceBuckets) Add(segments []entity.Segment) error {
+func (rb *resourceBuckets) Add(segments []Segment) error {
 	for _, segment := range segments {
 		err := rb.add(segment)
 		if err != nil {
@@ -67,7 +66,7 @@ func (rb *resourceBuckets) Add(segments []entity.Segment) error {
 	return nil
 }
 
-func (rb *resourceBuckets) remove(segment entity.Segment) error {
+func (rb *resourceBuckets) remove(segment Segment) error {
 	for i := range rb.buckets {
 		if rb.buckets[i].tryRemove(segment) {
 			return nil
@@ -76,7 +75,7 @@ func (rb *resourceBuckets) remove(segment entity.Segment) error {
 	return fmt.Errorf("couldn't remove segment, doesn't exist")
 }
 
-func (rb *resourceBuckets) Remove(segments []entity.Segment) error {
+func (rb *resourceBuckets) Remove(segments []Segment) error {
 	for _, segment := range segments {
 		err := rb.remove(segment)
 		if err != nil {

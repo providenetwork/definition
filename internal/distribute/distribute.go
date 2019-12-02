@@ -19,28 +19,32 @@
 package distribute
 
 import (
+	"github.com/whiteblock/definition/config"
+	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
 type Distributor interface {
-	Distribute(spec schema.RootSchema) ([]*ResourceDist, error)
+	Distribute(spec schema.RootSchema) ([]*entity.ResourceDist, error)
 }
 
 type distributor struct {
 	calculator BiomeCalculator
+	conf       config.Bucket
 }
 
-func NewDistributor(calculator BiomeCalculator) Distributor {
+func NewDistributor(conf config.Bucket, calculator BiomeCalculator) Distributor {
 	return &distributor{
 		calculator: calculator,
+		conf:       conf,
 	}
 }
 
-func (dist *distributor) Distribute(spec schema.RootSchema) ([]*ResourceDist, error) {
-	out := []*ResourceDist{}
+func (dist *distributor) Distribute(spec schema.RootSchema) ([]*entity.ResourceDist, error) {
+	out := []*entity.ResourceDist{}
 	for _, test := range spec.Tests {
-		sp := dist.calculator.NewStatePack(spec)
-		testResources := &ResourceDist{}
+		sp := dist.calculator.NewStatePack(spec, dist.conf)
+		testResources := &entity.ResourceDist{}
 		for _, phase := range test.Phases {
 			err := dist.calculator.AddNextPhase(sp, phase)
 			if err != nil {

@@ -16,11 +16,10 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package distribute
+package entity
 
 import (
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/internal/entity"
 
 	"github.com/jinzhu/copier"
 )
@@ -31,31 +30,23 @@ import (
  */
 
 type Bucket struct {
-	entity.Resource //The real size it occupies
-	conf            *config.Bucket
-	segments        []entity.Segment
-	usage           entity.Resource //The combined usage of the segments
+	Resource //The real size it occupies
+	conf     *config.Bucket
+	segments []Segment
+	usage    Resource //The combined usage of the segments
 }
 
-func newBucket(conf *config.Bucket) *Bucket {
+func NewBucket(conf *config.Bucket) *Bucket {
 	out := &Bucket{conf: conf}
 	out.CPUs = conf.MinCPU
 	out.Memory = conf.MinMemory
 	out.Storage = conf.MinStorage
-	out.segments = []entity.Segment{}
+	out.segments = []Segment{}
 	return out
 }
 
-func (b Bucket) GetSegments() []entity.Segment {
+func (b Bucket) GetSegments() []Segment {
 	return b.segments
-}
-
-//ToResource gets this *Bucket as a Resourse
-func (b Bucket) ToResource() entity.Resource {
-	return entity.Resource{
-		CPUs:    b.CPUs,
-		Memory:  b.Memory,
-		Storage: b.Storage}
 }
 
 func (b Bucket) FindByName(name string) int {
@@ -72,13 +63,13 @@ func (b Bucket) Clone() (out Bucket) {
 	return
 }
 
-func (b Bucket) hasSpace(segment entity.Segment) bool {
+func (b Bucket) hasSpace(segment Segment) bool {
 	return (b.usage.CPUs+segment.CPUs <= b.conf.MaxCPU) &&
 		(b.usage.Memory+segment.Memory <= b.conf.MaxMemory) &&
 		(b.usage.Storage+segment.Storage <= b.conf.MaxStorage)
 }
 
-func (b Bucket) findSegment(segment entity.Segment) int {
+func (b Bucket) findSegment(segment Segment) int {
 	return b.FindByName(segment.Name)
 }
 
@@ -97,7 +88,7 @@ func roundValueAndMax(old int64, new int64, unit int64) int64 {
 
 }
 
-func (b *Bucket) update(segment entity.Segment, positive bool) {
+func (b *Bucket) update(segment Segment, positive bool) {
 	if positive {
 		b.usage.CPUs = b.usage.CPUs + segment.CPUs
 		b.usage.Memory = b.usage.Memory + segment.Memory
@@ -113,7 +104,7 @@ func (b *Bucket) update(segment entity.Segment, positive bool) {
 	b.Storage = roundValueAndMax(b.Storage, b.usage.Storage, b.conf.UnitStorage)
 }
 
-func (b *Bucket) tryAdd(segment entity.Segment) bool {
+func (b *Bucket) tryAdd(segment Segment) bool {
 	if !b.hasSpace(segment) {
 		return false
 	}
@@ -122,7 +113,7 @@ func (b *Bucket) tryAdd(segment entity.Segment) bool {
 	return true
 }
 
-func (b *Bucket) tryRemove(segment entity.Segment) bool {
+func (b *Bucket) tryRemove(segment Segment) bool {
 	loc := b.findSegment(segment)
 	if loc == -1 {
 		return false

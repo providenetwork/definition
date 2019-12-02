@@ -21,13 +21,12 @@ package process
 import (
 	"fmt"
 
-	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
 
 type Commands interface {
-	Interpret(spec schema.RootSchema, dists []*distribute.ResourceDist) ([]entity.TestCommands, error)
+	Interpret(spec schema.RootSchema, dists []*entity.ResourceDist) ([]entity.TestCommands, error)
 }
 
 type commandProc struct {
@@ -39,7 +38,7 @@ func NewCommands(calc TestCalculator) Commands {
 }
 
 func (cmdProc *commandProc) Interpret(spec schema.RootSchema,
-	dists []*distribute.ResourceDist) ([]entity.TestCommands, error) {
+	dists []*entity.ResourceDist) ([]entity.TestCommands, error) {
 
 	if len(dists) != len(spec.Tests) {
 		return nil, fmt.Errorf("dists does not match the tests")

@@ -27,30 +27,29 @@ import (
 )
 
 type SystemState interface {
-	Add(spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Segment, error)
-	Remove(systems []string) ([]entity.Segment, error)
+	Add(sp *entity.StatePack, spec schema.RootSchema,
+		systems []schema.SystemComponent) ([]entity.Segment, error)
+	Remove(sp *entity.StatePack, systems []string) ([]entity.Segment, error)
 }
 
 type systemState struct {
-	totalSystemState map[string]schema.SystemComponent
-	parser           parser.Resources
-	namer            parser.Names
+	parser parser.Resources
+	namer  parser.Names
 }
 
 func NewSystemState(parser parser.Resources, namer parser.Names) SystemState {
 	return &systemState{
-		totalSystemState: map[string]schema.SystemComponent{},
-		parser:           parser,
-		namer:            namer}
+		parser: parser,
+		namer:  namer}
 }
 
-func (state *systemState) Add(spec schema.RootSchema,
+func (state *systemState) Add(sp *entity.StatePack, spec schema.RootSchema,
 	systems []schema.SystemComponent) ([]entity.Segment, error) {
 
 	out := []entity.Segment{}
 	for _, system := range systems {
 		name := state.namer.SystemComponent(system)
-		_, exists := state.totalSystemState[name]
+		_, exists := sp.SystemState[name]
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
 		}
@@ -63,17 +62,18 @@ func (state *systemState) Add(spec schema.RootSchema,
 
 	for _, system := range systems {
 		name := state.namer.SystemComponent(system)
-		state.totalSystemState[name] = system
+		sp.SystemState[name] = system
 	}
 
 	return out, nil
 }
 
-func (state *systemState) Remove(systems []string) ([]entity.Segment, error) {
+func (state *systemState) Remove(sp *entity.StatePack,
+	systems []string) ([]entity.Segment, error) {
 
 	out := []entity.Segment{}
 	for _, toRemove := range systems {
-		system, exists := state.totalSystemState[toRemove]
+		system, exists := sp.SystemState[toRemove]
 		if !exists {
 			return nil, fmt.Errorf("system not found")
 		}
@@ -81,7 +81,7 @@ func (state *systemState) Remove(systems []string) ([]entity.Segment, error) {
 		out = append(out, segments...)
 	}
 	for _, toRemove := range systems {
-		delete(state.totalSystemState, toRemove)
+		delete(sp.SystemState, toRemove)
 	}
 	return out, nil
 }

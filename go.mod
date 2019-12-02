@@ -9,6 +9,7 @@ require (
 	github.com/imdario/mergo v0.3.8
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/pkg/errors v0.8.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.5.0
 	github.com/stretchr/testify v1.4.0

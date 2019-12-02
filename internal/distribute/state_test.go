@@ -21,6 +21,7 @@ package distribute
 import (
 	"testing"
 
+	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
 	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
 	"github.com/whiteblock/definition/schema"
@@ -60,18 +61,18 @@ func TestSystemState_FullTest(t *testing.T) {
 		parser.On("SystemComponent", spec, system).Return(result, nil).Once()
 		parser.On("SystemComponentNamesOnly", system).Return(result).Once()
 	}
-
+	statePack := entity.NewStatePack(spec, config.Bucket{})
 	state := NewSystemState(parser, namer)
 
 	//Successful Add
-	result, err := state.Add(spec, systems)
+	result, err := state.Add(statePack, spec, systems)
 	require.NotNil(t, result)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, segments, result)
 	assert.Len(t, result, len(segments))
 
 	//Successful Remove
-	result, err = state.Remove([]string{"1", "2", "3"})
+	result, err = state.Remove(statePack, []string{"1", "2", "3"})
 	require.NotNil(t, result)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, segments, result)
