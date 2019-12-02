@@ -35,6 +35,6 @@ func setServiceBindings(v *viper.Viper) error {
 	return v.BindEnv("defaultServiceImage", "DEFAULT_SERVICE_IMAGE")
 }
 
-func setServiceDefaults(v *viper.Viper) error {
-	return v.SetDefault("defaultServiceImage", "INFO")
+func setServiceDefaults(v *viper.Viper) {
+	v.SetDefault("defaultServiceImage", "INFO")
 }

@@ -18,16 +18,12 @@
 package definition
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/command/biome"
+	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/process"
-	"github.com/whiteblock/definition/schema"
-	"github.com/whiteblock/definition/validator"
 
 	"github.com/spf13/viper"
 )
@@ -49,12 +45,9 @@ type commands struct {
 }
 
 //NewCommands creates a new command extractor from the given viper config
-func NewCommands(v *viper.Viper) (Commands, error) {
-	proc, dist, err := internal.GetFunctionality(v)
-	if err != nil {
-		return nil, err
-	}
-	return &commands{proc: proc, dist: dist}
+func NewCommands(conf config.Config) (Commands, error) {
+	proc, dist, err := internal.GetFunctionality(conf)
+	return &commands{proc: proc, dist: dist}, err
 }
 
 //GetCommands gets all of the commands, for both provisioner and genesis.
@@ -67,10 +60,23 @@ func (cmdParser commands) GetCommands(def Definition) (biome.CreateBiome, [][]co
 	return biome.CreateBiome{}, nil, nil
 }
 
-//ConfigureGlobal allows you to tie in configuration for this library from viper.
-func ConfigureGlobal(v *viper.Viper) (err error) {
-	globalCommands, err = NewCommands(v)
+//ConfigureGlobal allows you to provide the global config for this library
+func ConfigureGlobal(conf config.Config) (err error) {
+	globalCommands, err = NewCommands(conf)
 	return
+}
+
+//ConfigureGlobalFromViper allows you to tie in configuration for this library from viper.
+func ConfigureGlobalFromViper(v *viper.Viper) error {
+	err := config.SetupViper(v)
+	if err != nil {
+		return err
+	}
+	conf, err := config.New(v)
+	if err != nil {
+		return err
+	}
+	return ConfigureGlobal(conf)
 }
 
 //GetCommands gets all of the commands, for both provisioner and genesis.
@@ -84,7 +90,7 @@ func GetCommands(def Definition) (biome.CreateBiome, [][]command.Command, error)
 func init() {
 	//This may fail if the default configuration is bad, perhaps we might want to just
 	//error out if ConfigureGlobal is not called.
-	err := ConfigureGlobal(viper.New())
+	err := ConfigureGlobalFromViper(viper.New())
 	if err != nil {
 		panic(err)
 	}

@@ -19,15 +19,12 @@ package internal
 
 import (
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/internal/process"
 	"github.com/whiteblock/definition/internal/search"
-
-	"github.com/spf13/viper"
 )
 
 func GetFunctionality(conf config.Config) (process.Commands, distribute.Distributor, error) {

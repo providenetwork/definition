@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/whiteblock/definition/internal"
 	"github.com/whiteblock/definition/schema"
 	"github.com/whiteblock/definition/validator"
 )
@@ -73,7 +72,7 @@ func (def Definition) Validate() []error {
 		return []error{err}
 	}
 
-	data, err := json.Marshal(d.spec)
+	data, err := json.Marshal(def.spec)
 	if err != nil {
 		return []error{err}
 	}
@@ -84,7 +83,7 @@ func (def Definition) Validate() []error {
 	}
 	out := []error{err}
 	for _, schemaErr := range v.Errors() {
-		out = append(out, fmt.Errorf(schemaErr.Details()))
+		out = append(out, fmt.Errorf(schemaErr.String()))
 	}
 	return out
 }

@@ -47,6 +47,6 @@ func setLoggerBindings(v *viper.Viper) error {
 	return v.BindEnv("verbosity", "VERBOSITY")
 }
 
-func setLoggerDefaults(v *viper.Viper) error {
-	return v.SetDefault("verbosity", "INFO")
+func setLoggerDefaults(v *viper.Viper) {
+	v.SetDefault("verbosity", "INFO")
 }

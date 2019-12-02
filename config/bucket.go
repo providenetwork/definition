@@ -95,52 +95,15 @@ func setBucketBindings(v *viper.Viper) error {
 	return v.BindEnv("maxBuckets", "MAX_BUCKETS")
 }
 
-func setBucketDefaults(v *viper.Viper) error {
-
-	err := v.SetDefault("bucketMaxCPU", 96)
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketMaxMemory", 624*1024) //624 GiB in MiB
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketMaxStorage", 2*1024*1024) //TiB in MiB
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketMinCPU", 1)
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketMinMemory", 1*1024) //1 GiB in MiB
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketMinStorage", 10*1024) //10 GiB in MiB
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketUnitCPU", 1)
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketUnitMemory", 128) //128MiB
-	if err != nil {
-		return err
-	}
-
-	err = v.SetDefault("bucketUnitStorage", 1*1024) //1 GiB in MiB
-	if err != nil {
-		return err
-	}
-
-	return v.SetDefault("maxBuckets", 3000) //Max 3000 instances
+func setBucketDefaults(v *viper.Viper) {
+	v.SetDefault("bucketMaxCPU", 96)
+	v.SetDefault("bucketMaxMemory", 624*1024)     //624 GiB in MiB
+	v.SetDefault("bucketMaxStorage", 2*1024*1024) //TiB in MiB
+	v.SetDefault("bucketMinCPU", 1)
+	v.SetDefault("bucketMinMemory", 1*1024)   //1 GiB in MiB
+	v.SetDefault("bucketMinStorage", 10*1024) //10 GiB in MiB
+	v.SetDefault("bucketUnitCPU", 1)
+	v.SetDefault("bucketUnitMemory", 128)     //128MiB
+	v.SetDefault("bucketUnitStorage", 1*1024) //1 GiB in MiB
+	v.SetDefault("maxBuckets", 3000)          //Max 3000 instances
 }

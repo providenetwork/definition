@@ -49,6 +49,6 @@ func SetViperBindings(v *viper.Viper) error {
 
 //SetViperDefaults adds all of the default values to the given
 //viper config provider
-func SetViperDefaults(v *viper.Viper) error {
-	return setServiceDefaults(v)
+func SetViperDefaults(v *viper.Viper) {
+	setServiceDefaults(v)
 }
