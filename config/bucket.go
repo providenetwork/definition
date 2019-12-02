@@ -45,3 +45,102 @@ func NewBucket(v *viper.Viper) (Bucket, error) {
 	out := Bucket{}
 	return out, v.Unmarshal(&out)
 }
+
+func setBucketBindings(v *viper.Viper) error {
+	err := v.BindEnv("bucketMaxCPU", "BUCKET_MAX_CPU")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketMaxMemory", "BUCKET_MAX_MEMORY")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketMaxStorage", "BUCKET_MAX_STORAGE")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketMinCPU", "BUCKET_MIN_CPU")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketMinMemory", "BUCKET_MIN_MEMORY")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketMinStorage", "BUCKET_MIN_STORAGE")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketUnitCPU", "BUCKET_UNIT_CPU")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketUnitMemory", "BUCKET_UNIT_MEMORY")
+	if err != nil {
+		return err
+	}
+
+	err = v.BindEnv("bucketUnitStorage", "BUCKET__UNIT_STORAGE")
+	if err != nil {
+		return err
+	}
+
+	return v.BindEnv("maxBuckets", "MAX_BUCKETS")
+}
+
+func setBucketDefaults(v *viper.Viper) error {
+
+	err := v.SetDefault("bucketMaxCPU", 96)
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketMaxMemory", 624*1024) //624 GiB in MiB
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketMaxStorage", 2*1024*1024) //TiB in MiB
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketMinCPU", 1)
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketMinMemory", 1*1024) //1 GiB in MiB
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketMinStorage", 10*1024) //10 GiB in MiB
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketUnitCPU", 1)
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketUnitMemory", 128) //128MiB
+	if err != nil {
+		return err
+	}
+
+	err = v.SetDefault("bucketUnitStorage", 1*1024) //1 GiB in MiB
+	if err != nil {
+		return err
+	}
+
+	return v.SetDefault("maxBuckets", 3000) //Max 3000 instances
+}

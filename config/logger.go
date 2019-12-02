@@ -42,3 +42,11 @@ func (l Logger) GetLogger() (*logrus.Logger, error) {
 	logger.SetLevel(lvl)
 	return logger, nil
 }
+
+func setLoggerBindings(v *viper.Viper) error {
+	return v.BindEnv("verbosity", "VERBOSITY")
+}
+
+func setLoggerDefaults(v *viper.Viper) error {
+	return v.SetDefault("verbosity", "INFO")
+}

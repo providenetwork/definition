@@ -30,3 +30,11 @@ func NewService(v *viper.Viper) (Service, error) {
 	out := Service{}
 	return out, v.Unmarshal(&out)
 }
+
+func setServiceBindings(v *viper.Viper) error {
+	return v.BindEnv("defaultServiceImage", "DEFAULT_SERVICE_IMAGE")
+}
+
+func setServiceDefaults(v *viper.Viper) error {
+	return v.SetDefault("defaultServiceImage", "INFO")
+}

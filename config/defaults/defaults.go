@@ -40,3 +40,15 @@ func New(v *viper.Viper) (def Defaults, err error) {
 	}
 	return
 }
+
+//SetViperBindings adds all of the enviroment bindings to the given
+//viper config provider
+func SetViperBindings(v *viper.Viper) error {
+	return setServiceBindings(v)
+}
+
+//SetViperDefaults adds all of the default values to the given
+//viper config provider
+func SetViperDefaults(v *viper.Viper) error {
+	return setServiceDefaults(v)
+}

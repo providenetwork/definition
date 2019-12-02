@@ -53,3 +53,45 @@ func New(v *viper.Viper) (conf Config, err error) {
 	conf.Defaults, err = defaults.New(v)
 	return
 }
+
+//SetViperBindings adds all of the enviroment bindings to the given
+//viper config provider, for all of the configs and defaults
+func SetViperBindings(v *viper.Viper) error {
+	err := setLoggerBindings(v)
+	if err != nil {
+		return err
+	}
+
+	err = setBucketBindings(v)
+	if err != nil {
+		return err
+	}
+
+	return defaults.SetViperBindings(v)
+}
+
+//SetViperDefaults adds all of the default values to the given
+//viper config provider, for all of the configs and defaults
+func SetViperDefaults(v *viper.Viper) error {
+	err := setLoggerDefaults(v)
+	if err != nil {
+		return err
+	}
+
+	err = setBucketDefaults(v)
+	if err != nil {
+		return err
+	}
+
+	return defaults.SetViperDefaults(v)
+}
+
+//SetupViper applies SetViperDefaults and SetViperBindings to the given
+//viper provider
+func SetupViper(v *viper.Viper) error {
+	err := SetViperBindings(v)
+	if err != nil {
+		return err
+	}
+	return SetViperDefaults(v)
+}

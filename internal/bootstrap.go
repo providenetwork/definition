@@ -49,7 +49,6 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 	)
 
 	//Commands
-
 	cmds := process.NewCommands(
 		process.NewTestCalculator(
 			process.NewSystem(
