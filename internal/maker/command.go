@@ -185,7 +185,7 @@ func (cmd commandMaker) Emulation(service entity.Service, network schema.Network
 			Network:     network.Name,
 			Limit:       0, //NYI
 			Loss:        loss,
-			Delay:       delay,
+			Delay:       int(delay),
 			Rate:        cmd.network.GetBandwidth(network),
 			Duplication: 0.0, //NYI
 			Corrupt:     0.0, //NYI

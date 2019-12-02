@@ -28,7 +28,8 @@ import (
 //defaults, which are the default values for configurations. These are the default values for the
 //test definition schema
 type Defaults struct {
-	Service Service
+	Service   Service
+	Resources Resources
 }
 
 //New creates a Defaults by generating each field from the given viper config
@@ -38,17 +39,28 @@ func New(v *viper.Viper) (def Defaults, err error) {
 	if err != nil {
 		return Defaults{}, err
 	}
+
+	def.Resources, err = NewResources(v)
+	if err != nil {
+		return Defaults{}, err
+	}
+
 	return
 }
 
 //SetViperBindings adds all of the enviroment bindings to the given
 //viper config provider
 func SetViperBindings(v *viper.Viper) error {
+	err := setResourcesBindings(v)
+	if err != nil {
+		return err
+	}
 	return setServiceBindings(v)
 }
 
 //SetViperDefaults adds all of the default values to the given
 //viper config provider
 func SetViperDefaults(v *viper.Viper) {
+	setResourcesDefaults(v)
 	setServiceDefaults(v)
 }

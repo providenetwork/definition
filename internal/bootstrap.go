@@ -39,13 +39,17 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 			parser.NewResources(
 				parser.NewNames(),
 				search.NewSchema(),
-				converter.NewResource(),
+				converter.NewResource(
+					conf.Defaults.Resources,
+				),
 			),
 			distribute.NewSystemState(
 				parser.NewResources(
 					parser.NewNames(),
 					search.NewSchema(),
-					converter.NewResource(),
+					converter.NewResource(
+						conf.Defaults.Resources,
+					),
 				),
 				parser.NewNames(),
 			),

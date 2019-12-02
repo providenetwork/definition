@@ -23,23 +23,33 @@ import (
 	"strings"
 )
 
-func Memconv(mem string) (int64, error) {
+const (
+	_          = iota
+	Kibi int64 = 1 << (10 * iota)
+	Mibi
+	Gibi
+	Tibi
+)
+
+func Memconv(mem string, defaultMulti int64) (int64, error) {
 
 	m := strings.ToLower(mem)
+	m = strings.Replace(m, " ", "", -1)
+	m = strings.Replace(m, "ib", "b", -1)
 
-	var multiplier int64 = 1
+	var multiplier int64 = defaultMulti
 
 	if strings.HasSuffix(m, "kb") || strings.HasSuffix(m, "k") {
-		multiplier = 1000
+		multiplier = Kibi
 	} else if strings.HasSuffix(m, "mb") || strings.HasSuffix(m, "m") {
-		multiplier = 1000000
+		multiplier = Mibi
 	} else if strings.HasSuffix(m, "gb") || strings.HasSuffix(m, "g") {
-		multiplier = 1000000000
+		multiplier = Gibi
 	} else if strings.HasSuffix(m, "tb") || strings.HasSuffix(m, "t") {
-		multiplier = 1000000000000
+		multiplier = Tibi
 	}
 
-	i, err := strconv.ParseInt(strings.Trim(m, "bgkmt"), 10, 64)
+	i, err := strconv.ParseInt(strings.Trim(m, "bgkmti"), 10, 64)
 	if err != nil {
 		return -1, err
 	}

@@ -19,6 +19,9 @@
 package converter
 
 import (
+	"strings"
+
+	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/util"
 	"github.com/whiteblock/definition/schema"
@@ -28,25 +31,38 @@ type Resource interface {
 	FromResources(sRes schema.Resources) (entity.Resource, error)
 }
 
-type resourceCovnverter struct {
+type resourceConverter struct {
+	def defaults.Resources
 }
 
-func NewResource() Resource {
-	return &resourceCovnverter{}
+func NewResource(def defaults.Resources) Resource {
+	return &resourceConverter{def: def}
 }
 
-func (rc resourceCovnverter) FromResources(sRes schema.Resources) (entity.Resource, error) {
-	out := entity.Resource{CPUs: int64(sRes.Cpus)}
-	mem, err := util.Memconv(sRes.Memory)
-	if err != nil {
-		return entity.Resource{}, err
+func (rc resourceConverter) FromResources(sRes schema.Resources) (out entity.Resource, err error) {
+	out.CPUs = int64(sRes.Cpus)
+	if out.CPUs == 0 {
+		out.CPUs = rc.def.CPUs
 	}
-	out.Memory = mem
 
-	storage, err := util.Memconv(sRes.Storage)
-	if err != nil {
-		return entity.Resource{}, err
+	memory := strings.Trim(sRes.Memory, " ")
+	if memory != "" {
+		out.Memory, err = util.Memconv(sRes.Memory, util.Mibi)
+		if err != nil {
+			return
+		}
+	} else {
+		out.Memory = rc.def.Memory
 	}
-	out.Storage = storage
-	return out, nil
+	storage := strings.Trim(sRes.Storage, " ")
+	if storage != "" {
+		out.Storage, err = util.Memconv(sRes.Storage, util.Gibi)
+		if err != nil {
+			return
+		}
+	} else {
+		out.Storage = rc.def.Storage
+	}
+
+	return
 }
