@@ -49,23 +49,24 @@ type Definition struct {
 	spec  schema.RootSchema
 }
 
-//Gets the UUID which uniquely identifies this definition
+// GetID returns the ID for this definition
 func (def Definition) GetID() string {
 	return def.ID
 }
 
-//GetOrgID gets the organization id
+// GetOrgID gets the organization id
 func (def Definition) GetOrgID() int64 {
 	return def.OrgID
 }
 
-//GetSpec gets a pointer to the internal spec object. Should be used with care.
+// GetSpec gets a pointer to the internal spec object. Should be used with care.
 func (def Definition) GetSpec() *schema.RootSchema {
 	return &def.spec
 }
 
-//Validate returns nil if it is a valid test definition, other the returned
-//error will contain an explanation for the issue
+// Validate returns nil if it is a valid test definition,
+// otherwise the returned errors will contain explanations
+// for the issue
 func (def Definition) Validate() []error {
 	v, err := validator.NewValidator()
 	if err != nil {
