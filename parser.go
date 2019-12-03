@@ -25,7 +25,7 @@ import (
 
 var globalParser = NewParser()
 
-//Parser represents a parser of the test definition format
+// Parser represents a parser of the test definition format
 type Parser interface {
 	// SchemaYAML takes a raw set of YAML bytes and
 	// de-serializes them to a Definition structure from just the test spec.
@@ -47,7 +47,7 @@ type Parser interface {
 type parser struct {
 }
 
-//NewParser creates a new parser
+// NewParser creates a new parser
 func NewParser() Parser {
 	return &parser{}
 }
