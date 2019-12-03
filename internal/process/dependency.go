@@ -38,8 +38,8 @@ type Dependency interface {
 	Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) ([][]command.Command, error)
 
-	SidecarNetwork(spec schema.RootSchema, dist entity.PhaseDist,
-		service entity.Service) (command.Command, error)
+	SidecarNetwork(spec schema.RootSchema, networkState entity.NetworkState,
+		dist entity.PhaseDist, service entity.Service) (command.Command, error)
 
 	Volumes(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) ([]command.Command, error)
@@ -129,14 +129,18 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 	return out, nil
 }
 
-func (dep dependency) SidecarNetwork(spec schema.RootSchema, dist entity.PhaseDist,
-	service entity.Service) (command.Command, error) {
+func (dep dependency) SidecarNetwork(spec schema.RootSchema, networkState entity.NetworkState,
+	dist entity.PhaseDist, service entity.Service) (command.Command, error) {
 
 	bucket := dist.FindBucket(service.Name)
 	if bucket == -1 {
 		return command.Command{}, fmt.Errorf("could not find bucket")
 	}
-	order := dep.cmdMaker.CreateSidecarNetwork(service)
+	subnet, err := networkState.GetNextLocal(bucket)
+	if err != nil {
+		return command.Command{}, err
+	}
+	order := dep.cmdMaker.CreateSidecarNetwork(service, subnet)
 	return dep.cmdMaker.New(order, fmt.Sprint(bucket), 0)
 }
 

@@ -35,10 +35,10 @@ import (
 type Command interface {
 	New(order command.Order, endpoint string, timeout time.Duration) (command.Command, error)
 
-	CreateNetwork(network schema.Network, global bool) command.Order
+	CreateNetwork(name string, network entity.Network) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
 	CreateContainer(service entity.Service) command.Order
-	CreateSidecarNetwork(service entity.Service) command.Order
+	CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order
 	StartContainer(service entity.Service) command.Order
 
 	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
@@ -82,24 +82,30 @@ func (cmd commandMaker) New(order command.Order, endpoint string,
 		Timestamp: time.Now().Unix(),
 		Timeout:   timeout,
 		Target: command.Target{
-			IP: endpoint,
+			IP: "127.0.0.1", //endpoint,
 		},
 		Order: order,
 	}, nil
 }
 
-func (cmd commandMaker) CreateNetwork(network schema.Network, global bool) command.Order {
+func (cmd commandMaker) createNetwork(name string, network entity.Network, global bool) command.Order {
 	return command.Order{
 		Type: command.Createnetwork,
 		Payload: command.Network{
-			Name:   network.Name,
-			Global: global,
+			Name:    name,
+			Global:  global,
+			Gateway: network.Gateway(),
+			Subnet:  network.Subnet(),
 		},
 	}
 }
 
-func (cmd commandMaker) CreateSidecarNetwork(service entity.Service) command.Order {
-	return cmd.CreateNetwork(schema.Network{Name: cmd.namer.SidecarNetwork(service)}, false)
+func (cmd commandMaker) CreateNetwork(name string, network entity.Network) command.Order {
+	return cmd.createNetwork(cmd.namer.Network(schema.Network{Name: name}), network, true)
+}
+
+func (cmd commandMaker) CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order {
+	return cmd.createNetwork(cmd.namer.SidecarNetwork(service), network, false)
 }
 
 func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {

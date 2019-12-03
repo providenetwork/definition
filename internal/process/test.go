@@ -21,6 +21,7 @@ package process
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 )
@@ -30,16 +31,26 @@ type TestCalculator interface {
 }
 
 type testCalculator struct {
+	netConf  config.Network
 	sys      System
 	resolver Resolve
 	logger   logrus.Ext1FieldLogger
 }
 
-func NewTestCalculator(sys System, resolver Resolve, logger logrus.Ext1FieldLogger) TestCalculator {
-	return &testCalculator{sys: sys, resolver: resolver, logger: logger}
+func NewTestCalculator(
+	netConf config.Network,
+	sys System,
+	resolver Resolve,
+	logger logrus.Ext1FieldLogger) TestCalculator {
+	return &testCalculator{
+		netConf:  netConf,
+		sys:      sys,
+		resolver: resolver,
+		logger:   logger}
 }
 
-func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSchema,
+func (calc *testCalculator) handlePhase(state *entity.State, networkState entity.NetworkState,
+	spec schema.RootSchema,
 	phase schema.Phase, dist *entity.ResourceDist, index int) ([][]command.Command, error) {
 
 	changedSystems, systems, hasChanged := calc.sys.GetAlreadyExists(state, phase.System)
@@ -77,7 +88,7 @@ func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSch
 		"changed":  changedSystems,
 	}).Info("calculating command diff")
 
-	networkCommands, err := calc.resolver.CreateNetworks(phase.System)
+	networkCommands, err := calc.resolver.CreateNetworks(phase.System, networkState)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +116,7 @@ func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSch
 		out = append(out, removalCommands...)
 	}
 
-	addCommands, err := calc.resolver.CreateServices(spec, phaseDist, servicesToAdd)
+	addCommands, err := calc.resolver.CreateServices(spec, networkState, phaseDist, servicesToAdd)
 	if err != nil {
 		return nil, err
 	}
@@ -129,15 +140,21 @@ func (calc *testCalculator) Commands(spec schema.RootSchema,
 	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
 
 	state := entity.NewState()
+	network, err := entity.NewNetworkState(calc.netConf.GlobalNetwork,
+		calc.netConf.SidecarNetwork, calc.netConf.MaxNodesPerNetwork)
+	if err != nil {
+		return nil, err
+	}
+
 	phase := schema.Phase{System: spec.Tests[index].System}
 	out := entity.TestCommands{}
-	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
+	cmds, err := calc.handlePhase(state, network, spec, phase, dist, 0)
 	if err != nil {
 		return nil, err
 	}
 	out = out.Append(cmds)
 	for i, phase := range spec.Tests[index].Phases {
-		cmds, err = calc.handlePhase(state, spec, phase, dist, i+1)
+		cmds, err = calc.handlePhase(state, network, spec, phase, dist, i+1)
 		if err != nil {
 			return nil, err
 		}

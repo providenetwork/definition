@@ -62,6 +62,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 	//Commands
 	cmds := process.NewCommands(
 		process.NewTestCalculator(
+			conf.Network,
 			process.NewSystem(
 				parser.NewNames(),
 				maker.NewService(
