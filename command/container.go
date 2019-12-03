@@ -20,17 +20,18 @@ package command
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
-	"strconv"
-	"strings"
 )
 
 // NetworkConfig represents a docker network configuration
 type NetworkConfig struct {
-	//EndpointsConfig TODO: this will be removed
+	// EndpointsConfig TODO: this will be removed
 	EndpointsConfig map[string]*network.EndpointSettings
 }
 
@@ -45,9 +46,9 @@ type Container struct {
 
 	// Labels are any identifier which are to be attached to the container
 	Labels map[string]string `json:"labels"`
-	//Name is the unique name of the docker container
+	//N ame is the unique name of the docker container
 	Name string `json:"name"`
-	//Network is the primary network(s) for this container to be attached to
+	// Network is the primary network(s) for this container to be attached to
 	Network strslice.StrSlice `json:"network"`
 
 	// Ports to be opened for each container, each port associated.
@@ -66,9 +67,9 @@ type Container struct {
 	// is assumed to be bytes. This is not case sensitive.
 	Memory string `json:"memory"`
 
-	//Image is the docker image
+	// Image is the docker image
 	Image string `json:"image"`
-	//Args are the arguments passed to the containers entrypoint
+	// Args are the arguments passed to the containers entrypoint
 	Args []string `json:"args"`
 }
 
@@ -77,8 +78,8 @@ func (c Container) GetMemory() (int64, error) {
 	return memconv(c.Memory)
 }
 
-//GetEnv gets the environment variables in the format which is
-//expected by docker
+// GetEnv gets the environment variables in the format which is
+// expected by docker
 func (c Container) GetEnv() (envVars []string) {
 	for key, val := range c.Environment {
 		envVars = append(envVars, fmt.Sprintf("%s=%s", key, val))
@@ -99,8 +100,9 @@ func (c Container) GetPortBindings() (nat.PortSet, nat.PortMap, error) {
 	return nat.PortSet(portSet), nat.PortMap(portMap), err
 }
 
-//GetEntryPoint returns the properly formatted entrypiont if this container has one,
-//otherwise returns nil
+// GetEntryPoint returns the properly formatted
+// entrypoint if this container has one,
+// otherwise returns nil
 func (c Container) GetEntryPoint() strslice.StrSlice {
 	if len(c.EntryPoint) == 0 {
 		return nil
@@ -108,7 +110,7 @@ func (c Container) GetEntryPoint() strslice.StrSlice {
 	return strslice.StrSlice(append([]string{c.EntryPoint}, c.Args...))
 }
 
-//GetMounts gets the docker mounts for the docker container
+// GetMounts gets the docker mounts for the docker container
 func (c Container) GetMounts() []mount.Mount {
 	out := []mount.Mount{}
 	for _, vol := range c.Volumes {
@@ -123,7 +125,6 @@ func (c Container) GetMounts() []mount.Mount {
 }
 
 func memconv(mem string) (int64, error) {
-
 	m := strings.ToLower(mem)
 
 	var multiplier int64 = 1
