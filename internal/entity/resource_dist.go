@@ -54,7 +54,7 @@ func (rd *ResourceDist) Add(buckets []Bucket) {
 
 func (rd ResourceDist) GetPhase(index int) (PhaseDist, error) {
 	if rd == nil || len(rd) <= index {
-		return nil, fmt.Errorf("index out of bounds")
+		return nil, fmt.Errorf("index %d out of bounds", index)
 	}
 	return rd[index], nil
 }

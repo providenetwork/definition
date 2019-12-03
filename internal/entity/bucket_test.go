@@ -77,6 +77,13 @@ func TestBucket_GetSegments(t *testing.T) {
 	assert.ElementsMatch(t, bucket.segments, bucket.GetSegments())
 }
 
+func TestBucket_Clone(t *testing.T) {
+	bucket := Bucket{
+		Resource: Resource{CPUs: 1, Memory: 2, Storage: 3},
+		segments: GenerateTestSegments(10, 0)}
+	assert.Equal(t, bucket, bucket.Clone())
+}
+
 func TestBucket_Runthrough(t *testing.T) {
 	segments := GenerateTestSegments(10, 0)
 	conf := GenerateTestConf(segments, 1)
@@ -85,9 +92,12 @@ func TestBucket_Runthrough(t *testing.T) {
 	for _, segment := range segments {
 		require.True(t, bucket.hasSpace(segment))
 	}
-
+	expectedCPU := int64(0)
 	for _, segment := range segments {
 		assert.True(t, bucket.tryAdd(segment))
+		expectedCPU += segment.CPUs
+		assert.Equal(t, expectedCPU, bucket.usage.CPUs)
+		assert.True(t, expectedCPU <= bucket.CPUs)
 	}
 
 	require.ElementsMatch(t, segments, bucket.GetSegments())

@@ -55,8 +55,8 @@ func TestResource_FromResources(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, int64(2), res.CPUs)
-	assert.Equal(t, 10*util.Gibi, res.Memory)
-	assert.Equal(t, 20*util.Gibi, res.Storage)
+	assert.Equal(t, 10*util.Gibi/util.Mibi, res.Memory)
+	assert.Equal(t, 20*util.Gibi/util.Mibi, res.Storage)
 
 	res, err = conv.FromResources(schema.Resources{
 		Cpus:    0,
@@ -65,8 +65,8 @@ func TestResource_FromResources(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, testConfig.CPUs, res.CPUs)
-	assert.Equal(t, 40*util.Mibi, res.Memory)
-	assert.Equal(t, 30*util.Gibi, res.Storage)
+	assert.Equal(t, 40*util.Mibi/util.Mibi, res.Memory)
+	assert.Equal(t, 30*util.Gibi/util.Mibi, res.Storage)
 
 	_, err = conv.FromResources(schema.Resources{
 		Cpus:    0,

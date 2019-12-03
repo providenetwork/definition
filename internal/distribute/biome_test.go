@@ -28,6 +28,7 @@ import (
 	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
 	"github.com/whiteblock/definition/schema"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -46,12 +47,12 @@ func TestBiomeCalculator_AddNextPhase(t *testing.T) {
 
 	state.On("Remove", mock.Anything, mock.Anything).Return(
 		[]entity.Segment{}, nil).Twice()
-
+	state.On("GetAlreadyExists", mock.Anything, mock.Anything).Return(nil, nil, false).Twice()
 	parser := new(mockParser.Resources)
 	parser.On("Tasks", mock.Anything, mock.Anything).Return(
 		[]entity.Segment{}, nil).Twice()
 
-	calc := NewBiomeCalculator(parser, state)
+	calc := NewBiomeCalculator(parser, state, logrus.New())
 
 	err := calc.AddNextPhase(testStatePack, schema.Phase{})
 	assert.NoError(t, err)

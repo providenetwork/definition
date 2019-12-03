@@ -62,7 +62,7 @@ func TestSystemState_FullTest(t *testing.T) {
 		parser.On("SystemComponentNamesOnly", system).Return(result).Once()
 	}
 	statePack := entity.NewStatePack(spec, config.Bucket{})
-	state := NewSystemState(parser, namer)
+	state := NewSystemState(parser, namer, nil)
 
 	//Successful Add
 	result, err := state.Add(statePack, spec, systems)

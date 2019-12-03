@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/merger"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 )
@@ -29,18 +30,75 @@ import (
 type SystemState interface {
 	Add(sp *entity.StatePack, spec schema.RootSchema,
 		systems []schema.SystemComponent) ([]entity.Segment, error)
+
+	GetAlreadyExists(sp *entity.StatePack, systems []schema.SystemComponent) (
+		exist []schema.SystemComponent, noExist []schema.SystemComponent, anyExist bool)
+
+	UpdateChanged(sp *entity.StatePack, spec schema.RootSchema,
+		systems []schema.SystemComponent) ([]entity.Segment, []entity.Segment, error)
+
 	Remove(sp *entity.StatePack, systems []string) ([]entity.Segment, error)
 }
 
 type systemState struct {
 	parser parser.Resources
 	namer  parser.Names
+	merger merger.System
 }
 
-func NewSystemState(parser parser.Resources, namer parser.Names) SystemState {
+func NewSystemState(
+	parser parser.Resources,
+	namer parser.Names,
+	merger merger.System) SystemState {
+
 	return &systemState{
 		parser: parser,
-		namer:  namer}
+		namer:  namer,
+		merger: merger}
+}
+
+func (state systemState) UpdateChanged(sp *entity.StatePack, spec schema.RootSchema,
+	systems []schema.SystemComponent) (toAdd []entity.Segment,
+	toRemove []entity.Segment, err error) {
+
+	for _, systemUpdate := range systems {
+		name := state.namer.SystemComponent(systemUpdate)
+		old, exists := sp.SystemState[name]
+		if !exists {
+			return nil, nil, fmt.Errorf("system \"%s\" not found", name)
+		}
+		system := state.merger.MergeLeft(systemUpdate, old)
+
+		segs, err := state.parser.FromSystemDiff(spec, old, system)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if system.Count < old.Count {
+			toRemove = append(toRemove, segs...)
+		} else {
+			toAdd = append(toAdd, segs...)
+		}
+		sp.SystemState[name] = system
+	}
+	return
+}
+
+func (state systemState) GetAlreadyExists(sp *entity.StatePack, systems []schema.SystemComponent) (
+	exist []schema.SystemComponent, noExist []schema.SystemComponent, anyExist bool) {
+
+	anyExist = false
+	for _, s := range systems {
+		name := state.namer.SystemComponent(s)
+		_, exists := sp.SystemState[name]
+		if exists {
+			anyExist = true
+			exist = append(exist, s)
+		} else {
+			noExist = append(noExist, s)
+		}
+	}
+	return
 }
 
 func (state *systemState) Add(sp *entity.StatePack, spec schema.RootSchema,

@@ -51,6 +51,7 @@ func (rc resourceConverter) FromResources(sRes schema.Resources) (out entity.Res
 		if err != nil {
 			return
 		}
+		out.Memory /= util.Mibi
 	} else {
 		out.Memory = rc.def.Memory
 	}
@@ -60,6 +61,7 @@ func (rc resourceConverter) FromResources(sRes schema.Resources) (out entity.Res
 		if err != nil {
 			return
 		}
+		out.Storage /= util.Mibi
 	} else {
 		out.Storage = rc.def.Storage
 	}

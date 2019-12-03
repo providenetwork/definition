@@ -23,12 +23,20 @@ import (
 
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
+	"github.com/whiteblock/definition/internal/merger"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 )
 
 //System is for diff calculations
 type System interface {
+	GetAlreadyExists(state *entity.State, systems []schema.SystemComponent) (
+		[]schema.SystemComponent, []schema.SystemComponent, bool)
+
+	UpdateChanged(state *entity.State, spec schema.RootSchema,
+		systems []schema.SystemComponent) (toAdd []entity.Service,
+		toRemove []entity.Service, err error)
+
 	//Add modifies State
 	Add(state *entity.State, spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Service, error)
 	//Remove modifies state
@@ -39,11 +47,59 @@ type System interface {
 
 type system struct {
 	namer  parser.Names
-	parser maker.Service
+	maker  maker.Service
+	merger merger.System
 }
 
-func NewSystem(namer parser.Names, parser maker.Service) System {
-	return &system{namer: namer, parser: parser}
+func NewSystem(
+	namer parser.Names,
+	maker maker.Service,
+	merger merger.System) System {
+	return &system{namer: namer, maker: maker, merger: merger}
+}
+
+func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
+	systems []schema.SystemComponent) (toAdd []entity.Service,
+	toRemove []entity.Service, err error) {
+
+	for _, systemUpdate := range systems {
+		name := sys.namer.SystemComponent(systemUpdate)
+		old, exists := state.SystemState[name]
+		if !exists {
+			return nil, nil, fmt.Errorf("system \"%s\" not found", name)
+		}
+		system := sys.merger.MergeLeft(systemUpdate, old)
+
+		serv, err := sys.maker.FromSystemDiff(spec, old, system)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if system.Count < old.Count {
+			toRemove = append(toRemove, serv...)
+		} else {
+			toAdd = append(toAdd, serv...)
+		}
+		state.SystemState[name] = system
+	}
+	return
+}
+
+func (sys system) GetAlreadyExists(state *entity.State, systems []schema.SystemComponent) (
+	exist []schema.SystemComponent, noExist []schema.SystemComponent, anyExist bool) {
+
+	anyExist = false
+	for _, s := range systems {
+		name := sys.namer.SystemComponent(s)
+		_, exists := state.SystemState[name]
+		if exists {
+			anyExist = true
+			exist = append(exist, s)
+		} else {
+			noExist = append(noExist, s)
+		}
+	}
+	return
 }
 
 //Add modifies State
@@ -57,7 +113,7 @@ func (sys system) Add(state *entity.State, spec schema.RootSchema,
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
 		}
-		services, err := sys.parser.FromSystem(spec, system)
+		services, err := sys.maker.FromSystem(spec, system)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +136,7 @@ func (sys system) Remove(state *entity.State, spec schema.RootSchema, systems []
 		if !exists {
 			return nil, fmt.Errorf("system not found")
 		}
-		services, err := sys.parser.FromSystem(spec, system)
+		services, err := sys.maker.FromSystem(spec, system)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +151,7 @@ func (sys system) Remove(state *entity.State, spec schema.RootSchema, systems []
 func (sys system) Tasks(state *entity.State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error) {
 	out := []entity.Service{}
 	for i, task := range tasks {
-		service, err := sys.parser.FromTask(spec, task, i)
+		service, err := sys.maker.FromTask(spec, task, i)
 		if err != nil {
 			return nil, err
 		}

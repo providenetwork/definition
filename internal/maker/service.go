@@ -19,6 +19,7 @@
 package maker
 
 import (
+	"strings"
 	"time"
 
 	"github.com/whiteblock/definition/internal/converter"
@@ -32,6 +33,9 @@ import (
 )
 
 type Service interface {
+	FromSystemDiff(spec schema.RootSchema, system schema.SystemComponent,
+		merged schema.SystemComponent) ([]entity.Service, error)
+
 	FromSystem(spec schema.RootSchema, system schema.SystemComponent) ([]entity.Service, error)
 	FromTask(spec schema.RootSchema, task schema.Task, index int) (entity.Service, error)
 }
@@ -42,8 +46,33 @@ type serviceMaker struct {
 	convert  converter.Service
 }
 
-func NewService(namer parser.Names, searcher search.Schema, convert converter.Service) Service {
+func NewService(
+	namer parser.Names,
+	searcher search.Schema,
+	convert converter.Service) Service {
 	return &serviceMaker{namer: namer, searcher: searcher, convert: convert}
+}
+
+func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
+	system schema.SystemComponent, merged schema.SystemComponent) ([]entity.Service, error) {
+
+	if merged.Count == system.Count {
+		return nil, nil
+	}
+	if merged.Count < system.Count {
+		out := []entity.Service{} //We are removing nodes, so only need name
+		for i := merged.Count; i < system.Count; i++ {
+			out = append(out, entity.Service{Name: sp.namer.SystemService(merged, int(i))})
+		}
+		return out, nil
+	}
+
+	services, err := sp.FromSystem(spec, merged)
+	if err != nil {
+		return nil, err
+	}
+	services = services[int(merged.Count-system.Count):]
+	return services, nil
 }
 
 func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
@@ -134,8 +163,8 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 			return entity.Service{}, err
 		}
 	}
-
-	timeout, err := time.ParseDuration(task.Timeout)
+	to := strings.Replace(task.Timeout, " ", "", -1)
+	timeout, err := time.ParseDuration(to)
 	return entity.Service{
 		Name:            sp.namer.Task(task, index),
 		Networks:        task.Networks,

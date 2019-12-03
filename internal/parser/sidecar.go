@@ -74,6 +74,9 @@ func (sp sidecarParser) GetImage(sidecar schema.Sidecar) string {
 func (sp sidecarParser) GetLabels(parent entity.Service, sidecar schema.Sidecar) map[string]string {
 	var labels map[string]string
 	copier.Copy(&labels, parent.Labels)
+	if labels == nil {
+		labels = make(map[string]string)
+	}
 	labels["name"] = sidecar.Name
 	labels["service"] = parent.Name
 	return labels

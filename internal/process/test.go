@@ -19,6 +19,7 @@
 package process
 
 import (
+	"github.com/sirupsen/logrus"
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
@@ -31,16 +32,19 @@ type TestCalculator interface {
 type testCalculator struct {
 	sys      System
 	resolver Resolve
+	logger   logrus.Ext1FieldLogger
 }
 
-func NewTestCalculator(sys System, resolver Resolve) TestCalculator {
-	return &testCalculator{sys: sys, resolver: resolver}
+func NewTestCalculator(sys System, resolver Resolve, logger logrus.Ext1FieldLogger) TestCalculator {
+	return &testCalculator{sys: sys, resolver: resolver, logger: logger}
 }
 
 func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSchema,
 	phase schema.Phase, dist *entity.ResourceDist, index int) ([][]command.Command, error) {
 
-	servicesToAdd, err := calc.sys.Add(state, spec, phase.System)
+	changedSystems, systems, hasChanged := calc.sys.GetAlreadyExists(state, phase.System)
+
+	servicesToAdd, err := calc.sys.Add(state, spec, systems)
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +54,15 @@ func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSch
 		return nil, err
 	}
 
+	if hasChanged {
+		add, remove, err := calc.sys.UpdateChanged(state, spec, changedSystems)
+		if err != nil {
+			return nil, err
+		}
+		servicesToAdd = append(servicesToAdd, add...)
+		servicesToRemove = append(servicesToRemove, remove...)
+	}
+
 	servicesForTasks, err := calc.sys.Tasks(state, spec, phase.Tasks)
 	if err != nil {
 		return nil, err
@@ -57,11 +70,25 @@ func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSch
 	servicesToAdd = append(servicesToAdd, servicesForTasks...)
 	//Break it down into commands now
 
+	calc.logger.WithFields(logrus.Fields{
+		"adding":   servicesToAdd,
+		"removing": servicesToRemove,
+		"systems":  systems,
+		"changed":  changedSystems,
+	}).Info("calculating command diff")
+
 	networkCommands, err := calc.resolver.CreateNetworks(phase.System)
 	if err != nil {
 		return nil, err
 	}
-	out := [][]command.Command{networkCommands}
+	calc.logger.WithFields(logrus.Fields{
+		"count": len(networkCommands),
+	}).Info("got the network commands")
+	out := [][]command.Command{}
+
+	if len(networkCommands) > 0 {
+		out = append(out, networkCommands)
+	}
 
 	phaseDist, err := dist.GetPhase(index)
 	if err != nil {
@@ -72,13 +99,29 @@ func (calc *testCalculator) handlePhase(state *entity.State, spec schema.RootSch
 	if err != nil {
 		return nil, err
 	}
-	out = append(out, removalCommands...)
 
-	addCommands, err := calc.resolver.CreateServices(spec, phaseDist, servicesToRemove)
+	calc.logger.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace("got the removal commands")
+	if len(removalCommands) > 0 {
+		out = append(out, removalCommands...)
+	}
+
+	addCommands, err := calc.resolver.CreateServices(spec, phaseDist, servicesToAdd)
 	if err != nil {
 		return nil, err
 	}
-	out = append(out, addCommands...)
+
+	if len(addCommands) > 0 {
+		for i, set := range addCommands {
+			calc.logger.WithFields(logrus.Fields{
+				"count": len(set),
+				"set":   i,
+			}).Trace("got the add commands set")
+			if len(set) > 0 {
+				out = append(out, set)
+			}
+		}
+	}
+
 	return out, nil
 }
 

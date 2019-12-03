@@ -45,8 +45,15 @@ func (dist *distributor) Distribute(spec schema.RootSchema) ([]*entity.ResourceD
 	for _, test := range spec.Tests {
 		sp := dist.calculator.NewStatePack(spec, dist.conf)
 		testResources := &entity.ResourceDist{}
+		err := dist.calculator.AddNextPhase(sp, schema.Phase{
+			System: test.System,
+		})
+		if err != nil {
+			return nil, err
+		}
+		testResources.Add(dist.calculator.Resources(sp))
 		for _, phase := range test.Phases {
-			err := dist.calculator.AddNextPhase(sp, phase)
+			err = dist.calculator.AddNextPhase(sp, phase)
 			if err != nil {
 				return nil, err
 			}

@@ -19,9 +19,9 @@
 package definition
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/Whiteblock/go-prettyjson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -94,6 +94,10 @@ tests:
 	require.NoError(t, err)
 	tests, err := GetTests(def)
 	assert.NoError(t, err)
-	fmt.Print(tests)
+	assert.NotNil(t, tests)
 
+	out, _ := prettyjson.Marshal(*def.GetSpec())
+	t.Log(string(out))
+	out, _ = prettyjson.Marshal(tests)
+	t.Log(string(out))
 }

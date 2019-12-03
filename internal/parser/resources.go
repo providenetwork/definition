@@ -27,6 +27,8 @@ import (
 
 // Resources presents methods for extracting named resources from parts of the schema
 type Resources interface {
+	FromSystemDiff(spec schema.RootSchema,
+		system schema.SystemComponent, merged schema.SystemComponent) ([]entity.Segment, error)
 	SystemComponentNamesOnly(sys schema.SystemComponent) []entity.Segment
 	SystemComponent(spec schema.RootSchema, sys schema.SystemComponent) ([]entity.Segment, error)
 	Tasks(spec schema.RootSchema, tasks []schema.Task) ([]entity.Segment, error)
@@ -49,6 +51,28 @@ func NewResources(
 		searcher: searcher,
 		conv:     conv,
 	}
+}
+
+func (res *resources) FromSystemDiff(spec schema.RootSchema,
+	system schema.SystemComponent, merged schema.SystemComponent) ([]entity.Segment, error) {
+
+	if merged.Count == system.Count {
+		return nil, nil
+	}
+	if merged.Count < system.Count {
+		out := []entity.Segment{} //We are removing nodes, so only need name
+		for i := merged.Count; i < system.Count; i++ {
+			out = append(out, entity.Segment{Name: res.namer.SystemService(merged, int(i))})
+		}
+		return out, nil
+	}
+
+	services, err := res.SystemComponent(spec, merged)
+	if err != nil {
+		return nil, err
+	}
+	services = services[int(merged.Count-system.Count):]
+	return services, nil
 }
 
 func (res *resources) SystemComponent(spec schema.RootSchema,

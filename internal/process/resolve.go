@@ -109,6 +109,9 @@ func (resolver resolve) CreateServices(spec schema.RootSchema,
 func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 	services []entity.Service) ([][]command.Command, error) {
 
+	if len(services) == 0 {
+		return nil, nil
+	}
 	out := []command.Command{}
 	for _, service := range services {
 		order := resolver.cmdMaker.RemoveContainer(service)
