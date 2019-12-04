@@ -30,9 +30,10 @@ import (
 )
 
 type Resolve interface {
-	CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error)
+	CreateNetworks(systems []schema.SystemComponent,
+		networkState entity.NetworkState) ([]command.Command, error)
 
-	CreateServices(spec schema.RootSchema, dist entity.PhaseDist,
+	CreateServices(spec schema.RootSchema, networkState entity.NetworkState, dist entity.PhaseDist,
 		services []entity.Service) ([][]command.Command, error)
 
 	RemoveServices(dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error)
@@ -48,12 +49,17 @@ func NewResolve(cmdMaker maker.Command, deps Dependency, log logrus.Ext1FieldLog
 	return &resolve{cmdMaker: cmdMaker, deps: deps, log: log}
 }
 
-func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]command.Command, error) {
+func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
+	networkState entity.NetworkState) ([]command.Command, error) {
 	out := []command.Command{}
 	for _, system := range systems {
 		for _, network := range system.Resources.Networks {
-			order := resolver.cmdMaker.CreateNetwork(network, true)
-			cmd, err := resolver.cmdMaker.New(order, "0", 0)
+			subnet, err := networkState.GetNextGlobal()
+			if err != nil {
+				return nil, err
+			}
+			order := resolver.cmdMaker.CreateNetwork(network.Name, subnet)
+			cmd, err := resolver.cmdMaker.New(order, "0")
 			if err != nil {
 				return nil, err
 			}
@@ -63,7 +69,7 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent) ([]comm
 	return out, nil
 }
 
-func (resolver resolve) CreateServices(spec schema.RootSchema,
+func (resolver resolve) CreateServices(spec schema.RootSchema, networkState entity.NetworkState,
 	dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 5)
@@ -73,18 +79,21 @@ func (resolver resolve) CreateServices(spec schema.RootSchema,
 		if err != nil {
 			return nil, err
 		}
-
-		sidecarCmds, err := resolver.deps.Sidecars(spec, dist, service)
-		if err != nil {
-			return nil, err
+		if !service.IsTask && len(service.Sidecars) > 0 {
+			sidecarCmds, err := resolver.deps.Sidecars(spec, dist, service)
+			if err != nil {
+				return nil, err
+			}
+			out[3] = append(out[3], sidecarCmds[0]...)
+			out[4] = append(out[4], sidecarCmds[1]...)
+			sidecarNetworkCmd, err := resolver.deps.SidecarNetwork(spec, networkState, dist, service)
+			if err != nil {
+				return nil, err
+			}
+			out[0] = append(out[0], sidecarNetworkCmd)
 		}
 
 		volumeCmds, err := resolver.deps.Volumes(spec, dist, service)
-		if err != nil {
-			return nil, err
-		}
-
-		sidecarNetworkCmd, err := resolver.deps.SidecarNetwork(spec, dist, service)
 		if err != nil {
 			return nil, err
 		}
@@ -95,12 +104,9 @@ func (resolver resolve) CreateServices(spec schema.RootSchema,
 		}
 
 		out[0] = append(out[0], volumeCmds...)
-		out[0] = append(out[0], sidecarNetworkCmd)
 		out[1] = append(out[1], createCmd)
 		out[2] = append(out[2], startCmd)
-		out[3] = append(out[3], sidecarCmds[0]...)
 		out[3] = append(out[3], emulationCmds...)
-		out[4] = append(out[4], sidecarCmds[1]...)
 	}
 
 	return out, nil
@@ -120,7 +126,7 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 			return nil, fmt.Errorf("could not find bucket")
 		}
 
-		cmd, err := resolver.cmdMaker.New(order, fmt.Sprint(bucket), 0)
+		cmd, err := resolver.cmdMaker.New(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
 		}

@@ -34,6 +34,9 @@ type Config struct {
 	//Logger is the configuration for the loggers
 	Logger Logger
 
+	//Network is the configuration for the networks
+	Network Network
+
 	//  Defaults is the configuration of the defaults
 	Defaults defaults.Defaults
 }
@@ -50,11 +53,16 @@ func New(v *viper.Viper) (conf Config, err error) {
 		return Config{}, err
 	}
 
+	conf.Network, err = NewNetwork(v)
+	if err != nil {
+		return Config{}, err
+	}
+
 	conf.Defaults, err = defaults.New(v)
 	return
 }
 
-//SetViperBindings adds all of the enviroment bindings to the given
+//SetViperBindings adds all of the environment bindings to the given
 //viper config provider, for all of the configs and defaults
 func SetViperBindings(v *viper.Viper) error {
 	err := setLoggerBindings(v)
@@ -67,6 +75,11 @@ func SetViperBindings(v *viper.Viper) error {
 		return err
 	}
 
+	err = setNetworkBindings(v)
+	if err != nil {
+		return err
+	}
+
 	return defaults.SetViperBindings(v)
 }
 
@@ -75,6 +88,7 @@ func SetViperBindings(v *viper.Viper) error {
 func SetViperDefaults(v *viper.Viper) {
 	setLoggerDefaults(v)
 	setBucketDefaults(v)
+	setNetworkDefaults(v)
 	defaults.SetViperDefaults(v)
 }
 

@@ -163,6 +163,11 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 			return entity.Service{}, err
 		}
 	}
+	if len(task.Networks) == 0 {
+		task.Networks = []schema.Network{
+			schema.Network{Name: "default"},
+		}
+	}
 	to := strings.Replace(task.Timeout, " ", "", -1)
 	timeout, err := time.ParseDuration(to)
 	return entity.Service{
@@ -172,5 +177,6 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 		Sidecars:        nil,
 		IgnoreExitCode:  task.IgnoreExitCode,
 		Timeout:         timeout,
+		IsTask:          true,
 	}, err
 }

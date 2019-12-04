@@ -16,17 +16,20 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package command
+package entity
 
 import (
-	"time"
+	neta "github.com/dspinhirne/netaddr-go"
 )
 
-//StartContainer is the command for starting a container
-type StartContainer struct {
-	Name   string `json:"name"`
-	Attach bool   `json:"attach"`
-	// Timeout is the maximum amount of time to wait for the task before terminating it.
-	// This is ignored if attach is false
-	Timeout time.Duration `json:"timeout"`
+type Network struct {
+	network *neta.IPv4Net
+}
+
+func (n Network) Subnet() string {
+	return n.network.String()
+}
+
+func (n Network) Gateway() string {
+	return n.network.Network().Next().String()
 }

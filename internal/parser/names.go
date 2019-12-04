@@ -19,6 +19,7 @@
 package parser
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"strings"
 
@@ -28,6 +29,7 @@ import (
 
 type Names interface {
 	InputFileVolume(input schema.InputFile) string
+	Network(network schema.Network) string
 	Sidecar(parent entity.Service, sidecar schema.Sidecar) string
 	SidecarNetwork(parent entity.Service) string
 	SystemComponent(sys schema.SystemComponent) string
@@ -42,8 +44,18 @@ func NewNames() Names {
 	return &namer{}
 }
 
+func (n *namer) capString(s string, size int) string {
+	h := sha256.New()
+	h.Write([]byte(s))
+	return fmt.Sprintf("%x", h.Sum(nil))[:size]
+}
+
 func (n *namer) InputFileVolume(input schema.InputFile) string {
 	return strings.Replace(input.DestinationPath, "/", "-", 0)
+}
+
+func (n *namer) Network(network schema.Network) string {
+	return "net-" + n.capString(network.Name, 11)
 }
 
 func (n *namer) Sidecar(parent entity.Service, sidecar schema.Sidecar) string {
@@ -51,7 +63,7 @@ func (n *namer) Sidecar(parent entity.Service, sidecar schema.Sidecar) string {
 }
 
 func (n *namer) SidecarNetwork(parent entity.Service) string {
-	return fmt.Sprintf("%s-sidecar-net", parent.Name)
+	return "snet-" + n.capString(parent.Name, 10)
 }
 
 func (n *namer) SystemComponent(sys schema.SystemComponent) string {

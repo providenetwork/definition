@@ -20,13 +20,12 @@ package command
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
+	"github.com/whiteblock/utility/utils"
 )
 
 // NetworkConfig represents a docker network configuration
@@ -75,7 +74,7 @@ type Container struct {
 
 // GetMemory gets the memory value as an integer.
 func (c Container) GetMemory() (int64, error) {
-	return memconv(c.Memory)
+	return utils.Memconv(c.Memory, utils.Mibi)
 }
 
 // GetEnv gets the environment variables in the format which is
@@ -122,27 +121,4 @@ func (c Container) GetMounts() []mount.Mount {
 		})
 	}
 	return out
-}
-
-func memconv(mem string) (int64, error) {
-	m := strings.ToLower(mem)
-
-	var multiplier int64 = 1
-
-	if strings.HasSuffix(m, "kb") || strings.HasSuffix(m, "k") {
-		multiplier = 1000
-	} else if strings.HasSuffix(m, "mb") || strings.HasSuffix(m, "m") {
-		multiplier = 1000000
-	} else if strings.HasSuffix(m, "gb") || strings.HasSuffix(m, "g") {
-		multiplier = 1000000000
-	} else if strings.HasSuffix(m, "tb") || strings.HasSuffix(m, "t") {
-		multiplier = 1000000000000
-	}
-
-	i, err := strconv.ParseInt(strings.Trim(m, "bgkmt"), 10, 64)
-	if err != nil {
-		return -1, err
-	}
-
-	return i * multiplier, nil
 }

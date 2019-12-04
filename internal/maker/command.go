@@ -33,13 +33,13 @@ import (
 
 //  Command handles the simple schema -> order conversions
 type Command interface {
-	New(order command.Order, endpoint string, timeout time.Duration) (command.Command, error)
+	New(order command.Order, endpoint string) (command.Command, error)
 
-	CreateNetwork(network schema.Network, global bool) command.Order
+	CreateNetwork(name string, network entity.Network) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
 	CreateContainer(service entity.Service) command.Order
-	CreateSidecarNetwork(service entity.Service) command.Order
-	StartContainer(service entity.Service) command.Order
+	CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order
+	StartContainer(service entity.Service, isTask bool, timeout time.Duration) command.Order
 
 	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
@@ -71,8 +71,7 @@ func NewCommand(
 	}
 }
 
-func (cmd commandMaker) New(order command.Order, endpoint string,
-	timeout time.Duration) (command.Command, error) {
+func (cmd commandMaker) New(order command.Order, endpoint string) (command.Command, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return command.Command{}, err
@@ -80,26 +79,31 @@ func (cmd commandMaker) New(order command.Order, endpoint string,
 	return command.Command{
 		ID:        id.String(),
 		Timestamp: time.Now().Unix(),
-		Timeout:   timeout,
 		Target: command.Target{
-			IP: endpoint,
+			IP: "127.0.0.1", //endpoint,
 		},
 		Order: order,
 	}, nil
 }
 
-func (cmd commandMaker) CreateNetwork(network schema.Network, global bool) command.Order {
+func (cmd commandMaker) createNetwork(name string, network entity.Network, global bool) command.Order {
 	return command.Order{
 		Type: command.Createnetwork,
 		Payload: command.Network{
-			Name:   network.Name,
-			Global: global,
+			Name:    name,
+			Global:  global,
+			Gateway: network.Gateway(),
+			Subnet:  network.Subnet(),
 		},
 	}
 }
 
-func (cmd commandMaker) CreateSidecarNetwork(service entity.Service) command.Order {
-	return cmd.CreateNetwork(schema.Network{Name: cmd.namer.SidecarNetwork(service)}, false)
+func (cmd commandMaker) CreateNetwork(name string, network entity.Network) command.Order {
+	return cmd.createNetwork(cmd.namer.Network(schema.Network{Name: name}), network, true)
+}
+
+func (cmd commandMaker) CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order {
+	return cmd.createNetwork(cmd.namer.SidecarNetwork(service), network, false)
 }
 
 func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
@@ -132,8 +136,8 @@ func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
 	}
 }
 
-func (cmd commandMaker) StartContainer(service entity.Service) command.Order {
-	return cmd.startContainer(service.Name)
+func (cmd commandMaker) StartContainer(service entity.Service, isTask bool, timeout time.Duration) command.Order {
+	return cmd.startContainer(service.Name, isTask, timeout)
 }
 
 func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order {
@@ -155,7 +159,7 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 }
 
 func (cmd commandMaker) StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order {
-	return cmd.startContainer(cmd.namer.Sidecar(parent, sidecar))
+	return cmd.startContainer(cmd.namer.Sidecar(parent, sidecar), false, 0)
 }
 
 func (cmd commandMaker) AttachNetwork(service entity.Service, network schema.Network) command.Order {
@@ -203,12 +207,13 @@ func (cmd commandMaker) RemoveContainer(service entity.Service) command.Order {
 	}
 }
 
-func (cmd commandMaker) startContainer(name string) command.Order {
+func (cmd commandMaker) startContainer(name string, isTask bool, timeout time.Duration) command.Order {
 	return command.Order{
 		Type: command.Startcontainer,
 		Payload: command.StartContainer{
-			Name:   name,
-			Attach: false,
+			Name:    name,
+			Attach:  isTask,
+			Timeout: timeout,
 		},
 	}
 }
