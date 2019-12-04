@@ -21,7 +21,6 @@ package command
 import (
 	"bytes"
 	"encoding/json"
-	"time"
 )
 
 //OrderType is the type of order
@@ -108,8 +107,6 @@ type Command struct {
 	ID string `json:"id"`
 	// Timestamp is the earliest time the command can be executed
 	Timestamp int64 `json:"timestamp"`
-	// Timeout is the maximum amount of time a command can take before being aborted
-	Timeout time.Duration `json:"timeout"`
 	//Target represents the target of this command
 	Target Target `json:"target"`
 	//Order is the action of the command, it represents what needs to be done

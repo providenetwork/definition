@@ -21,11 +21,12 @@ package command
 import (
 	"fmt"
 
+	"github.com/whiteblock/definition/internal/util"
+
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
-	"github.com/whiteblock/definition/internal/util"
 )
 
 // NetworkConfig represents a docker network configuration

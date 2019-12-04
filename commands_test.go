@@ -21,6 +21,8 @@ package definition
 import (
 	"testing"
 
+	"github.com/whiteblock/definition/command"
+
 	"github.com/Whiteblock/go-prettyjson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,7 +74,7 @@ tests:
     description: run a geth testnet and execute some simple transactions
     system:
       - type: geth
-        count: 5
+        count: 2
     phases:
       - name: baseline-tps
         tasks:
@@ -96,8 +98,27 @@ tests:
 	assert.NoError(t, err)
 	assert.NotNil(t, tests)
 
-	out, _ := prettyjson.Marshal(*def.GetSpec())
-	t.Log(string(out))
-	out, _ = prettyjson.Marshal(tests)
-	t.Log(string(out))
+	for _, test := range tests {
+		assertNoDupNetworks(t, test)
+	}
+}
+
+func assertNoDupNetworks(t *testing.T, test Test) {
+	networks := map[string]bool{}
+
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			if inner.Order.Type == command.Createnetwork {
+				var network command.Network
+				err := inner.ParseOrderPayloadInto(&network)
+
+				out, _ := prettyjson.Marshal(network)
+				t.Log(string(out))
+				require.NoError(t, err)
+				_, exists := networks[network.Name]
+				assert.False(t, exists, "duplicate network found "+network.Name)
+				networks[network.Name] = true
+			}
+		}
+	}
 }

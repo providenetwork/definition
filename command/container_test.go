@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/whiteblock/definition/internal/util"
+
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
@@ -36,31 +38,31 @@ func TestContainer_GetMemory_Successful(t *testing.T) {
 		{res: Container{
 			Cpus:   "",
 			Memory: "45",
-		}, expected: int64(45)},
+		}, expected: int64(45 * util.Mibi)},
 		{res: Container{
 			Cpus:   "",
 			Memory: "1",
-		}, expected: int64(1)},
+		}, expected: int64(1 * util.Mibi)},
 		{res: Container{
 			Cpus:   "",
-			Memory: "92233720368547",
-		}, expected: int64(92233720368547)},
+			Memory: "922547",
+		}, expected: int64(922547 * util.Mibi)},
 		{res: Container{
 			Cpus:   "",
 			Memory: "3gb",
-		}, expected: int64(3000000000)},
+		}, expected: int64(3 * util.Gibi)},
 		{res: Container{
 			Cpus:   "",
 			Memory: "6KB",
-		}, expected: int64(6000)},
+		}, expected: int64(6 * util.Kibi)},
 		{res: Container{
 			Cpus:   "",
 			Memory: "4mb",
-		}, expected: int64(4000000)},
+		}, expected: int64(4 * util.Mibi)},
 		{res: Container{
 			Cpus:   "",
 			Memory: "1tb",
-		}, expected: int64(1000000000000)},
+		}, expected: int64(1 * util.Tibi)},
 	}
 
 	for i, tt := range tests {

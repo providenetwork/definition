@@ -18,8 +18,15 @@
 
 package command
 
+import (
+	"time"
+)
+
 //StartContainer is the command for starting a container
 type StartContainer struct {
 	Name   string `json:"name"`
 	Attach bool   `json:"attach"`
+	// Timeout is the maximum amount of time to wait for the task before terminating it.
+	// This is ignored if attach is false
+	Timeout time.Duration `json:"timeout"`
 }

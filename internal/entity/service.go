@@ -33,5 +33,6 @@ type Service struct {
 	Labels          map[string]string
 
 	Timeout        time.Duration
+	IsTask         bool
 	IgnoreExitCode bool
 }

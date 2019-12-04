@@ -86,19 +86,19 @@ func (calc *testCalculator) handlePhase(state *entity.State, networkState entity
 		"removing": servicesToRemove,
 		"systems":  systems,
 		"changed":  changedSystems,
-	}).Info("calculating command diff")
+	}).Trace("calculating command diff")
 
 	networkCommands, err := calc.resolver.CreateNetworks(phase.System, networkState)
 	if err != nil {
 		return nil, err
 	}
-	calc.logger.WithFields(logrus.Fields{
-		"count": len(networkCommands),
-	}).Info("got the network commands")
+
 	out := [][]command.Command{}
 
 	if len(networkCommands) > 0 {
 		out = append(out, networkCommands)
+		calc.logger.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
+			"got the network commands")
 	}
 
 	phaseDist, err := dist.GetPhase(index)
@@ -111,8 +111,9 @@ func (calc *testCalculator) handlePhase(state *entity.State, networkState entity
 		return nil, err
 	}
 
-	calc.logger.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace("got the removal commands")
 	if len(removalCommands) > 0 {
+		calc.logger.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace(
+			"got the removal commands")
 		out = append(out, removalCommands...)
 	}
 
