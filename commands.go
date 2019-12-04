@@ -33,6 +33,8 @@ var globalCommands Commands
 
 //Test contains the instructions necessary for the execution of a single test
 type Test struct {
+	ID               string
+	OrgID            int64
 	ProvisionCommand biome.CreateBiome
 	Commands         [][]command.Command
 }
