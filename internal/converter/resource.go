@@ -23,8 +23,9 @@ import (
 
 	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/entity"
-	"github.com/whiteblock/definition/internal/util"
 	"github.com/whiteblock/definition/schema"
+
+	util "github.com/whiteblock/utility/utils"
 )
 
 type Resource interface {

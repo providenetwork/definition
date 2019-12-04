@@ -21,12 +21,11 @@ package command
 import (
 	"fmt"
 
-	"github.com/whiteblock/definition/internal/util"
-
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
+	"github.com/whiteblock/utility/utils"
 )
 
 // NetworkConfig represents a docker network configuration
@@ -75,7 +74,7 @@ type Container struct {
 
 // GetMemory gets the memory value as an integer.
 func (c Container) GetMemory() (int64, error) {
-	return util.Memconv(c.Memory, util.Mibi)
+	return utils.Memconv(c.Memory, utils.Mibi)
 }
 
 // GetEnv gets the environment variables in the format which is

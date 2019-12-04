@@ -22,11 +22,12 @@ import (
 	"testing"
 
 	"github.com/whiteblock/definition/config/defaults"
-	"github.com/whiteblock/definition/internal/util"
+
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	util "github.com/whiteblock/utility/utils"
 )
 
 func TestResource_FromResources(t *testing.T) {

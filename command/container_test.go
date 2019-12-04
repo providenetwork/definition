@@ -22,12 +22,11 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/whiteblock/definition/internal/util"
-
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/assert"
+	util "github.com/whiteblock/utility/utils"
 )
 
 func TestContainer_GetMemory_Successful(t *testing.T) {
