@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-//Config is the union of all of the configuration structures of this
+//  Config is the union of all of the configuration structures of this
 //library, so that it may be passed in directly by the user
 type Config struct {
 	//Bucket is the configuration for buckets
@@ -34,7 +34,7 @@ type Config struct {
 	//Logger is the configuration for the loggers
 	Logger Logger
 
-	//Defaults is the configuration of the defaults
+	//  Defaults is the configuration of the defaults
 	Defaults defaults.Defaults
 }
 

@@ -37,12 +37,12 @@ type Test struct {
 	Commands         [][]command.Command
 }
 
-//Commands is the interface of a parser that extracts commands from a definition
+// Commands is the interface of a parser that extracts commands from a definition
 type Commands interface {
-	//GetTests gets all of the commands, for both provisioner and genesis.
-	//The genesis commands will be in dependency groups, so that
-	//res[n+1] is the set of commands which require the execution of the commands
-	//in res[n].
+	// GetTests gets all of the commands, for both provisioner and genesis.
+	// The genesis commands will be in dependency groups, so that
+	// res[n+1] is the set of commands which require the execution of the commands
+	// In res[n].
 	GetTests(def Definition) ([]Test, error)
 }
 
@@ -51,17 +51,17 @@ type commands struct {
 	dist distribute.Distributor
 }
 
-//NewCommands creates a new command extractor from the given viper config
+// NewCommands creates a new command extractor from the given viper config
 func NewCommands(conf config.Config) (Commands, error) {
 	proc, dist, err := internal.GetFunctionality(conf)
 	return &commands{proc: proc, dist: dist}, err
 }
 
-//GetTests gets all of the commands, for both provisioner and genesis.
-//The genesis commands will be in dependency groups, so that
-//res[n+1] is the set of commands which require the execution of the commands
-//in res[n]. We get both at once, since we have to compute the commands for provisioning to produce
-//the commands for Genesis.
+// GetTests gets all of the commands, for both provisioner and genesis.
+// The genesis commands will be in dependency groups, so that
+// res[n+1] is the set of commands which require the execution of the commands
+// In res[n]. We get both at once, since we have to compute the commands for provisioning to produce
+// the commands for Genesis.
 func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	resDist, err := cmdParser.dist.Distribute(def.spec)
 	if err != nil {
@@ -82,13 +82,13 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	return out, nil
 }
 
-//ConfigureGlobal allows you to provide the global config for this library
+// ConfigureGlobal allows you to provide the global config for this library
 func ConfigureGlobal(conf config.Config) (err error) {
 	globalCommands, err = NewCommands(conf)
 	return
 }
 
-//ConfigureGlobalFromViper allows you to tie in configuration for this library from viper.
+// ConfigureGlobalFromViper allows you to tie in configuration for this library from viper.
 func ConfigureGlobalFromViper(v *viper.Viper) error {
 	err := config.SetupViper(v)
 	if err != nil {
@@ -101,17 +101,17 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 	return ConfigureGlobal(conf)
 }
 
-//GetTests gets all of the commands, for both provisioner and genesis.
-//The genesis commands will be in dependency groups, so that
-//res[n+1] is the set of commands which require the execution of the commands
-//in res[n].
+// GetTests gets all of the commands, for both provisioner and genesis.
+// The genesis commands will be in dependency groups, so that
+// res[n+1] is the set of commands which require the execution of the commands
+// In res[n].
 func GetTests(def Definition) ([]Test, error) {
 	return globalCommands.GetTests(def)
 }
 
 func init() {
-	//This may fail if the default configuration is bad, perhaps we might want to just
-	//error out if ConfigureGlobal is not called.
+	// This may fail if the default configuration is bad, perhaps we might want to just
+	// Error out if ConfigureGlobal is not called.
 	err := ConfigureGlobalFromViper(viper.New())
 	if err != nil {
 		panic(err)

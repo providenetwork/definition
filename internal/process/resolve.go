@@ -126,6 +126,6 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 		}
 		out = append(out, cmd)
 	}
-	//If needed, we can also add commands for removing volumes and networks
+	//  If needed, we can also add commands for removing volumes and networks
 	return [][]command.Command{out}, nil
 }

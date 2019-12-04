@@ -55,7 +55,7 @@ func NewParser() Parser {
 // SchemaYAML takes a raw set of YAML bytes and
 // de-serializes them to a Definition structure from just the test spec.
 func (p parser) SchemaYAML(raw []byte) (out Definition, err error) {
-	return out, yaml.Unmarshal(raw, &out.spec)
+	return out, yaml.Unmarshal(raw, &out.Spec)
 }
 
 // YAML takes a raw set of YAML bytes and
@@ -67,7 +67,7 @@ func (p parser) YAML(raw []byte) (out Definition, err error) {
 // SchemaJSON takes a raw set of JSON bytes and
 // de-serializes them to a Definition structure from just the test spec.
 func (p parser) SchemaJSON(raw []byte) (out Definition, err error) {
-	return out, json.Unmarshal(raw, &out.spec)
+	return out, json.Unmarshal(raw, &out.Spec)
 }
 
 // JSON takes a raw set of JSON bytes and

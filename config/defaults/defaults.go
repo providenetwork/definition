@@ -23,9 +23,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-//Defaults is a top level contain for all of the defaults so that they all
+//  Defaults is a top level contain for all of the defaults so that they all
 //may be passed into this library by the user. This is not to be confused with configuration
-//defaults, which are the default values for configurations. These are the default values for the
+//  Defaults, which are the default values for configurations. These are the default values for the
 //test definition schema
 type Defaults struct {
 	Service   Service

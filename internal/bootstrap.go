@@ -33,7 +33,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 	if err != nil {
 		return nil, nil, err
 	}
-	//Distribute
+	//  Distribute
 	dist := distribute.NewDistributor(
 		conf.Bucket,
 		distribute.NewBiomeCalculator(
@@ -59,7 +59,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 		),
 	)
 
-	//Commands
+	//  Commands
 	cmds := process.NewCommands(
 		process.NewTestCalculator(
 			process.NewSystem(

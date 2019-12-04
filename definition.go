@@ -18,73 +18,17 @@
 package definition
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/whiteblock/definition/schema"
-	"github.com/whiteblock/definition/validator"
 )
 
-//IDefinition is the representation of the test definition format.
-type IDefinition interface {
-	//Gets the UUID which uniquely identifies this definition
-	GetID() string
-
-	//GetOrgID gets the organization id
-	GetOrgID() int64
-
-	//GetSpec gets a pointer to the internal spec object. Should be used with care.
-	GetSpec() *schema.RootSchema
-
-	//Validate returns nil if it is a valid test definition, other the returned
-	//error will contain an explanation for the issue
-	Validate() []error
-}
-
-// Definition is the top level container for the test definition
-// specification
+// Definition is the top level container for
+// the test definition specification.
 type Definition struct {
+	// ID is the test ID
 	ID    string
+
+	// OrgID
 	OrgID int64
-	spec  schema.RootSchema
-}
 
-// GetID returns the ID for this definition
-func (def Definition) GetID() string {
-	return def.ID
-}
-
-// GetOrgID gets the organization id
-func (def Definition) GetOrgID() int64 {
-	return def.OrgID
-}
-
-// GetSpec gets a pointer to the internal spec object. Should be used with care.
-func (def Definition) GetSpec() *schema.RootSchema {
-	return &def.spec
-}
-
-// Validate returns nil if it is a valid test definition,
-// otherwise the returned errors will contain explanations
-// for the issue
-func (def Definition) Validate() []error {
-	v, err := validator.NewValidator()
-	if err != nil {
-		return []error{err}
-	}
-
-	data, err := json.Marshal(def.spec)
-	if err != nil {
-		return []error{err}
-	}
-
-	err = v.Validate(data)
-	if err == nil {
-		return nil
-	}
-	out := []error{err}
-	for _, schemaErr := range v.Errors() {
-		out = append(out, fmt.Errorf(schemaErr.String()))
-	}
-	return out
+	Spec schema.RootSchema
 }

@@ -28,7 +28,7 @@ import (
 )
 
 //BiomeCalculator is a calculator for the state for the testnet
-//as time goes on.
+//  As time goes on.
 type BiomeCalculator interface {
 	NewStatePack(spec schema.RootSchema, conf config.Bucket) *entity.StatePack
 	AddNextPhase(sp *entity.StatePack, phase schema.Phase) error

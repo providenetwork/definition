@@ -28,21 +28,21 @@ import (
 type OrderType string
 
 const (
-	//Createcontainer attempts to create a docker container
+	//  Createcontainer attempts to create a docker container
 	Createcontainer = OrderType("createcontainer")
 	//Startcontainer attempts to start an already created docker container
 	Startcontainer = OrderType("startcontainer")
 	//Removecontainer attempts to remove a container
 	Removecontainer = OrderType("removecontainer")
-	//Createnetwork attempts to create a network
+	//  Createnetwork attempts to create a network
 	Createnetwork = OrderType("createnetwork")
-	//Attachnetwork attempts to remove a network
+	//  Attachnetwork attempts to remove a network
 	Attachnetwork = OrderType("attachnetwork")
-	//Detachnetwork detaches network
+	//  Detachnetwork detaches network
 	Detachnetwork = OrderType("detachnetwork")
 	//Removenetwork removes network
 	Removenetwork = OrderType("removenetwork")
-	//Createvolume creates volume
+	//  Createvolume creates volume
 	Createvolume = OrderType("createvolume")
 	//Removevolume removes volume
 	Removevolume = OrderType("removevolume")
@@ -50,7 +50,7 @@ const (
 	Putfile = OrderType("putfile")
 	//Putfileincontainer puts file in container
 	Putfileincontainer = OrderType("putfileincontainer")
-	//Emulation emulates
+	//  Emulation emulates
 	Emulation = OrderType("emulation")
 )
 

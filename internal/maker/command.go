@@ -31,7 +31,7 @@ import (
 	"github.com/google/uuid"
 )
 
-//Command handles the simple schema -> order conversions
+//  Command handles the simple schema -> order conversions
 type Command interface {
 	New(order command.Order, endpoint string, timeout time.Duration) (command.Command, error)
 

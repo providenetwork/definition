@@ -32,7 +32,7 @@ func NewLogger(v *viper.Viper) (Logger, error) {
 	return out, v.Unmarshal(&out)
 }
 
-//GetLogger gets a logger according to the config
+//  GetLogger gets a logger according to the config
 func (l Logger) GetLogger() (*logrus.Logger, error) {
 	logger := logrus.New()
 	lvl, err := logrus.ParseLevel(l.Verbosity)

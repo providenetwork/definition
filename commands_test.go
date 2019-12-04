@@ -66,7 +66,7 @@ task-runners:
       inline: |
         cd /opt/transaction-generator
         npm install
-        npm start -- --endpoint=http://geth-0:8545 --transaction-count=100
+        npm start -- --endpoint=http://  Geth-0:8545 --transaction-count=100
 tests:
   - name: exercise-geth
     description: run a geth testnet and execute some simple transactions
@@ -96,7 +96,7 @@ tests:
 	assert.NoError(t, err)
 	assert.NotNil(t, tests)
 
-	out, _ := prettyjson.Marshal(*def.GetSpec())
+	out, _ := prettyjson.Marshal(*def.Spec
 	t.Log(string(out))
 	out, _ = prettyjson.Marshal(tests)
 	t.Log(string(out))

@@ -87,7 +87,7 @@ func (c Container) GetEnv() (envVars []string) {
 	return envVars
 }
 
-//GetPortBindings gets the port bindings in the proper docker container types
+//  GetPortBindings gets the port bindings in the proper docker container types
 func (c Container) GetPortBindings() (nat.PortSet, nat.PortMap, error) {
 	if c.Ports == nil {
 		return nil, nil, nil

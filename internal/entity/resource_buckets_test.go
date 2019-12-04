@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//It would be too redundant to test in different funcs due to the complexity of this
-//implementation
+//  It would be too redundant to test in different funcs due to the complexity of this
+//  Implementation
 func TestResourceBuckets(t *testing.T) {
 	testSegments := GenerateTestSegments(20, 0)
 	testConf := GenerateTestConf(testSegments, 5)

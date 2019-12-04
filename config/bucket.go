@@ -40,7 +40,7 @@ type Bucket struct {
 }
 
 //NewBucket generates a Bucket configuration from the given viper
-//configuration
+//  Configuration
 func NewBucket(v *viper.Viper) (Bucket, error) {
 	out := Bucket{}
 	return out, v.Unmarshal(&out)

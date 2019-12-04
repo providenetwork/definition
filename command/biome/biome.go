@@ -2,11 +2,11 @@
 // the testexecution service imports this package.
 package biome
 
-//CloudProvider is the remote cloud provide to provision the instance on
+// CloudProvider is the remote cloud provide to provision the instance on
 type CloudProvider string
 
 const (
-	//GCPProvider represents the Google Cloud Platform Provider
+	// GCPProvider represents the Google Cloud Platform Provider
 	GCPProvider = CloudProvider("gcp")
 )
 
@@ -18,14 +18,14 @@ type Instance struct {
 	Storage  int64         `json:"storage"`
 }
 
-//CreateBiome represents the create biome command
+// CreateBiome represents the create biome command
 type CreateBiome struct {
 	TestnetID string     `json:"testnetID"`
 	OrgID     int64      `json:"orgID"`
 	Instances []Instance `json:"nodes"`
 }
 
-//DestroyBiome represents the destroy biome command
+// DestroyBiome represents the destroy biome command
 type DestroyBiome struct {
 	TestnetID string `json:"testnetID"`
 }

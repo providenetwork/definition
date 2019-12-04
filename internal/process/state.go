@@ -37,7 +37,7 @@ type System interface {
 		systems []schema.SystemComponent) (toAdd []entity.Service,
 		toRemove []entity.Service, err error)
 
-	//Add modifies State
+	//  Add modifies State
 	Add(state *entity.State, spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Service, error)
 	//Remove modifies state
 	Remove(state *entity.State, spec schema.RootSchema, systems []string) ([]entity.Service, error)
@@ -102,7 +102,7 @@ func (sys system) GetAlreadyExists(state *entity.State, systems []schema.SystemC
 	return
 }
 
-//Add modifies State
+//  Add modifies State
 func (sys system) Add(state *entity.State, spec schema.RootSchema,
 	systems []schema.SystemComponent) ([]entity.Service, error) {
 	out := []entity.Service{}

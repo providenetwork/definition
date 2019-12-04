@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 )
 
-//TarWriter represents a writer that outputs a tar achive
+// TarWriter represents a writer that outputs a tar achive
 type TarWriter interface {
 	io.Closer
 	io.Writer
@@ -33,7 +33,7 @@ type TarWriter interface {
 	WriteHeader(hdr *tar.Header) error
 }
 
-//IFile represents the operations needed for the file object
+// IFile represents the operations needed for the file object
 type IFile interface {
 	GetTarReader() (io.Reader, error)
 	GetDir() string
@@ -41,11 +41,11 @@ type IFile interface {
 
 // File represents a file which will be placed inside either a docker container or volume
 type File struct {
-	//Mode is permission and mode bits
+	// Mode is permission and mode bits
 	Mode int64 `json:"mode"`
-	//Destination is the mount point of the file
+	// Destination is the mount point of the file
 	Destination string `json:"destination"`
-	//Data is the contents of the file
+	// Data is the contents of the file
 	Data []byte `json:"data"`
 }
 
@@ -62,13 +62,13 @@ func (file File) writeToTar(tw TarWriter) error {
 	return err
 }
 
-//GetTarReader returns a reader which reads this file as if it was in a tar archive
+// GetTarReader returns a reader which reads this file as if it was in a tar archive
 func (file File) GetTarReader() (io.Reader, error) {
 	var buf bytes.Buffer
 	return &buf, file.writeToTar(tar.NewWriter(&buf))
 }
 
-//GetDir gets the destination directory
+// GetDir gets the destination directory
 func (file File) GetDir() string {
 	return filepath.Dir(file.Destination)
 }
