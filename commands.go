@@ -65,12 +65,12 @@ func NewCommands(conf config.Config) (Commands, error) {
 // In res[n]. We get both at once, since we have to compute the commands for provisioning to produce
 // the commands for Genesis.
 func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
-	resDist, err := cmdParser.dist.Distribute(def.spec)
+	resDist, err := cmdParser.dist.Distribute(def.Spec)
 	if err != nil {
 		return nil, errors.Wrap(err, "distribute")
 	}
 
-	testCmds, err := cmdParser.proc.Interpret(def.spec, resDist)
+	testCmds, err := cmdParser.proc.Interpret(def.Spec, resDist)
 	if err != nil {
 		return nil, errors.Wrap(err, "interpret")
 	}
