@@ -19,8 +19,11 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config/defaults"
+	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
 
@@ -30,20 +33,23 @@ import (
 
 type Sidecar interface {
 	GetArgs(sidecar schema.Sidecar) []string
+	GetCPUs(sidecar schema.Sidecar) string
 	GetEntrypoint(sidecar schema.Sidecar) string
 	GetImage(sidecar schema.Sidecar) string
 	GetLabels(parent entity.Service, sidecar schema.Sidecar) map[string]string
+	GetMemory(sidecar schema.Sidecar) string
 	GetNetwork(parent entity.Service) strslice.StrSlice
 	GetVolumes(sidecar schema.Sidecar) []command.Mount
 }
 
 type sidecarParser struct {
 	defaults defaults.Service
+	conv     converter.Resource
 	namer    Names
 }
 
-func NewSidecar(defaults defaults.Service, namer Names) Sidecar {
-	return &sidecarParser{defaults: defaults, namer: namer}
+func NewSidecar(defaults defaults.Service, conv converter.Resource, namer Names) Sidecar {
+	return &sidecarParser{defaults: defaults, namer: namer, conv: conv}
 }
 
 func (sp sidecarParser) GetArgs(sidecar schema.Sidecar) []string {
@@ -61,6 +67,22 @@ func (sp sidecarParser) GetEntrypoint(sidecar schema.Sidecar) string {
 		return "/bin/sh"
 	}
 	return ""
+}
+
+func (sp sidecarParser) GetCPUs(sidecar schema.Sidecar) string {
+	if sidecar.Resources.Cpus == 0 {
+		return fmt.Sprint(sp.defaults.CPUs)
+	}
+	return fmt.Sprint(sidecar.Resources.Cpus)
+}
+
+func (sp sidecarParser) GetMemory(sidecar schema.Sidecar) string {
+	res, err := sp.conv.FromResources(sidecar.Resources)
+	if err != nil || res.Memory == 0 {
+		return fmt.Sprint(sp.defaults.Memory)
+	}
+	return fmt.Sprint(res.Memory)
+
 }
 
 func (sp sidecarParser) GetImage(sidecar schema.Sidecar) string {

@@ -23,6 +23,7 @@ import (
 )
 
 type Service struct {
+	Resources
 	Image string `mapstructure:"defaultServiceImage"`
 }
 

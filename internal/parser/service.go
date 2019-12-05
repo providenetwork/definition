@@ -21,25 +21,30 @@ package parser
 import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config/defaults"
+	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
 )
 
 type Service interface {
 	GetArgs(service entity.Service) []string
+	GetCPUs(service entity.Service) int64
 	GetEntrypoint(service entity.Service) string
 	GetImage(service entity.Service) string
+
 	GetSidecarNetwork(service entity.Service) string
 	GetNetworks(service entity.Service) []string
+	GetMemory(service entity.Service) int64
 	GetVolumes(service entity.Service) []command.Mount
 }
 
 type serviceParser struct {
 	defaults defaults.Service
+	conv     converter.Resource
 	namer    Names
 }
 
-func NewService(defaults defaults.Service, namer Names) Service {
-	return &serviceParser{defaults: defaults, namer: namer}
+func NewService(defaults defaults.Service, conv converter.Resource, namer Names) Service {
+	return &serviceParser{defaults: defaults, namer: namer, conv: conv}
 }
 
 func (sp *serviceParser) GetArgs(service entity.Service) []string {
@@ -57,6 +62,22 @@ func (sp *serviceParser) GetEntrypoint(service entity.Service) string {
 		return "/bin/sh"
 	}
 	return ""
+}
+
+func (sp *serviceParser) GetCPUs(service entity.Service) int64 {
+	if service.SquashedService.Resources.Cpus == 0 {
+		return sp.defaults.CPUs
+	}
+	return service.SquashedService.Resources.Cpus
+}
+
+func (sp *serviceParser) GetMemory(service entity.Service) int64 {
+	res, err := sp.conv.FromResources(service.SquashedService.Resources)
+	if err != nil || res.Memory == 0 {
+		return sp.defaults.Memory
+	}
+	return res.Memory
+
 }
 
 func (sp *serviceParser) GetImage(service entity.Service) string {

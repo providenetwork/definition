@@ -76,10 +76,12 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 				maker.NewCommand(
 					parser.NewService(
 						conf.Defaults.Service,
+						converter.NewResource(conf.Defaults.Resources),
 						parser.NewNames(),
 					),
 					parser.NewSidecar(
 						conf.Defaults.Service,
+						converter.NewResource(conf.Defaults.Resources),
 						parser.NewNames(),
 					),
 					parser.NewNetwork(),
@@ -89,10 +91,12 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 					maker.NewCommand(
 						parser.NewService(
 							conf.Defaults.Service,
+							converter.NewResource(conf.Defaults.Resources),
 							parser.NewNames(),
 						),
 						parser.NewSidecar(
 							conf.Defaults.Service,
+							converter.NewResource(conf.Defaults.Resources),
 							parser.NewNames(),
 						),
 						parser.NewNetwork(),
