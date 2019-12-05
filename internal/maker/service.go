@@ -165,7 +165,7 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 	}
 	if len(task.Networks) == 0 {
 		task.Networks = []schema.Network{
-			schema.Network{Name: "default"},
+			schema.Network{Name: "none"},
 		}
 	}
 	to := strings.Replace(task.Timeout, " ", "", -1)
