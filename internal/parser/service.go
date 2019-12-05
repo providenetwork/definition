@@ -88,11 +88,22 @@ func (sp *serviceParser) GetImage(service entity.Service) string {
 	return service.SquashedService.Image
 }
 
-func (sp *serviceParser) GetNetworks(service entity.Service) []string {
-	out := make([]string, len(service.Networks)+1)
-	out[0] = sp.GetSidecarNetwork(service)
+func (sp *serviceParser) GetNetworks(service entity.Service) (out []string) {
+
+	if service.IsTask {
+		out = make([]string, len(service.Networks))
+	} else {
+		out = make([]string, len(service.Networks)+1)
+		out[0] = sp.GetSidecarNetwork(service)
+	}
+
 	for i := range service.Networks {
-		out[i+1] = service.Networks[i].Name
+		if service.IsTask {
+			out[i] = service.Networks[i].Name
+		} else {
+			out[i+1] = service.Networks[i].Name
+		}
+
 	}
 	return out
 }
