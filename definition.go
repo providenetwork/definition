@@ -25,7 +25,7 @@ import (
 // the test definition specification.
 type Definition struct {
 	// ID is the test ID
-	ID    string
+	ID string
 
 	// OrgID
 	OrgID int64

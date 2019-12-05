@@ -147,7 +147,7 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			EntryPoint:  cmd.sidecar.GetEntrypoint(sidecar),
 			Environment: sidecar.Environment,
 			Labels:      cmd.sidecar.GetLabels(parent, sidecar),
-			Name:        sidecar.Name,
+			Name:        cmd.namer.Sidecar(parent, sidecar),
 			Network:     strslice.StrSlice(cmd.sidecar.GetNetwork(parent)),
 			Volumes:     cmd.sidecar.GetVolumes(sidecar),
 			Cpus:        fmt.Sprint(sidecar.Resources.Cpus),
