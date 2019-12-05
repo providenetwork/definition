@@ -80,7 +80,7 @@ func (cmd commandMaker) New(order command.Order, endpoint string) (command.Comma
 		ID:        id.String(),
 		Timestamp: time.Now().Unix(),
 		Target: command.Target{
-			IP: "127.0.0.1", //endpoint,
+			IP: endpoint, //endpoint,
 		},
 		Order: order,
 	}, nil
