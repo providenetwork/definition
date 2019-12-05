@@ -36,5 +36,5 @@ func setServiceBindings(v *viper.Viper) error {
 }
 
 func setServiceDefaults(v *viper.Viper) {
-	v.SetDefault("defaultServiceImage", "INFO")
+	v.SetDefault("defaultServiceImage", "ubuntu:latest")
 }
