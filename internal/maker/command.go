@@ -28,13 +28,10 @@ import (
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/docker/docker/api/types/strslice"
-	"github.com/google/uuid"
 )
 
 //  Command handles the simple schema -> order conversions
 type Command interface {
-	New(order command.Order, endpoint string) (command.Command, error)
-
 	CreateNetwork(name string, network entity.Network) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
 	CreateContainer(service entity.Service) command.Order
@@ -69,21 +66,6 @@ func NewCommand(
 		namer:   namer,
 		network: network,
 	}
-}
-
-func (cmd commandMaker) New(order command.Order, endpoint string) (command.Command, error) {
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return command.Command{}, err
-	}
-	return command.Command{
-		ID:        id.String(),
-		Timestamp: time.Now().Unix(),
-		Target: command.Target{
-			IP: endpoint, //endpoint,
-		},
-		Order: order,
-	}, nil
 }
 
 func (cmd commandMaker) createNetwork(name string, network entity.Network, global bool) command.Order {

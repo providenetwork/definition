@@ -59,7 +59,7 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 				return nil, err
 			}
 			order := resolver.cmdMaker.CreateNetwork(network.Name, subnet)
-			cmd, err := resolver.cmdMaker.New(order, "0")
+			cmd, err := command.NewCommand(order, "0")
 			if err != nil {
 				return nil, err
 			}
@@ -126,7 +126,7 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 			return nil, fmt.Errorf("could not find bucket")
 		}
 
-		cmd, err := resolver.cmdMaker.New(order, fmt.Sprint(bucket))
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
 		}

@@ -19,11 +19,14 @@
 package process
 
 import (
-	"github.com/sirupsen/logrus"
+	"fmt"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/sirupsen/logrus"
 )
 
 type TestCalculator interface {
@@ -49,7 +52,7 @@ func NewTestCalculator(
 		logger:   logger}
 }
 
-func (calc *testCalculator) handlePhase(state *entity.State, networkState entity.NetworkState,
+func (calc testCalculator) handlePhase(state *entity.State, networkState entity.NetworkState,
 	spec schema.RootSchema,
 	phase schema.Phase, dist *entity.ResourceDist, index int) ([][]command.Command, error) {
 
@@ -137,7 +140,24 @@ func (calc *testCalculator) handlePhase(state *entity.State, networkState entity
 	return out, nil
 }
 
-func (calc *testCalculator) Commands(spec schema.RootSchema,
+func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Command, error) {
+	hosts := make([]string, dist.Size())
+	for i := range hosts {
+		hosts[i] = fmt.Sprint(i)
+	}
+
+	order := command.Order{
+		Type: command.SwarmInit,
+		Payload: command.SetupSwarm{
+			Hosts: hosts,
+		},
+	}
+	cmd, err := command.NewCommand(order, "0")
+	return [][]command.Command{[]command.Command{cmd}}, err
+
+}
+
+func (calc testCalculator) Commands(spec schema.RootSchema,
 	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
 
 	state := entity.NewState()
@@ -149,6 +169,11 @@ func (calc *testCalculator) Commands(spec schema.RootSchema,
 
 	phase := schema.Phase{System: spec.Tests[index].System}
 	out := entity.TestCommands{}
+	sCmds, err := calc.swarmInit(dist)
+	if err != nil {
+		return nil, err
+	}
+	out = out.Append(sCmds)
 	cmds, err := calc.handlePhase(state, network, spec, phase, dist, 0)
 	if err != nil {
 		return nil, err

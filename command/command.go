@@ -21,6 +21,9 @@ package command
 import (
 	"bytes"
 	"encoding/json"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 //OrderType is the type of order
@@ -51,6 +54,9 @@ const (
 	Putfileincontainer = OrderType("putfileincontainer")
 	//  Emulation emulates
 	Emulation = OrderType("emulation")
+
+	//SwarmInit sets up the docker swarm
+	SwarmInit = OrderType("swarminit")
 )
 
 // OrderPayload is a pointer interface for order payloads.
@@ -95,6 +101,12 @@ type FileAndVolume struct {
 	File File `json:"file"`
 }
 
+//SetupSwarm is the payload to setup a docker swarm
+type SetupSwarm struct {
+	//Hosts is an array of the hosts to be setup with docker swarm
+	Hosts []string
+}
+
 // Target sets the target of a command - which testnet, instance to hit
 type Target struct {
 	IP        string `json:"ip"`
@@ -111,6 +123,22 @@ type Command struct {
 	Target Target `json:"target"`
 	//Order is the action of the command, it represents what needs to be done
 	Order Order `json:"order"`
+}
+
+//NewCommand properly creates a new command
+func NewCommand(order Order, endpoint string) (Command, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return Command{}, err
+	}
+	return Command{
+		ID:        id.String(),
+		Timestamp: time.Now().Unix(),
+		Target: Target{
+			IP: endpoint, //endpoint,
+		},
+		Order: order,
+	}, nil
 }
 
 //ParseOrderPayloadInto attempts to Marshal the payload into the object pointed to by out

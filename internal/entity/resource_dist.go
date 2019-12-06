@@ -58,3 +58,10 @@ func (rd ResourceDist) GetPhase(index int) (PhaseDist, error) {
 	}
 	return rd[index], nil
 }
+
+func (rd ResourceDist) Size() int {
+	if len(rd) == 0 {
+		return 0
+	}
+	return len(rd[len(rd)-1])
+}
