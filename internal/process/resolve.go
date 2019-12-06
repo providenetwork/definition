@@ -106,7 +106,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		out[0] = append(out[0], volumeCmds...)
 		out[1] = append(out[1], createCmd)
 		out[2] = append(out[2], startCmd)
-		out[3] = append(out[3], emulationCmds...)
+		out[1] = append(out[1], emulationCmds...)
 	}
 
 	return out, nil
