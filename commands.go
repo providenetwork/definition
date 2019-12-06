@@ -80,6 +80,12 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID),
 			Commands:         [][]command.Command(testCmds[i]),
 		}
+
+		for j := range out[i].Commands {
+			for k := range out[i].Commands[j] {
+				out[i].Commands[j][k].Target.TestnetID = def.ID
+			}
+		}
 	}
 	return out, nil
 }
