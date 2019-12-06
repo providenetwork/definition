@@ -73,7 +73,7 @@ func (dep dependency) Emulation(spec schema.RootSchema, dist entity.PhaseDist,
 		if err != nil {
 			return nil, err
 		}
-		cmd, err := dep.cmdMaker.New(order, fmt.Sprint(bucket))
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
 		}
@@ -93,14 +93,14 @@ func (dep dependency) Container(spec schema.RootSchema, dist entity.PhaseDist,
 
 	order := dep.cmdMaker.CreateContainer(service)
 
-	create, err = dep.cmdMaker.New(order, fmt.Sprint(bucket))
+	create, err = command.NewCommand(order, fmt.Sprint(bucket))
 	if err != nil {
 		return
 	}
 
 	order = dep.cmdMaker.StartContainer(service, service.IsTask, service.Timeout)
 
-	start, err = dep.cmdMaker.New(order, fmt.Sprint(bucket))
+	start, err = command.NewCommand(order, fmt.Sprint(bucket))
 	return
 }
 
@@ -115,14 +115,14 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 	for _, sidecar := range service.Sidecars {
 
 		order := dep.cmdMaker.CreateSidecar(service, sidecar)
-		create, err := dep.cmdMaker.New(order, fmt.Sprint(bucket))
+		create, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
 		}
 		out[0] = append(out[0], create)
 		order = dep.cmdMaker.StartSidecar(service, sidecar)
 
-		start, err := dep.cmdMaker.New(order, fmt.Sprint(bucket))
+		start, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +143,7 @@ func (dep dependency) SidecarNetwork(spec schema.RootSchema, networkState entity
 		return command.Command{}, err
 	}
 	order := dep.cmdMaker.CreateSidecarNetwork(service, subnet)
-	return dep.cmdMaker.New(order, fmt.Sprint(bucket))
+	return command.NewCommand(order, fmt.Sprint(bucket))
 }
 
 func (dep dependency) Volumes(spec schema.RootSchema, dist entity.PhaseDist,
@@ -156,7 +156,7 @@ func (dep dependency) Volumes(spec schema.RootSchema, dist entity.PhaseDist,
 	out := []command.Command{}
 	for _, volume := range service.SquashedService.SharedVolumes {
 		order := dep.cmdMaker.CreateVolume(volume)
-		cmd, err := dep.cmdMaker.New(order, fmt.Sprint(bucket))
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
 		}
