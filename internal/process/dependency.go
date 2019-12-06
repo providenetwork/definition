@@ -60,7 +60,9 @@ func NewDependency(
 
 func (dep dependency) Emulation(spec schema.RootSchema, dist entity.PhaseDist,
 	service entity.Service) ([]command.Command, error) {
-
+	if service.IsTask {
+		return []command.Command{}, nil
+	}
 	bucket := dist.FindBucket(service.Name)
 	if bucket == -1 {
 		return nil, fmt.Errorf("could not find bucket")
