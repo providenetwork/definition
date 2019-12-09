@@ -26,6 +26,7 @@ import (
 	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/schema"
 
+	"github.com/imdario/mergo"
 	"github.com/sirupsen/logrus"
 )
 
@@ -63,22 +64,26 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 			if err != nil {
 				return nil, err
 			}
+			cmd.Meta["system"] = system.Name
+			cmd.Meta["network"] = network.Name
 			out = append(out, cmd)
 		}
 	}
 	return out, nil
 }
 
-func (resolver resolve) pullImages(allImages map[string]map[string]bool) ([]command.Command, error) {
+//instance -> images -> meta
+func (resolver resolve) pullImages(allImages map[string]map[string]map[string]string) ([]command.Command, error) {
+
 	out := []command.Command{}
 	for instance, images := range allImages {
-		for image := range images {
+		for image, meta := range images {
 			order := resolver.cmdMaker.PullImage(image)
 			cmd, err := command.NewCommand(order, instance)
 			if err != nil {
 				return nil, err
 			}
-
+			mergo.Map(&cmd.Meta, meta)
 			out = append(out, cmd)
 		}
 
@@ -90,7 +95,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 	dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 5)
-	images := map[string]map[string]bool{}
+	images := map[string]map[string]map[string]string{}
 	for _, service := range services {
 
 		createCmd, startCmd, err := resolver.deps.Container(spec, dist, service)
@@ -99,9 +104,9 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		}
 
 		if images[createCmd.Target.IP] == nil {
-			images[createCmd.Target.IP] = map[string]bool{}
+			images[createCmd.Target.IP] = map[string]map[string]string{}
 		}
-		images[createCmd.Target.IP][service.SquashedService.Image] = true
+		images[createCmd.Target.IP][service.SquashedService.Image] = service.Labels
 
 		if !service.IsTask && len(service.Sidecars) > 0 {
 			sidecarCmds, err := resolver.deps.Sidecars(spec, dist, service)
@@ -117,9 +122,9 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 					continue
 				}
 				if images[cmd.Target.IP] == nil {
-					images[cmd.Target.IP] = map[string]bool{}
+					images[cmd.Target.IP] = map[string]map[string]string{}
 				}
-				images[cmd.Target.IP][payload.Image] = true
+				images[cmd.Target.IP][payload.Image] = service.Labels
 			}
 			out[3] = append(out[3], sidecarCmds[0]...)
 			out[4] = append(out[4], sidecarCmds[1]...)
@@ -172,6 +177,7 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 		if err != nil {
 			return nil, err
 		}
+		mergo.Map(&cmd.Meta, service.Labels)
 		out = append(out, cmd)
 	}
 	//  If needed, we can also add commands for removing volumes and networks
