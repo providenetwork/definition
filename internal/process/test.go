@@ -52,9 +52,11 @@ func NewTestCalculator(
 		logger:   logger}
 }
 
-func (calc testCalculator) handlePhase(state *entity.State, networkState entity.NetworkState,
+func (calc testCalculator) handlePhase(state *entity.State,
+	networkState entity.NetworkState,
 	spec schema.RootSchema,
-	phase schema.Phase, dist *entity.ResourceDist, index int) ([][]command.Command, error) {
+	phase schema.Phase,
+	dist *entity.ResourceDist, index int) ([][]command.Command, error) {
 
 	changedSystems, systems, hasChanged := calc.sys.GetAlreadyExists(state, phase.System)
 
@@ -137,7 +139,11 @@ func (calc testCalculator) handlePhase(state *entity.State, networkState entity.
 		}
 	}
 
-	return out, nil
+	tmp := entity.TestCommands(out)
+	tmp.MetaInject(
+		"phase", phase.Name,
+		"phaseNum", fmt.Sprint(index))
+	return [][]command.Command(tmp), nil
 }
 
 func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Command, error) {
@@ -185,5 +191,6 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 		}
 		out = out.Append(cmds)
 	}
+	out.MetaInject("test", spec.Tests[index].Name)
 	return out, nil
 }

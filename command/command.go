@@ -84,12 +84,14 @@ type Target struct {
 type Command struct {
 	// ID is the unique id of this command
 	ID string `json:"id"`
-	// Timestamp is the earliest time the command can be executed
+	// Timestamp is the creation timestamp
 	Timestamp int64 `json:"timestamp"`
-	//Target represents the target of this command
+	// Target represents the target of this command
 	Target Target `json:"target"`
-	//Order is the action of the command, it represents what needs to be done
+	// Order is the action of the command, it represents what needs to be done
 	Order Order `json:"order"`
+	// Meta is extra informative data to be passed with the command
+	Meta map[string]string `json:"meta"`
 }
 
 // NewCommand properly creates a new command
@@ -105,6 +107,7 @@ func NewCommand(order Order, endpoint string) (Command, error) {
 			IP: endpoint, //endpoint,
 		},
 		Order: order,
+		Meta:  map[string]string{},
 	}, nil
 }
 

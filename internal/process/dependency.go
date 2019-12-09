@@ -25,6 +25,7 @@ import (
 	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/schema"
 
+	"github.com/imdario/mergo"
 	"github.com/sirupsen/logrus"
 )
 
@@ -98,9 +99,19 @@ func (dep dependency) Container(spec schema.RootSchema, dist entity.PhaseDist,
 		return
 	}
 
+	err = mergo.Map(&create.Meta, service.Labels)
+	if err != nil {
+		return
+	}
+
 	order = dep.cmdMaker.StartContainer(service, service.IsTask, service.Timeout)
 
 	start, err = command.NewCommand(order, fmt.Sprint(bucket))
+	if err != nil {
+		return
+	}
+
+	err = mergo.Map(&start.Meta, service.Labels)
 	return
 }
 
@@ -119,6 +130,13 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 		if err != nil {
 			return nil, err
 		}
+
+		err = mergo.Map(&create.Meta, service.Labels)
+		if err != nil {
+			return nil, err
+		}
+		create.Meta["service"] = service.Name
+
 		out[0] = append(out[0], create)
 		order = dep.cmdMaker.StartSidecar(service, sidecar)
 
@@ -126,6 +144,11 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 		if err != nil {
 			return nil, err
 		}
+		err = mergo.Map(&start.Meta, service.Labels)
+		if err != nil {
+			return nil, err
+		}
+
 		out[1] = append(out[1], start)
 	}
 	return out, nil

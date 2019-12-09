@@ -18,6 +18,8 @@
 package definition
 
 import (
+	"fmt"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/command/biome"
 	"github.com/whiteblock/definition/config"
@@ -76,6 +78,7 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	}
 	out := make([]Test, len(testCmds))
 	for i := range testCmds {
+		testCmds[i].MetaInject("org", fmt.Sprint(def.OrgID))
 		out[i] = Test{
 			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID),
 			Commands:         [][]command.Command(testCmds[i]),
