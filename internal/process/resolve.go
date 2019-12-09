@@ -69,20 +69,57 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 	return out, nil
 }
 
+func (resolver resolve) pullImages(allImages map[string]map[string]bool) ([]command.Command, error) {
+	out := []command.Command{}
+	for instance, images := range allImages {
+		for image := range images {
+			order := resolver.cmdMaker.PullImage(image)
+			cmd, err := command.NewCommand(order, instance)
+			if err != nil {
+				return nil, err
+			}
+
+			out = append(out, cmd)
+		}
+
+	}
+	return out, nil
+}
+
 func (resolver resolve) CreateServices(spec schema.RootSchema, networkState entity.NetworkState,
 	dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 5)
+	images := map[string]map[string]bool{}
 	for _, service := range services {
 
 		createCmd, startCmd, err := resolver.deps.Container(spec, dist, service)
 		if err != nil {
 			return nil, err
 		}
+
+		if images[createCmd.Target.IP] == nil {
+			images[createCmd.Target.IP] = map[string]bool{}
+		}
+		images[createCmd.Target.IP][service.SquashedService.Image] = true
+
 		if !service.IsTask && len(service.Sidecars) > 0 {
 			sidecarCmds, err := resolver.deps.Sidecars(spec, dist, service)
 			if err != nil {
 				return nil, err
+			}
+			for _, cmd := range sidecarCmds[0] {
+				if cmd.Order.Type != command.Createcontainer {
+					continue
+				}
+				payload, ok := cmd.Order.Payload.(command.Container)
+				if !ok {
+					continue
+				}
+				if images[cmd.Target.IP] == nil {
+					images[cmd.Target.IP] = map[string]bool{}
+				}
+				images[cmd.Target.IP][payload.Image] = true
 			}
 			out[3] = append(out[3], sidecarCmds[0]...)
 			out[4] = append(out[4], sidecarCmds[1]...)
@@ -108,6 +145,11 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		out[2] = append(out[2], startCmd)
 		out[1] = append(out[1], emulationCmds...)
 	}
+	cmds, err := resolver.pullImages(images)
+	if err != nil {
+		return nil, err
+	}
+	out[0] = append(out[0], cmds...)
 
 	return out, nil
 }

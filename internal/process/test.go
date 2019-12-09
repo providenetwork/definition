@@ -154,7 +154,6 @@ func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Com
 	}
 	cmd, err := command.NewCommand(order, "0")
 	return [][]command.Command{[]command.Command{cmd}}, err
-
 }
 
 func (calc testCalculator) Commands(spec schema.RootSchema,

@@ -26,37 +26,40 @@ import (
 	"github.com/google/uuid"
 )
 
-//OrderType is the type of order
+// OrderType is the type of order
 type OrderType string
 
 const (
-	//  Createcontainer attempts to create a docker container
+	// Createcontainer attempts to create a docker container
 	Createcontainer = OrderType("createcontainer")
-	//Startcontainer attempts to start an already created docker container
+	// Startcontainer attempts to start an already created docker container
 	Startcontainer = OrderType("startcontainer")
-	//Removecontainer attempts to remove a container
+	// Removecontainer attempts to remove a container
 	Removecontainer = OrderType("removecontainer")
-	//  Createnetwork attempts to create a network
+	// Createnetwork attempts to create a network
 	Createnetwork = OrderType("createnetwork")
-	//  Attachnetwork attempts to remove a network
+	// Attachnetwork attempts to remove a network
 	Attachnetwork = OrderType("attachnetwork")
-	//  Detachnetwork detaches network
+	// Detachnetwork detaches network
 	Detachnetwork = OrderType("detachnetwork")
-	//Removenetwork removes network
+	// Removenetwork removes network
 	Removenetwork = OrderType("removenetwork")
-	//  Createvolume creates volume
+	// Createvolume creates volume
 	Createvolume = OrderType("createvolume")
-	//Removevolume removes volume
+	// Removevolume removes volume
 	Removevolume = OrderType("removevolume")
-	//Putfile puts file
+	// Putfile puts file
 	Putfile = OrderType("putfile")
-	//Putfileincontainer puts file in container
+	// Putfileincontainer puts file in container
 	Putfileincontainer = OrderType("putfileincontainer")
-	//  Emulation emulates
+	// Emulation emulates
 	Emulation = OrderType("emulation")
 
-	//SwarmInit sets up the docker swarm
+	// SwarmInit sets up the docker swarm
 	SwarmInit = OrderType("swarminit")
+
+	// Pullimage pre-emptively pulls the given image
+	Pullimage = OrderType("pullimage")
 )
 
 // OrderPayload is a pointer interface for order payloads.
@@ -69,42 +72,6 @@ type Order struct {
 	Type OrderType `json:"type"`
 	//Payload is the payload object of the order
 	Payload OrderPayload `json:"payload"`
-}
-
-// SimpleName is a simple order payload with just the container name
-type SimpleName struct {
-	// Name of the container.
-	Name string `json:"name"`
-}
-
-// ContainerNetwork is a container and network order payload.
-type ContainerNetwork struct {
-	// Name of the container.
-	ContainerName string `json:"container"`
-	// Name of the network.
-	Network string `json:"network"`
-}
-
-// FileAndContainer is a file and container order payload.
-type FileAndContainer struct {
-	// Name of the container.
-	ContainerName string `json:"container"`
-	// Name of the file.
-	File File `json:"file"`
-}
-
-// FileAndVolume is a file and volume order payload.
-type FileAndVolume struct {
-	// Name of the volume.
-	VolumeName string `json:"volume"`
-	// Name of the file.
-	File File `json:"file"`
-}
-
-//SetupSwarm is the payload to setup a docker swarm
-type SetupSwarm struct {
-	//Hosts is an array of the hosts to be setup with docker swarm
-	Hosts []string
 }
 
 // Target sets the target of a command - which testnet, instance to hit
@@ -125,7 +92,7 @@ type Command struct {
 	Order Order `json:"order"`
 }
 
-//NewCommand properly creates a new command
+// NewCommand properly creates a new command
 func NewCommand(order Order, endpoint string) (Command, error) {
 	id, err := uuid.NewRandom()
 	if err != nil {
@@ -141,7 +108,7 @@ func NewCommand(order Order, endpoint string) (Command, error) {
 	}, nil
 }
 
-//ParseOrderPayloadInto attempts to Marshal the payload into the object pointed to by out
+// ParseOrderPayloadInto attempts to Marshal the payload into the object pointed to by out
 func (cmd Command) ParseOrderPayloadInto(out interface{}) error {
 	raw, err := json.Marshal(cmd.Order.Payload)
 	if err != nil {

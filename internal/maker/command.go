@@ -40,6 +40,7 @@ type Command interface {
 
 	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
+	PullImage(image string) command.Order
 
 	AttachNetwork(service entity.Service, network schema.Network) command.Order
 	Emulation(service entity.Service, network schema.Network) (command.Order, error)
@@ -82,6 +83,15 @@ func (cmd commandMaker) createNetwork(name string, network entity.Network, globa
 
 func (cmd commandMaker) CreateNetwork(name string, network entity.Network) command.Order {
 	return cmd.createNetwork(cmd.namer.Network(schema.Network{Name: name}), network, true)
+}
+
+func (cmd commandMaker) PullImage(image string) command.Order {
+	return command.Order{
+		Type: command.Pullimage,
+		Payload: command.PullImage{
+			Image: image,
+		},
+	}
 }
 
 func (cmd commandMaker) CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order {
