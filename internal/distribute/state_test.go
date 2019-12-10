@@ -26,6 +26,7 @@ import (
 	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
 	"github.com/whiteblock/definition/schema"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -61,7 +62,7 @@ func TestSystemState_FullTest(t *testing.T) {
 		parser.On("SystemComponent", spec, system).Return(result, nil).Once()
 		parser.On("SystemComponentNamesOnly", system).Return(result).Once()
 	}
-	statePack := entity.NewStatePack(spec, config.Bucket{})
+	statePack := entity.NewStatePack(spec, config.Bucket{}, logrus.New())
 	state := NewSystemState(parser, namer, nil)
 
 	//Successful Add

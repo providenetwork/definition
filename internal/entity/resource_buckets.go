@@ -22,6 +22,8 @@ import (
 	"fmt"
 
 	"github.com/whiteblock/definition/config"
+
+	"github.com/sirupsen/logrus"
 )
 
 type ResourceBuckets interface {
@@ -33,22 +35,24 @@ type ResourceBuckets interface {
 type resourceBuckets struct {
 	conf    config.Bucket
 	buckets []*Bucket
+	log     logrus.Ext1FieldLogger
 }
 
-func NewResourceBuckets(conf config.Bucket) ResourceBuckets {
-	return &resourceBuckets{conf: conf}
+func NewResourceBuckets(conf config.Bucket, log logrus.Ext1FieldLogger) ResourceBuckets {
+	return &resourceBuckets{conf: conf, log: log}
 }
 
 func (rb *resourceBuckets) add(segment Segment) error {
 	for i := range rb.buckets {
 		if rb.buckets[i].tryAdd(segment) {
+			rb.log.WithField("bucket", i).Trace("inserted a segment")
 			return nil
 		}
 	}
 	if int64(len(rb.buckets)) == rb.conf.MaxBuckets {
 		return fmt.Errorf("size limits exceeded")
 	}
-	bucket := NewBucket(&rb.conf)
+	bucket := NewBucket(&rb.conf, rb.log)
 	if !bucket.tryAdd(segment) {
 		return fmt.Errorf("segment size too large")
 	}
@@ -60,6 +64,9 @@ func (rb *resourceBuckets) Add(segments []Segment) error {
 	for _, segment := range segments {
 		err := rb.add(segment)
 		if err != nil {
+			rb.log.WithFields(logrus.Fields{
+				"segment": segment,
+				"error":   err}).Warn("failed to add segment")
 			return err
 		}
 	}
@@ -79,6 +86,9 @@ func (rb *resourceBuckets) Remove(segments []Segment) error {
 	for _, segment := range segments {
 		err := rb.remove(segment)
 		if err != nil {
+			rb.log.WithFields(logrus.Fields{
+				"segment": segment,
+				"error":   err}).Warn("failed to remove segment")
 			return err
 		}
 	}

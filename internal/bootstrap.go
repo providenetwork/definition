@@ -57,6 +57,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 			),
 			logger,
 		),
+		logger,
 	)
 
 	//  Commands
