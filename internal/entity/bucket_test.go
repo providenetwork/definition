@@ -24,6 +24,7 @@ import (
 
 	"github.com/whiteblock/definition/config"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -66,7 +67,7 @@ func TestNewBucket(t *testing.T) {
 		MinMemory:  2,
 		MinStorage: 3,
 	}
-	bucket := NewBucket(&testConf)
+	bucket := NewBucket(&testConf, logrus.New())
 	assert.Equal(t, bucket.CPUs, testConf.MinCPU)
 	assert.Equal(t, bucket.Memory, testConf.MinMemory)
 	assert.Equal(t, bucket.Storage, testConf.MinStorage)
@@ -87,7 +88,7 @@ func TestBucket_Clone(t *testing.T) {
 func TestBucket_Runthrough(t *testing.T) {
 	segments := GenerateTestSegments(10, 0)
 	conf := GenerateTestConf(segments, 1)
-	bucket := NewBucket(&conf)
+	bucket := NewBucket(&conf, logrus.New())
 
 	for _, segment := range segments {
 		require.True(t, bucket.hasSpace(segment))

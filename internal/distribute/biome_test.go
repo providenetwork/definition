@@ -34,7 +34,7 @@ import (
 )
 
 func TestBiomeCalculator_AddNextPhase(t *testing.T) {
-	testStatePack := entity.NewStatePack(schema.RootSchema{}, config.Bucket{})
+	testStatePack := entity.NewStatePack(schema.RootSchema{}, config.Bucket{}, logrus.New())
 
 	buckets := new(mockEntity.ResourceBuckets)
 	buckets.On("Remove", mock.Anything).Return(nil).Times(3)

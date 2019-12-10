@@ -21,6 +21,7 @@ package entity
 import (
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,7 +30,7 @@ func TestResourceDist(t *testing.T) {
 	testSegments := GenerateTestSegments(30, 0)
 	testConf := GenerateTestConf(testSegments, 5)
 
-	rb := NewResourceBuckets(testConf)
+	rb := NewResourceBuckets(testConf, logrus.New())
 	require.NotNil(t, rb)
 
 	resourceDist := &ResourceDist{}

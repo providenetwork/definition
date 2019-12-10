@@ -22,6 +22,8 @@ import (
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Distributor interface {
@@ -31,12 +33,14 @@ type Distributor interface {
 type distributor struct {
 	calculator BiomeCalculator
 	conf       config.Bucket
+	log        logrus.Ext1FieldLogger
 }
 
-func NewDistributor(conf config.Bucket, calculator BiomeCalculator) Distributor {
+func NewDistributor(conf config.Bucket, calculator BiomeCalculator, log logrus.Ext1FieldLogger) Distributor {
 	return &distributor{
 		calculator: calculator,
 		conf:       conf,
+		log:        log,
 	}
 }
 

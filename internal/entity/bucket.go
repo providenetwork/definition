@@ -22,6 +22,7 @@ import (
 	"github.com/whiteblock/definition/config"
 
 	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
 )
 
 /**
@@ -34,14 +35,16 @@ type Bucket struct {
 	conf     *config.Bucket
 	segments []Segment
 	usage    Resource //The combined usage of the segments
+	log      logrus.Ext1FieldLogger
 }
 
-func NewBucket(conf *config.Bucket) *Bucket {
+func NewBucket(conf *config.Bucket, log logrus.Ext1FieldLogger) *Bucket {
 	out := &Bucket{conf: conf}
 	out.CPUs = conf.MinCPU
 	out.Memory = conf.MinMemory
 	out.Storage = conf.MinStorage
 	out.segments = []Segment{}
+	out.log = log
 	return out
 }
 
@@ -61,6 +64,7 @@ func (b Bucket) FindByName(name string) int {
 func (b Bucket) Clone() (out Bucket) {
 	copier.Copy(&out, b)
 	copier.Copy(&out.segments, b.segments)
+	out.log = b.log
 	return
 }
 
@@ -86,7 +90,6 @@ func roundValueAndMax(old int64, new int64, unit int64) int64 {
 		return max(old, new)
 	}
 	return max(old, new+(unit-(new%unit)))
-
 }
 
 func (b *Bucket) update(segment Segment, positive bool) {
@@ -103,12 +106,21 @@ func (b *Bucket) update(segment Segment, positive bool) {
 	b.CPUs = roundValueAndMax(b.CPUs, b.usage.CPUs, b.conf.UnitCPU)
 	b.Memory = roundValueAndMax(b.Memory, b.usage.Memory, b.conf.UnitMemory)
 	b.Storage = roundValueAndMax(b.Storage, b.usage.Storage, b.conf.UnitStorage)
+	b.log.WithFields(logrus.Fields{
+		"storage":    b.Storage,
+		"memory":     b.Memory,
+		"cpu":        b.CPUs,
+		"storageUse": b.usage.Storage,
+		"memoryUse":  b.usage.Memory,
+		"cpuUse":     b.usage.CPUs,
+	}).Trace("updated bucket size")
 }
 
 func (b *Bucket) tryAdd(segment Segment) bool {
 	if !b.hasSpace(segment) {
 		return false
 	}
+	b.log.WithField("segment", segment).Trace("adding a segment")
 	b.update(segment, true)
 	b.segments = append(b.segments, segment)
 	return true
@@ -119,7 +131,8 @@ func (b *Bucket) tryRemove(segment Segment) bool {
 	if loc == -1 {
 		return false
 	}
-	b.update(segment, false)
+	b.log.WithField("segment", b.segments[loc]).Trace("removing a segment")
+	b.update(b.segments[loc], false)
 	if loc == len(b.segments)-1 {
 		b.segments = append(b.segments[:loc])
 	} else {

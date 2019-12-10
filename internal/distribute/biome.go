@@ -50,7 +50,7 @@ func NewBiomeCalculator(
 }
 
 func (bc *biomeCalculator) NewStatePack(spec schema.RootSchema, conf config.Bucket) *entity.StatePack {
-	return entity.NewStatePack(spec, conf)
+	return entity.NewStatePack(spec, conf, bc.logger)
 }
 
 func (bc *biomeCalculator) AddNextPhase(sp *entity.StatePack, phase schema.Phase) error {

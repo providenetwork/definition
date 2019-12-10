@@ -21,6 +21,8 @@ package entity
 import (
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/sirupsen/logrus"
 )
 
 type StatePack struct {
@@ -30,9 +32,9 @@ type StatePack struct {
 	Spec      schema.RootSchema
 }
 
-func NewStatePack(spec schema.RootSchema, conf config.Bucket) *StatePack {
+func NewStatePack(spec schema.RootSchema, conf config.Bucket, logger logrus.Ext1FieldLogger) *StatePack {
 	out := &StatePack{
-		Buckets:   NewResourceBuckets(conf),
+		Buckets:   NewResourceBuckets(conf, logger),
 		PrevTasks: nil,
 		Spec:      spec,
 	}
