@@ -64,6 +64,7 @@ func (b Bucket) FindByName(name string) int {
 func (b Bucket) Clone() (out Bucket) {
 	copier.Copy(&out, b)
 	copier.Copy(&out.segments, b.segments)
+	out.log = b.log
 	return
 }
 
