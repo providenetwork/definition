@@ -65,9 +65,9 @@ func (b Bucket) Clone() (out Bucket) {
 }
 
 func (b Bucket) hasSpace(segment Segment) bool {
-	return (b.usage.CPUs+segment.CPUs <= b.conf.MaxCPU) &&
-		(b.usage.Memory+segment.Memory <= b.conf.MaxMemory) &&
-		(b.usage.Storage+segment.Storage <= b.conf.MaxStorage)
+	return (roundValueAndMax(0, b.usage.CPUs+segment.CPUs, b.conf.UnitCPU) <= b.conf.MaxCPU) &&
+		(roundValueAndMax(0, b.usage.Memory+segment.Memory, b.conf.UnitCPU) <= b.conf.MaxMemory) &&
+		(roundValueAndMax(0, b.usage.Storage+segment.Storage, b.conf.UnitCPU) <= b.conf.MaxStorage)
 }
 
 func (b Bucket) findSegment(segment Segment) int {

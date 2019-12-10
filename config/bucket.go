@@ -87,7 +87,7 @@ func setBucketBindings(v *viper.Viper) error {
 		return err
 	}
 
-	err = v.BindEnv("bucketUnitStorage", "BUCKET__UNIT_STORAGE")
+	err = v.BindEnv("bucketUnitStorage", "BUCKET_UNIT_STORAGE")
 	if err != nil {
 		return err
 	}
