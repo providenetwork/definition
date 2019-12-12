@@ -12,4 +12,3 @@
 *.out
 /mocks
 /internal/mocks
-/test

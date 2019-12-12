@@ -118,7 +118,7 @@ func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
 			Labels:      service.Labels,
 			Name:        service.Name,
 			Network:     strslice.StrSlice(cmd.service.GetNetworks(service)),
-			Ports:       nil, //NYI
+			Ports:       service.Ports,
 			Volumes:     cmd.service.GetVolumes(service),
 			Cpus:        fmt.Sprint(cmd.service.GetCPUs(service)),
 			Memory:      fmt.Sprint(cmd.service.GetMemory(service)),
@@ -146,6 +146,7 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			Memory:      cmd.sidecar.GetMemory(sidecar),
 			Image:       cmd.sidecar.GetImage(sidecar),
 			Args:        cmd.sidecar.GetArgs(sidecar),
+			Ports:       service.Ports,
 		},
 	}
 }

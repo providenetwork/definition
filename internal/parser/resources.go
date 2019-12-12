@@ -19,6 +19,10 @@
 package parser
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/search"
@@ -88,6 +92,19 @@ func (res *resources) SystemComponent(spec schema.RootSchema,
 		resource, err := res.conv.FromResources(service.Resources)
 		if err != nil {
 			return nil, err
+		}
+
+		for _, pm := range sys.PortMappings {
+			ports := strings.Split(pm, ":")
+			if len(ports) != 2 {
+				return nil, fmt.Errorf(`invalid port mapping "%s"`, pm)
+			}
+
+			hostPort, err := strconv.Atoi(ports[0])
+			if err != nil {
+				return nil, err
+			}
+			(&resource).InsertPorts(hostPort)
 		}
 		out[i].UpdateResources(resource)
 	}

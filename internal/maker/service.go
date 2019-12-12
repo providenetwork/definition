@@ -19,6 +19,8 @@
 package maker
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +32,7 @@ import (
 
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
 )
 
 type Service interface {
@@ -44,13 +47,16 @@ type serviceMaker struct {
 	namer    parser.Names
 	searcher search.Schema
 	convert  converter.Service
+	log      logrus.Ext1FieldLogger
 }
 
 func NewService(
 	namer parser.Names,
 	searcher search.Schema,
-	convert converter.Service) Service {
-	return &serviceMaker{namer: namer, searcher: searcher, convert: convert}
+	convert converter.Service,
+	log logrus.Ext1FieldLogger) Service {
+	return &serviceMaker{namer: namer, searcher: searcher,
+		convert: convert, log: log}
 }
 
 func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
@@ -77,7 +83,7 @@ func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
 
 func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 	system schema.SystemComponent) ([]entity.Service, error) {
-
+	sp.log.WithField("system", system).Debug("creating service entities from system")
 	squashed, err := sp.searcher.FindServiceByType(spec, system.Type)
 	if err != nil {
 		return nil, err
@@ -104,6 +110,29 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		squashed.Resources.Storage = system.Resources.Storage
 	}
 
+	portMapping := map[int]int{}
+	for _, pm := range system.PortMappings {
+		ports := strings.Split(pm, ":")
+		if len(ports) != 2 {
+			return nil, fmt.Errorf(`invalid port mapping "%s"`, pm)
+		}
+
+		hostPort, err := strconv.Atoi(ports[0])
+		if err != nil {
+			return nil, err
+		}
+
+		cntrPort, err := strconv.Atoi(ports[1])
+		if err != nil {
+			return nil, err
+		}
+		sp.log.WithFields(logrus.Fields{
+			"host":      hostPort,
+			"container": cntrPort,
+		}).Debug("processed port mapping")
+		portMapping[hostPort] = cntrPort
+	}
+
 	base := entity.Service{
 		Name:            "",
 		Bucket:          -1,
@@ -111,6 +140,7 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		Networks:        system.Resources.Networks,
 		Sidecars:        sp.searcher.FindSidecarsByService(spec, system.Type),
 		Timeout:         0,
+		Ports:           portMapping,
 	}
 
 	for _, sidecar := range system.Sidecars {

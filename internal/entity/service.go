@@ -31,6 +31,7 @@ type Service struct {
 	Networks        []schema.Network
 	Sidecars        []schema.Sidecar
 	Labels          map[string]string
+	Ports           map[int]int
 
 	Timeout        time.Duration
 	IsTask         bool
