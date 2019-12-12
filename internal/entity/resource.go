@@ -54,6 +54,9 @@ func (res Resource) GetPorts() []int {
 }
 
 func (res *Resource) InsertPorts(ports ...int) {
+	if res.Ports == nil {
+		res.Ports = map[int]bool{}
+	}
 	for _, port := range ports {
 		res.Ports[port] = true
 	}

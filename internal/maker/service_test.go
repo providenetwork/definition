@@ -27,10 +27,10 @@ import (
 	mockSearch "github.com/whiteblock/definition/internal/mocks/search"
 	"github.com/whiteblock/definition/schema"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/sirupsen/logrus"
 )
 
 func TestService_FromSystem(t *testing.T) {

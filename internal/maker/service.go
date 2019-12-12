@@ -47,7 +47,7 @@ type serviceMaker struct {
 	namer    parser.Names
 	searcher search.Schema
 	convert  converter.Service
-	log logrus.Ext1FieldLogger
+	log      logrus.Ext1FieldLogger
 }
 
 func NewService(
@@ -55,7 +55,7 @@ func NewService(
 	searcher search.Schema,
 	convert converter.Service,
 	log logrus.Ext1FieldLogger) Service {
-	return &serviceMaker{namer: namer, searcher: searcher, 
+	return &serviceMaker{namer: namer, searcher: searcher,
 		convert: convert, log: log}
 }
 
@@ -83,7 +83,7 @@ func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
 
 func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 	system schema.SystemComponent) ([]entity.Service, error) {
-
+	sp.log.WithField("system", system).Debug("creating service entities from system")
 	squashed, err := sp.searcher.FindServiceByType(spec, system.Type)
 	if err != nil {
 		return nil, err
@@ -127,9 +127,9 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 			return nil, err
 		}
 		sp.log.WithFields(logrus.Fields{
-			"host":hostPort,
-			"container":cntrPort,
-		}).Trace("processed port mapping")
+			"host":      hostPort,
+			"container": cntrPort,
+		}).Debug("processed port mapping")
 		portMapping[hostPort] = cntrPort
 	}
 
