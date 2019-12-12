@@ -146,7 +146,7 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			Memory:      cmd.sidecar.GetMemory(sidecar),
 			Image:       cmd.sidecar.GetImage(sidecar),
 			Args:        cmd.sidecar.GetArgs(sidecar),
-			Ports:       service.Ports,
+			Ports:       parent.Ports,
 		},
 	}
 }
