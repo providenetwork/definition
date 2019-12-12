@@ -69,7 +69,8 @@ func (b Bucket) Clone() (out Bucket) {
 }
 
 func (b Bucket) hasSpace(segment Segment) bool {
-	return (roundValueAndMax(0, b.usage.CPUs+segment.CPUs, b.conf.UnitCPU) <= b.conf.MaxCPU) &&
+	return b.NoPortConflicts(segment.GetPorts()...) &&
+		(roundValueAndMax(0, b.usage.CPUs+segment.CPUs, b.conf.UnitCPU) <= b.conf.MaxCPU) &&
 		(roundValueAndMax(0, b.usage.Memory+segment.Memory, b.conf.UnitCPU) <= b.conf.MaxMemory) &&
 		(roundValueAndMax(0, b.usage.Storage+segment.Storage, b.conf.UnitCPU) <= b.conf.MaxStorage)
 }
@@ -97,10 +98,14 @@ func (b *Bucket) update(segment Segment, positive bool) {
 		b.usage.CPUs = b.usage.CPUs + segment.CPUs
 		b.usage.Memory = b.usage.Memory + segment.Memory
 		b.usage.Storage = b.usage.Storage + segment.Storage
+		b.InsertPorts(segment.GetPorts()...)
+		b.usage.InsertPorts(segment.GetPorts()...)
 	} else {
 		b.usage.CPUs = b.usage.CPUs - segment.CPUs
 		b.usage.Memory = b.usage.Memory - segment.Memory
 		b.usage.Storage = b.usage.Storage - segment.Storage
+		b.RemovePorts(segment.GetPorts()...)
+		b.usage.RemovePorts(segment.GetPorts()...)
 		return
 	}
 	b.CPUs = roundValueAndMax(b.CPUs, b.usage.CPUs, b.conf.UnitCPU)
