@@ -28,7 +28,7 @@ type Definition struct {
 	ID string
 
 	// OrgID
-	OrgID int64
+	OrgID string
 
 	Spec schema.RootSchema
 }

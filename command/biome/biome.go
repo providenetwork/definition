@@ -21,7 +21,7 @@ type Instance struct {
 // CreateBiome represents the create biome command
 type CreateBiome struct {
 	TestnetID string     `json:"testnetID"`
-	OrgID     int64      `json:"orgID"`
+	OrgID     string     `json:"orgID"`
 	Instances []Instance `json:"nodes"`
 }
 
