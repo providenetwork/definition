@@ -25,7 +25,8 @@ import (
 
 type ResourceDist []PhaseDist
 
-func (rd ResourceDist) ToBiomeCommand(provider biome.CloudProvider, testnetID string, orgID int64) biome.CreateBiome {
+func (rd ResourceDist) ToBiomeCommand(provider biome.CloudProvider,
+	testnetID string, orgID string) biome.CreateBiome {
 
 	finalDist := rd[len(rd)-1]
 	out := biome.CreateBiome{

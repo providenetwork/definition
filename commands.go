@@ -18,8 +18,6 @@
 package definition
 
 import (
-	"fmt"
-
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/command/biome"
 	"github.com/whiteblock/definition/config"
@@ -29,6 +27,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/whiteblock/utility/utils"
 )
 
 var globalCommands Commands
@@ -36,7 +35,7 @@ var globalCommands Commands
 //Test contains the instructions necessary for the execution of a single test
 type Test struct {
 	ID               string
-	OrgID            int64
+	OrgID            string
 	ProvisionCommand biome.CreateBiome
 	Commands         [][]command.Command
 }
@@ -78,8 +77,10 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	}
 	out := make([]Test, len(testCmds))
 	for i := range testCmds {
-		testCmds[i].MetaInject("org", fmt.Sprint(def.OrgID))
+		testCmds[i].MetaInject("org", def.OrgID)
 		out[i] = Test{
+			ID:               utils.GetUUIDString(),
+			OrgID:            def.OrgID,
 			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID),
 			Commands:         [][]command.Command(testCmds[i]),
 		}
