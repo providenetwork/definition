@@ -48,8 +48,6 @@ const (
 	Createvolume = OrderType("createvolume")
 	// Removevolume removes volume
 	Removevolume = OrderType("removevolume")
-	// Putfile puts file
-	Putfile = OrderType("putfile")
 	// Putfileincontainer puts file in container
 	Putfileincontainer = OrderType("putfileincontainer")
 	// Emulation emulates
