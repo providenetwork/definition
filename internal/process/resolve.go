@@ -145,7 +145,13 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 			return nil, err
 		}
 
+		fileCmds, err := resolver.deps.Files(dist, service)
+		if err != nil {
+			return nil, err
+		}
+
 		out[0] = append(out[0], volumeCmds...)
+		out[0] = append(out[0], fileCmds...)
 		out[1] = append(out[1], createCmd)
 		out[2] = append(out[2], startCmd)
 		out[1] = append(out[1], emulationCmds...)

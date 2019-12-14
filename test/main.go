@@ -35,6 +35,10 @@ func main() {
     shared-volumes:
       - source-path: /var/log/geth
         name: geth-logs
+    input-files:
+      - source-path: foobar
+        destination-path: /var/log/foo
+        template: false
     resources:
       cpus: 2
       memory: 4 GB
