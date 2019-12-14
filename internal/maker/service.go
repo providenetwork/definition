@@ -142,6 +142,13 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		Timeout:         0,
 		Ports:           portMapping,
 	}
+	if len(base.Networks) == 0 {
+		base.Networks = []schema.Network{
+			schema.Network{
+				Name: sp.namer.DefaultNetwork(system),
+			},
+		}
+	}
 
 	for _, sidecar := range system.Sidecars {
 		realSidecar, err := sp.searcher.FindSidecarByType(spec, sidecar.Type)

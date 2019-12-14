@@ -93,6 +93,7 @@ func TestService_FromSystem(t *testing.T) {
 	for i := 0; i < int(testSystemComp.Count); i++ {
 		namer.On("SystemService", testSystemComp, i).Return("foo").Once()
 	}
+	namer.On("DefaultNetwork", mock.Anything).Return("network").Once()
 	searcher := new(mockSearch.Schema)
 	searcher.On("FindServiceByType", mock.Anything, testSystemComp.Type).Return(
 		testService, nil).Once()

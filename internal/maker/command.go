@@ -82,7 +82,7 @@ func (cmd commandMaker) createNetwork(name string, network entity.Network, globa
 }
 
 func (cmd commandMaker) CreateNetwork(name string, network entity.Network) command.Order {
-	return cmd.createNetwork(cmd.namer.Network(schema.Network{Name: name}), network, true)
+	return cmd.createNetwork(name, network, true)
 }
 
 func (cmd commandMaker) PullImage(image string) command.Order {
