@@ -112,6 +112,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 					),
 					logger,
 				),
+				parser.NewNames(),
 				logger,
 			),
 			logger,

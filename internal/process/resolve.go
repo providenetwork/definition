@@ -24,6 +24,7 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
+	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/imdario/mergo"
@@ -43,11 +44,16 @@ type Resolve interface {
 type resolve struct {
 	cmdMaker maker.Command
 	deps     Dependency
+	namer    parser.Names
 	log      logrus.Ext1FieldLogger
 }
 
-func NewResolve(cmdMaker maker.Command, deps Dependency, log logrus.Ext1FieldLogger) Resolve {
-	return &resolve{cmdMaker: cmdMaker, deps: deps, log: log}
+func NewResolve(
+	cmdMaker maker.Command,
+	deps Dependency,
+	namer parser.Names,
+	log logrus.Ext1FieldLogger) Resolve {
+	return &resolve{cmdMaker: cmdMaker, deps: deps, namer: namer, log: log}
 }
 
 func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
@@ -59,13 +65,29 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 			if err != nil {
 				return nil, err
 			}
-			order := resolver.cmdMaker.CreateNetwork(network.Name, subnet)
+			order := resolver.cmdMaker.CreateNetwork(
+				resolver.namer.Network(network), subnet)
 			cmd, err := command.NewCommand(order, "0")
 			if err != nil {
 				return nil, err
 			}
 			cmd.Meta["system"] = system.Name
 			cmd.Meta["network"] = network.Name
+			out = append(out, cmd)
+		}
+		if len(system.Resources.Networks) == 0 {
+			subnet, err := networkState.GetNextGlobal()
+			if err != nil {
+				return nil, err
+			}
+			order := resolver.cmdMaker.CreateNetwork(
+				resolver.namer.DefaultNetwork(system), subnet)
+			cmd, err := command.NewCommand(order, "0")
+			if err != nil {
+				return nil, err
+			}
+			cmd.Meta["system"] = system.Name
+			cmd.Meta["network"] = resolver.namer.DefaultNetwork(system)
 			out = append(out, cmd)
 		}
 	}

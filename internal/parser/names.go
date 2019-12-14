@@ -29,6 +29,7 @@ import (
 
 type Names interface {
 	InputFileVolume(input schema.InputFile) string
+	DefaultNetwork(sys schema.SystemComponent) string
 	Network(network schema.Network) string
 	Sidecar(parent entity.Service, sidecar schema.Sidecar) string
 	SidecarNetwork(parent entity.Service) string
@@ -52,6 +53,10 @@ func (n *namer) capString(s string, size int) string {
 
 func (n *namer) InputFileVolume(input schema.InputFile) string {
 	return strings.Replace(input.DestinationPath, "/", "-", 0)
+}
+
+func (n *namer) DefaultNetwork(sys schema.SystemComponent) string {
+	return "net-" + n.capString(n.SystemComponent(sys), 11)
 }
 
 func (n *namer) Network(network schema.Network) string {
