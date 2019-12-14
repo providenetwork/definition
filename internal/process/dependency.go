@@ -36,6 +36,8 @@ type Dependency interface {
 	Emulation(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) ([]command.Command, error)
 
+	Files(dist entity.PhaseDist, service entity.Service) ([]command.Command, error)
+
 	Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 		service entity.Service) ([][]command.Command, error)
 
@@ -113,6 +115,41 @@ func (dep dependency) Container(spec schema.RootSchema, dist entity.PhaseDist,
 
 	err = mergo.Map(&start.Meta, service.Labels)
 	return
+}
+
+func (dep dependency) files(dist entity.PhaseDist, service entity.Service, name string,
+	inputs []schema.InputFile) ([]command.Command, error) {
+
+	bucket := dist.FindBucket(service.Name)
+	if bucket == -1 {
+		return nil, fmt.Errorf("could not find bucket")
+	}
+	out := []command.Command{}
+	for _, input := range inputs {
+		order := dep.cmdMaker.File(name, input)
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	return out, nil
+}
+
+func (dep dependency) Files(dist entity.PhaseDist, service entity.Service) ([]command.Command, error) {
+	cmds, err := dep.files(dist, service, service.Name, service.SquashedService.InputFiles)
+	if err != nil {
+		return nil, err
+	}
+	for _, sidecar := range service.Sidecars {
+		sCmds, err := dep.files(dist, service, sidecar.Name, sidecar.InputFiles)
+		if err != nil {
+			return nil, err
+		}
+		cmds = append(cmds, sCmds...)
+	}
+	return cmds, nil
+
 }
 
 func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,

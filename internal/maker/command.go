@@ -41,7 +41,7 @@ type Command interface {
 	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	PullImage(image string) command.Order
-
+	File(name string, input schema.InputFile) command.Order
 	AttachNetwork(service entity.Service, network schema.Network) command.Order
 	Emulation(service entity.Service, network schema.Network) (command.Order, error)
 
@@ -147,6 +147,21 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			Image:       cmd.sidecar.GetImage(sidecar),
 			Args:        cmd.sidecar.GetArgs(sidecar),
 			Ports:       parent.Ports,
+		},
+	}
+}
+
+func (cmd commandMaker) File(name string, input schema.InputFile) command.Order {
+	return command.Order{
+
+		Type: command.Putfileincontainer,
+		Payload: command.FileAndContainer{
+			ContainerName: name,
+			File: command.File{
+				Mode:        0644,
+				Destination: input.DestinationPath,
+				ID:          input.GetSource(),
+			},
 		},
 	}
 }

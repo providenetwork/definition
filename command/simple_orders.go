@@ -40,14 +40,6 @@ type FileAndContainer struct {
 	File File `json:"file"`
 }
 
-// FileAndVolume is a file and volume order payload.
-type FileAndVolume struct {
-	// Name of the volume.
-	VolumeName string `json:"volume"`
-	// Name of the file.
-	File File `json:"file"`
-}
-
 // SetupSwarm is the payload to setup a docker swarm
 type SetupSwarm struct {
 	//Hosts is an array of the hosts to be setup with docker swarm

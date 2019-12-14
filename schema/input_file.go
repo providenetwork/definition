@@ -23,3 +23,10 @@ type InputFile struct {
 	DestinationPath string `yaml:"destination-path,omitempty" json:"destination-path,omitempty"`
 	Template        bool   `yaml:"template,omitempty" json:"template,omitempty"`
 }
+
+// GetSource makes it easy to change the name of the source member, as it is
+// expected to change in the near future. (Also, there might be some logic behind it as well in
+// the future)
+func (in InputFile) GetSource() string {
+	return in.SourcePath
+}
