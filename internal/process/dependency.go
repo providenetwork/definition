@@ -72,6 +72,9 @@ func (dep dependency) Emulation(spec schema.RootSchema, dist entity.PhaseDist,
 	}
 	out := []command.Command{}
 	for _, network := range service.Networks {
+		if !network.HasEmulation() {
+			continue
+		}
 		order, err := dep.cmdMaker.Emulation(service, network)
 		if err != nil {
 			return nil, err
