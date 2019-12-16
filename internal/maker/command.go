@@ -175,7 +175,7 @@ func (cmd commandMaker) AttachNetwork(service entity.Service, network schema.Net
 		Type: command.Attachnetwork,
 		Payload: command.ContainerNetwork{
 			ContainerName: service.Name,
-			Network:       network.Name,
+			Network:       cmd.namer.Network(network),
 		},
 	}
 }
@@ -194,7 +194,7 @@ func (cmd commandMaker) Emulation(service entity.Service, network schema.Network
 		Type: command.Emulation,
 		Payload: command.Netconf{
 			Container:   service.Name,
-			Network:     network.Name,
+			Network:     cmd.namer.Network(network),
 			Limit:       0, //NYI
 			Loss:        loss,
 			Delay:       int(delay),
