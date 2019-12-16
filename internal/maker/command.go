@@ -20,7 +20,6 @@ package maker
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/entity"
@@ -36,7 +35,7 @@ type Command interface {
 	CreateVolume(volume schema.SharedVolume) command.Order
 	CreateContainer(service entity.Service) command.Order
 	CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order
-	StartContainer(service entity.Service, isTask bool, timeout time.Duration) command.Order
+	StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order
 
 	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
@@ -128,7 +127,7 @@ func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
 	}
 }
 
-func (cmd commandMaker) StartContainer(service entity.Service, isTask bool, timeout time.Duration) command.Order {
+func (cmd commandMaker) StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order {
 	return cmd.startContainer(service.Name, isTask, timeout)
 }
 
@@ -167,7 +166,7 @@ func (cmd commandMaker) File(name string, input schema.InputFile) command.Order 
 }
 
 func (cmd commandMaker) StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order {
-	return cmd.startContainer(cmd.namer.Sidecar(parent, sidecar), false, 0)
+	return cmd.startContainer(cmd.namer.Sidecar(parent, sidecar), false, command.Timeout{})
 }
 
 func (cmd commandMaker) AttachNetwork(service entity.Service, network schema.Network) command.Order {
@@ -215,7 +214,7 @@ func (cmd commandMaker) RemoveContainer(service entity.Service) command.Order {
 	}
 }
 
-func (cmd commandMaker) startContainer(name string, isTask bool, timeout time.Duration) command.Order {
+func (cmd commandMaker) startContainer(name string, isTask bool, timeout command.Timeout) command.Order {
 	return command.Order{
 		Type: command.Startcontainer,
 		Payload: command.StartContainer{
