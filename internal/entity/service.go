@@ -19,8 +19,7 @@
 package entity
 
 import (
-	"time"
-
+	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/schema"
 )
 
@@ -33,7 +32,7 @@ type Service struct {
 	Labels          map[string]string
 	Ports           map[int]int
 
-	Timeout        time.Duration
+	Timeout        command.Timeout
 	IsTask         bool
 	IgnoreExitCode bool
 }

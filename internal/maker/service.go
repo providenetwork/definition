@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
@@ -139,7 +138,6 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		SquashedService: squashed,
 		Networks:        system.Resources.Networks,
 		Sidecars:        sp.searcher.FindSidecarsByService(spec, system.Type),
-		Timeout:         0,
 		Ports:           portMapping,
 	}
 	if len(base.Networks) == 0 {
@@ -205,15 +203,13 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 			schema.Network{Name: "none"},
 		}
 	}
-	to := strings.Replace(task.Timeout, " ", "", -1)
-	timeout, err := time.ParseDuration(to)
 	return entity.Service{
 		Name:            sp.namer.Task(task, index),
 		Networks:        task.Networks,
 		SquashedService: service,
 		Sidecars:        nil,
 		IgnoreExitCode:  task.IgnoreExitCode,
-		Timeout:         timeout,
+		Timeout:         task.Timeout,
 		IsTask:          true,
-	}, err
+	}, nil
 }

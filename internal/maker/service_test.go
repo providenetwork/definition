@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/whiteblock/definition/command"
 	mockConvert "github.com/whiteblock/definition/internal/mocks/converter"
 	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
 	mockSearch "github.com/whiteblock/definition/internal/mocks/search"
@@ -150,10 +151,10 @@ func TestService_FromTask(t *testing.T) {
 	require.NotNil(t, serv)
 
 	res, err := serv.FromTask(schema.RootSchema{}, schema.Task{
-		Timeout: "10 m",
+		Timeout: command.Timeout{Duration: 10 * time.Minute},
 	}, 0)
 	assert.NoError(t, err)
-	assert.Equal(t, 10*time.Minute, res.Timeout)
+	assert.Equal(t, 10*time.Minute, res.Timeout.Duration)
 	searcher.AssertExpectations(t)
 	namer.AssertExpectations(t)
 	convert.AssertExpectations(t)
