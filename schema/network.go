@@ -24,3 +24,8 @@ type Network struct {
 	Latency    string `yaml:"latency,omitempty" json:"latency,omitempty"`
 	PacketLoss string `yaml:"packet-loss,omitempty" json:"packet-loss,omitempty"`
 }
+
+// HasEmulation checks if the network struct has any emulation included
+func (net Network) HasEmulation() bool {
+	return net.Bandwidth != "" && net.Latency != "" && net.PacketLoss != ""
+}
