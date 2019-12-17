@@ -23,6 +23,7 @@ import (
 
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/merger"
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 )
@@ -42,18 +43,15 @@ type SystemState interface {
 
 type systemState struct {
 	parser parser.Resources
-	namer  parser.Names
 	merger merger.System
 }
 
 func NewSystemState(
 	parser parser.Resources,
-	namer parser.Names,
 	merger merger.System) SystemState {
 
 	return &systemState{
 		parser: parser,
-		namer:  namer,
 		merger: merger}
 }
 
@@ -62,7 +60,7 @@ func (state systemState) UpdateChanged(sp *entity.StatePack, spec schema.RootSch
 	toRemove []entity.Segment, err error) {
 
 	for _, systemUpdate := range systems {
-		name := state.namer.SystemComponent(systemUpdate)
+		name := namer.SystemComponent(systemUpdate)
 		old, exists := sp.SystemState[name]
 		if !exists {
 			return nil, nil, fmt.Errorf("system \"%s\" not found", name)
@@ -89,7 +87,7 @@ func (state systemState) GetAlreadyExists(sp *entity.StatePack, systems []schema
 
 	anyExist = false
 	for _, s := range systems {
-		name := state.namer.SystemComponent(s)
+		name := namer.SystemComponent(s)
 		_, exists := sp.SystemState[name]
 		if exists {
 			anyExist = true
@@ -106,7 +104,7 @@ func (state *systemState) Add(sp *entity.StatePack, spec schema.RootSchema,
 
 	out := []entity.Segment{}
 	for _, system := range systems {
-		name := state.namer.SystemComponent(system)
+		name := namer.SystemComponent(system)
 		_, exists := sp.SystemState[name]
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
@@ -119,7 +117,7 @@ func (state *systemState) Add(sp *entity.StatePack, spec schema.RootSchema,
 	}
 
 	for _, system := range systems {
-		name := state.namer.SystemComponent(system)
+		name := namer.SystemComponent(system)
 		sp.SystemState[name] = system
 	}
 

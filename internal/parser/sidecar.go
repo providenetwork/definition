@@ -25,6 +25,7 @@ import (
 	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/docker/docker/api/types/strslice"
@@ -45,11 +46,10 @@ type Sidecar interface {
 type sidecarParser struct {
 	defaults defaults.Service
 	conv     converter.Resource
-	namer    Names
 }
 
-func NewSidecar(defaults defaults.Service, conv converter.Resource, namer Names) Sidecar {
-	return &sidecarParser{defaults: defaults, namer: namer, conv: conv}
+func NewSidecar(defaults defaults.Service, conv converter.Resource) Sidecar {
+	return &sidecarParser{defaults: defaults, conv: conv}
 }
 
 func (sp sidecarParser) GetArgs(sidecar schema.Sidecar) []string {
@@ -105,7 +105,7 @@ func (sp sidecarParser) GetLabels(parent entity.Service, sidecar schema.Sidecar)
 }
 
 func (sp sidecarParser) GetNetwork(parent entity.Service) strslice.StrSlice {
-	return strslice.StrSlice([]string{sp.namer.SidecarNetwork(parent)})
+	return strslice.StrSlice([]string{namer.SidecarNetwork(parent)})
 }
 
 func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
@@ -125,7 +125,7 @@ func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
 
 	for _, inputVol := range sidecar.InputFiles {
 		out = append(out, command.Mount{
-			Name:      sp.namer.InputFileVolume(inputVol),
+			Name:      namer.InputFileVolume(inputVol),
 			Directory: inputVol.DestinationPath,
 			ReadOnly:  false,
 		})

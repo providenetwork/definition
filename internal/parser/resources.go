@@ -25,6 +25,7 @@ import (
 
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/search"
 	"github.com/whiteblock/definition/schema"
 )
@@ -39,19 +40,16 @@ type Resources interface {
 }
 
 type resources struct {
-	namer    Names
 	searcher search.Schema
 	conv     converter.Resource
 }
 
 // NewResources creates a new Resources
 func NewResources(
-	namer Names,
 	searcher search.Schema,
 	conv converter.Resource) Resources {
 
 	return &resources{
-		namer:    namer,
 		searcher: searcher,
 		conv:     conv,
 	}
@@ -66,7 +64,7 @@ func (res *resources) FromSystemDiff(spec schema.RootSchema,
 	if merged.Count < system.Count {
 		out := []entity.Segment{} //We are removing nodes, so only need name
 		for i := merged.Count; i < system.Count; i++ {
-			out = append(out, entity.Segment{Name: res.namer.SystemService(merged, int(i))})
+			out = append(out, entity.Segment{Name: namer.SystemService(merged, int(i))})
 		}
 		return out, nil
 	}
@@ -88,7 +86,7 @@ func (res *resources) SystemComponent(spec schema.RootSchema,
 	}
 	out := make([]entity.Segment, sys.Count)
 	for i := range out {
-		out[i].Name = res.namer.SystemService(sys, i)
+		out[i].Name = namer.SystemService(sys, i)
 		resource, err := res.conv.FromResources(service.Resources)
 		if err != nil {
 			return nil, err
@@ -118,7 +116,7 @@ func (res *resources) task(spec schema.RootSchema, task schema.Task, index int) 
 		return entity.Segment{}, err
 	}
 
-	out := entity.Segment{Name: res.namer.Task(task, index)}
+	out := entity.Segment{Name: namer.Task(task, index)}
 	resource, err := res.conv.FromResources(taskRunner.Resources)
 	if err != nil {
 		return entity.Segment{}, err
@@ -142,7 +140,7 @@ func (res *resources) Tasks(spec schema.RootSchema, tasks []schema.Task) ([]enti
 func (res *resources) SystemComponentNamesOnly(sys schema.SystemComponent) []entity.Segment {
 	out := make([]entity.Segment, sys.Count)
 	for i := range out {
-		out[i] = entity.Segment{Name: res.namer.SystemService(sys, i)}
+		out[i] = entity.Segment{Name: namer.SystemService(sys, i)}
 	}
 	return out
 }

@@ -24,7 +24,6 @@ import (
 
 	"github.com/whiteblock/definition/command"
 	mockConvert "github.com/whiteblock/definition/internal/mocks/converter"
-	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
 	mockSearch "github.com/whiteblock/definition/internal/mocks/search"
 	"github.com/whiteblock/definition/schema"
 
@@ -90,11 +89,6 @@ func TestService_FromSystem(t *testing.T) {
 		},
 	}
 
-	namer := new(mockParser.Names)
-	for i := 0; i < int(testSystemComp.Count); i++ {
-		namer.On("SystemService", testSystemComp, i).Return("foo").Once()
-	}
-	namer.On("DefaultNetwork", mock.Anything).Return("network").Once()
 	searcher := new(mockSearch.Schema)
 	searcher.On("FindServiceByType", mock.Anything, testSystemComp.Type).Return(
 		testService, nil).Once()
@@ -103,7 +97,7 @@ func TestService_FromSystem(t *testing.T) {
 
 	searcher.On("FindSidecarsByService", mock.Anything, mock.Anything).Return(nil).Once()
 
-	serv := NewService(namer, searcher, nil, logrus.New())
+	serv := NewService(searcher, nil, logrus.New())
 	require.NotNil(t, serv)
 
 	results, err := serv.FromSystem(schema.RootSchema{}, testSystemComp)
@@ -134,20 +128,17 @@ func TestService_FromSystem(t *testing.T) {
 	}
 
 	searcher.AssertExpectations(t)
-	namer.AssertExpectations(t)
 }
 
 func TestService_FromTask(t *testing.T) {
 	testTaskRunner := schema.TaskRunner{}
-	namer := new(mockParser.Names)
-	namer.On("Task", mock.Anything, mock.Anything).Return("task").Once()
 
 	searcher := new(mockSearch.Schema)
 	searcher.On("FindTaskRunnerByType", mock.Anything, mock.Anything).Return(testTaskRunner, nil).Once()
 
 	convert := new(mockConvert.Service)
 	convert.On("FromTaskRunner", mock.Anything).Return(schema.Service{}).Once()
-	serv := NewService(namer, searcher, convert, logrus.New())
+	serv := NewService(searcher, convert, logrus.New())
 	require.NotNil(t, serv)
 
 	res, err := serv.FromTask(schema.RootSchema{}, schema.Task{
@@ -156,6 +147,5 @@ func TestService_FromTask(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 10*time.Minute, res.Timeout.Duration)
 	searcher.AssertExpectations(t)
-	namer.AssertExpectations(t)
 	convert.AssertExpectations(t)
 }

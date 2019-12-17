@@ -23,6 +23,7 @@ import (
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 
@@ -52,19 +53,16 @@ type commandMaker struct {
 	service parser.Service
 	sidecar parser.Sidecar
 	network parser.Network
-	namer   parser.Names
 }
 
 func NewCommand(
 	service parser.Service,
 	sidecar parser.Sidecar,
-	network parser.Network,
-	namer parser.Names) Command {
+	network parser.Network) Command {
 
 	return &commandMaker{
 		service: service,
 		sidecar: sidecar,
-		namer:   namer,
 		network: network,
 	}
 }
@@ -95,7 +93,7 @@ func (cmd commandMaker) PullImage(image string) command.Order {
 }
 
 func (cmd commandMaker) CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order {
-	return cmd.createNetwork(cmd.namer.SidecarNetwork(service), network, false)
+	return cmd.createNetwork(namer.SidecarNetwork(service), network, false)
 }
 
 func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
@@ -139,7 +137,7 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			EntryPoint:  cmd.sidecar.GetEntrypoint(sidecar),
 			Environment: sidecar.Environment,
 			Labels:      cmd.sidecar.GetLabels(parent, sidecar),
-			Name:        cmd.namer.Sidecar(parent, sidecar),
+			Name:        namer.Sidecar(parent, sidecar),
 			Network:     strslice.StrSlice(cmd.sidecar.GetNetwork(parent)),
 			Volumes:     cmd.sidecar.GetVolumes(sidecar),
 			Cpus:        cmd.sidecar.GetCPUs(sidecar),
@@ -167,7 +165,7 @@ func (cmd commandMaker) File(name string, input schema.InputFile) command.Order 
 }
 
 func (cmd commandMaker) StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order {
-	return cmd.startContainer(cmd.namer.Sidecar(parent, sidecar), false, command.Timeout{})
+	return cmd.startContainer(namer.Sidecar(parent, sidecar), false, command.Timeout{})
 }
 
 func (cmd commandMaker) AttachNetwork(service string, network string) command.Order {

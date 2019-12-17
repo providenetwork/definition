@@ -24,7 +24,7 @@ import (
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/internal/merger"
-	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/sirupsen/logrus"
@@ -48,18 +48,16 @@ type System interface {
 }
 
 type system struct {
-	namer  parser.Names
 	maker  maker.Service
 	merger merger.System
 	log    logrus.Ext1FieldLogger
 }
 
 func NewSystem(
-	namer parser.Names,
 	maker maker.Service,
 	merger merger.System,
 	log logrus.Ext1FieldLogger) System {
-	return &system{namer: namer, maker: maker, merger: merger, log: log}
+	return &system{maker: maker, merger: merger, log: log}
 }
 
 func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
@@ -67,7 +65,7 @@ func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
 
 	diff = &entity.SystemDiff{}
 	for _, systemUpdate := range systems {
-		name := sys.namer.SystemComponent(systemUpdate)
+		name := namer.SystemComponent(systemUpdate)
 		old, exists := state.SystemState[name]
 		if !exists {
 			return nil, fmt.Errorf("system \"%s\" not found", name)
@@ -90,7 +88,7 @@ func (sys system) GetAlreadyExists(state *entity.State, systems []schema.SystemC
 
 	anyExist = false
 	for _, s := range systems {
-		name := sys.namer.SystemComponent(s)
+		name := namer.SystemComponent(s)
 		_, exists := state.SystemState[name]
 		if exists {
 			anyExist = true
@@ -108,7 +106,7 @@ func (sys system) Add(state *entity.State, spec schema.RootSchema,
 	out := []entity.Service{}
 
 	for _, system := range systems {
-		name := sys.namer.SystemComponent(system)
+		name := namer.SystemComponent(system)
 		_, exists := state.SystemState[name]
 		if exists {
 			return nil, fmt.Errorf("already have a system with the name \"%s\"", name)
@@ -121,7 +119,7 @@ func (sys system) Add(state *entity.State, spec schema.RootSchema,
 	}
 
 	for _, system := range systems {
-		name := sys.namer.SystemComponent(system)
+		name := namer.SystemComponent(system)
 		state.SystemState[name] = system
 	}
 

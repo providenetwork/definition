@@ -38,7 +38,6 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 		conf.Bucket,
 		distribute.NewBiomeCalculator(
 			parser.NewResources(
-				parser.NewNames(),
 				search.NewSchema(),
 				converter.NewResource(
 					conf.Defaults.Resources,
@@ -46,13 +45,11 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 			),
 			distribute.NewSystemState(
 				parser.NewResources(
-					parser.NewNames(),
 					search.NewSchema(),
 					converter.NewResource(
 						conf.Defaults.Resources,
 					),
 				),
-				parser.NewNames(),
 				merger.NewSystem(),
 			),
 			logger,
@@ -65,9 +62,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 		process.NewTestCalculator(
 			conf.Network,
 			process.NewSystem(
-				parser.NewNames(),
 				maker.NewService(
-					parser.NewNames(),
 					search.NewSchema(),
 					converter.NewService(),
 					logger,
@@ -80,40 +75,32 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 					parser.NewService(
 						conf.Defaults.Service,
 						converter.NewResource(conf.Defaults.Resources),
-						parser.NewNames(),
 					),
 					parser.NewSidecar(
 						conf.Defaults.Service,
 						converter.NewResource(conf.Defaults.Resources),
-						parser.NewNames(),
 					),
 					parser.NewNetwork(),
-					parser.NewNames(),
 				),
 				process.NewDependency(
 					maker.NewCommand(
 						parser.NewService(
 							conf.Defaults.Service,
 							converter.NewResource(conf.Defaults.Resources),
-							parser.NewNames(),
 						),
 						parser.NewSidecar(
 							conf.Defaults.Service,
 							converter.NewResource(conf.Defaults.Resources),
-							parser.NewNames(),
 						),
 						parser.NewNetwork(),
-						parser.NewNames(),
 					),
 					maker.NewService(
-						parser.NewNames(),
 						search.NewSchema(),
 						converter.NewService(),
 						logger,
 					),
 					logger,
 				),
-				parser.NewNames(),
 				logger,
 			),
 			logger,

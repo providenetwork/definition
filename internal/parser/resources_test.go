@@ -23,7 +23,6 @@ import (
 
 	"github.com/whiteblock/definition/internal/entity"
 	mockConverter "github.com/whiteblock/definition/internal/mocks/converter"
-	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
 	mockSearch "github.com/whiteblock/definition/internal/mocks/search"
 	"github.com/whiteblock/definition/schema"
 
@@ -37,10 +36,7 @@ func TestResources_SystemComponent(t *testing.T) {
 		Count: 5,
 		Type:  "foo",
 	}
-	namer := new(mockParser.Names)
-	for i := 0; i < int(testSystemComp.Count); i++ {
-		namer.On("SystemService", testSystemComp, i).Return("foo").Once()
-	}
+
 	searcher := new(mockSearch.Schema)
 	searcher.On("FindServiceByType", mock.Anything, testSystemComp.Type).Return(
 		schema.Service{}, nil).Once()
@@ -50,14 +46,13 @@ func TestResources_SystemComponent(t *testing.T) {
 	conv.On("FromResources", mock.Anything).Return(
 		entity.Resource{}, nil).Times(int(testSystemComp.Count))
 
-	res := NewResources(namer, searcher, conv)
+	res := NewResources(searcher, conv)
 
 	ents, err := res.SystemComponent(schema.RootSchema{}, testSystemComp)
 	assert.NoError(t, err)
 	require.NotNil(t, ents)
 	assert.Len(t, ents, int(testSystemComp.Count))
 
-	namer.AssertExpectations(t)
 	searcher.AssertExpectations(t)
 	conv.AssertExpectations(t)
 }
@@ -67,11 +62,7 @@ func TestResources_SystemComponentNamesOnly(t *testing.T) {
 		Count: 5,
 		Type:  "foo",
 	}
-	namer := new(mockParser.Names)
-	for i := 0; i < int(testSystemComp.Count); i++ {
-		namer.On("SystemService", testSystemComp, i).Return("foo").Once()
-	}
-	res := NewResources(namer, nil, nil)
+	res := NewResources(nil, nil)
 	ents := res.SystemComponentNamesOnly(testSystemComp)
 	require.NotNil(t, ents)
 	assert.Len(t, ents, int(testSystemComp.Count))
@@ -85,10 +76,6 @@ func TestResources_Tasks(t *testing.T) {
 		schema.Task{},
 		schema.Task{},
 	}
-	namer := new(mockParser.Names)
-	for i := 0; i < len(testTasks); i++ {
-		namer.On("Task", mock.Anything, i).Return("foo").Once()
-	}
 
 	searcher := new(mockSearch.Schema)
 	searcher.On("FindTaskRunnerByType", mock.Anything, mock.Anything).Return(
@@ -98,14 +85,13 @@ func TestResources_Tasks(t *testing.T) {
 	conv.On("FromResources", mock.Anything).Return(
 		entity.Resource{}, nil).Times(len(testTasks))
 
-	res := NewResources(namer, searcher, conv)
+	res := NewResources(searcher, conv)
 
 	result, err := res.Tasks(schema.RootSchema{}, testTasks)
 	assert.NoError(t, err)
 	require.NotNil(t, result)
 	assert.Len(t, result, len(testTasks))
 
-	namer.AssertExpectations(t)
 	searcher.AssertExpectations(t)
 	conv.AssertExpectations(t)
 }

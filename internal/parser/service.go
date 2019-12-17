@@ -23,6 +23,7 @@ import (
 	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/namer"
 )
 
 type Service interface {
@@ -40,11 +41,10 @@ type Service interface {
 type serviceParser struct {
 	defaults defaults.Service
 	conv     converter.Resource
-	namer    Names
 }
 
-func NewService(defaults defaults.Service, conv converter.Resource, namer Names) Service {
-	return &serviceParser{defaults: defaults, namer: namer, conv: conv}
+func NewService(defaults defaults.Service, conv converter.Resource) Service {
+	return &serviceParser{defaults: defaults, conv: conv}
 }
 
 func (sp *serviceParser) GetArgs(service entity.Service) []string {
@@ -93,7 +93,7 @@ func (sp *serviceParser) GetNetworks(service entity.Service) (out []string) {
 }
 
 func (sp *serviceParser) GetSidecarNetwork(service entity.Service) string {
-	return sp.namer.SidecarNetwork(service)
+	return namer.SidecarNetwork(service)
 }
 
 func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
@@ -110,7 +110,7 @@ func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
 
 	for _, inputVol := range service.SquashedService.InputFiles {
 		out = append(out, command.Mount{
-			Name:      sp.namer.InputFileVolume(inputVol),
+			Name:      namer.InputFileVolume(inputVol),
 			Directory: inputVol.DestinationPath,
 			ReadOnly:  false,
 		})

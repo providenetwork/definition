@@ -47,7 +47,6 @@ func TestSystemState_FullTest(t *testing.T) {
 		},
 	}
 	spec := schema.RootSchema{}
-	namer := new(mockParser.Names)
 
 	segments := []entity.Segment{}
 	for i, system := range systems {
@@ -58,12 +57,11 @@ func TestSystemState_FullTest(t *testing.T) {
 			})
 		}
 		segments = append(segments, result...)
-		namer.On("SystemComponent", system).Return(system.Name).Twice()
 		parser.On("SystemComponent", spec, system).Return(result, nil).Once()
 		parser.On("SystemComponentNamesOnly", system).Return(result).Once()
 	}
 	statePack := entity.NewStatePack(spec, config.Bucket{}, logrus.New())
-	state := NewSystemState(parser, namer, nil)
+	state := NewSystemState(parser, nil)
 
 	//Successful Add
 	result, err := state.Add(statePack, spec, systems)
@@ -80,5 +78,4 @@ func TestSystemState_FullTest(t *testing.T) {
 	assert.Len(t, result, len(segments))
 
 	parser.AssertExpectations(t)
-	namer.AssertExpectations(t)
 }

@@ -25,7 +25,7 @@ import (
 
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
-	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/search"
 	"github.com/whiteblock/definition/schema"
 
@@ -43,18 +43,16 @@ type Service interface {
 }
 
 type serviceMaker struct {
-	namer    parser.Names
 	searcher search.Schema
 	convert  converter.Service
 	log      logrus.Ext1FieldLogger
 }
 
 func NewService(
-	namer parser.Names,
 	searcher search.Schema,
 	convert converter.Service,
 	log logrus.Ext1FieldLogger) Service {
-	return &serviceMaker{namer: namer, searcher: searcher,
+	return &serviceMaker{searcher: searcher,
 		convert: convert, log: log}
 }
 
@@ -180,7 +178,7 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 	if len(base.Networks) == 0 {
 		base.Networks = []schema.Network{
 			schema.Network{
-				Name: sp.namer.DefaultNetwork(system),
+				Name: namer.DefaultNetwork(system),
 			},
 		}
 	} else {
@@ -213,7 +211,7 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 
 	for i := range out {
 		copier.Copy(&out[i], base)
-		out[i].Name = sp.namer.SystemService(system, i)
+		out[i].Name = namer.SystemService(system, i)
 	}
 	return out, nil
 }
@@ -241,7 +239,7 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 		task.Networks = []schema.Network{}
 	}
 	return entity.Service{
-		Name:            sp.namer.Task(task, index),
+		Name:            namer.Task(task, index),
 		Networks:        task.Networks,
 		SquashedService: service,
 		Sidecars:        nil,

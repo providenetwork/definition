@@ -25,7 +25,7 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
-	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/imdario/mergo"
@@ -50,16 +50,14 @@ var (
 type resolve struct {
 	cmdMaker maker.Command
 	deps     Dependency
-	namer    parser.Names
 	log      logrus.Ext1FieldLogger
 }
 
 func NewResolve(
 	cmdMaker maker.Command,
 	deps Dependency,
-	namer parser.Names,
 	log logrus.Ext1FieldLogger) Resolve {
-	return &resolve{cmdMaker: cmdMaker, deps: deps, namer: namer, log: log}
+	return &resolve{cmdMaker: cmdMaker, deps: deps, log: log}
 }
 
 func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
@@ -87,13 +85,13 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 				return nil, err
 			}
 			order := resolver.cmdMaker.CreateNetwork(
-				resolver.namer.DefaultNetwork(system), subnet)
+				namer.DefaultNetwork(system), subnet)
 			cmd, err := command.NewCommand(order, "0")
 			if err != nil {
 				return nil, err
 			}
 			cmd.Meta["system"] = system.Name
-			cmd.Meta["network"] = resolver.namer.DefaultNetwork(system)
+			cmd.Meta["network"] = namer.DefaultNetwork(system)
 			out = append(out, cmd)
 		}
 	}
@@ -298,7 +296,7 @@ func (resolver resolve) UpdateServices(dist entity.PhaseDist,
 		}
 		for _, sidecarToRemove := range service.RemoveSidecars {
 			cmd, err := resolver.deps.RemoveContainer(bucket,
-				resolver.namer.Sidecar(*service.Parent, sidecarToRemove))
+				namer.Sidecar(*service.Parent, sidecarToRemove))
 			if err != nil {
 				return nil, err
 			}
