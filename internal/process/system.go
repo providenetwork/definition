@@ -19,6 +19,7 @@
 package process
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/whiteblock/definition/internal/entity"
@@ -47,17 +48,19 @@ type System interface {
 	Tasks(state *entity.State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error)
 }
 
+var (
+	ErrSystemNotFound = errors.New("system not found")
+)
+
 type system struct {
-	maker  maker.Service
-	merger merger.System
-	log    logrus.Ext1FieldLogger
+	maker maker.Service
+	log   logrus.Ext1FieldLogger
 }
 
 func NewSystem(
 	maker maker.Service,
-	merger merger.System,
 	log logrus.Ext1FieldLogger) System {
-	return &system{maker: maker, merger: merger, log: log}
+	return &system{maker: maker, log: log}
 }
 
 func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
@@ -68,9 +71,9 @@ func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
 		name := namer.SystemComponent(systemUpdate)
 		old, exists := state.SystemState[name]
 		if !exists {
-			return nil, fmt.Errorf("system \"%s\" not found", name)
+			return nil, ErrSystemNotFound
 		}
-		system := sys.merger.MergeLeft(systemUpdate, old)
+		system := merger.MergeSystemLeft(systemUpdate, old)
 		sys.log.WithField("system", system).Debug("merged the systems")
 		sysDiff, err := sys.maker.FromSystemDiff(spec, old, system)
 		if err != nil {
@@ -134,7 +137,7 @@ func (sys system) Remove(state *entity.State, spec schema.RootSchema,
 	for _, toRemove := range systems {
 		system, exists := state.SystemState[toRemove]
 		if !exists {
-			return nil, fmt.Errorf("system not found")
+			return nil, ErrSystemNotFound
 		}
 		services, err := sys.maker.FromSystem(spec, system)
 		if err != nil {

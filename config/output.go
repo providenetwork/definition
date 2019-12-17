@@ -16,19 +16,27 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package merger
+package config
 
 import (
-	"github.com/whiteblock/definition/schema"
-
-	"github.com/imdario/mergo"
-	"github.com/jinzhu/copier"
+	"github.com/spf13/viper"
 )
 
-func MergeSystemLeft(sys schema.SystemComponent, systems ...schema.SystemComponent) (system schema.SystemComponent) {
-	copier.Copy(&system, sys)
-	for _, merging := range systems {
-		mergo.Map(&system, merging, mergo.WithOverride)
-	}
-	return
+// Output represents the basic configuration for a bucket
+type Output struct {
+	NoParallelCommands bool `mapstructure:"noParallelCommands"`
+}
+
+// NewOutput generates a Bucket configuration from the given viper
+// Configuration
+func NewOutput(v *viper.Viper) (out Output, err error) {
+	return out, v.Unmarshal(&out)
+}
+
+func setOutputBindings(v *viper.Viper) error {
+	return v.BindEnv("noParallelCommands", "NO_PARALLEL_COMMANDS")
+}
+
+func setOutputDefaults(v *viper.Viper) {
+	v.SetDefault("noParallelCommands", false)
 }

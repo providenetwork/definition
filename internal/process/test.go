@@ -34,19 +34,19 @@ type TestCalculator interface {
 }
 
 type testCalculator struct {
-	netConf  config.Network
+	conf     config.Config
 	sys      System
 	resolver Resolve
 	logger   logrus.Ext1FieldLogger
 }
 
 func NewTestCalculator(
-	netConf config.Network,
+	conf config.Config,
 	sys System,
 	resolver Resolve,
 	logger logrus.Ext1FieldLogger) TestCalculator {
 	return &testCalculator{
-		netConf:  netConf,
+		conf:     conf,
 		sys:      sys,
 		resolver: resolver,
 		logger:   logger}
@@ -72,20 +72,26 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		return nil, err
 	}
 
-	networkCommands, err := calc.resolver.CreateNetworks(phase.System, networkState)
+	networkCommands, err := calc.resolver.CreateSystemNetworks(phase.System, networkState)
 	if err != nil {
 		return nil, err
-	}
-	if len(networkCommands) > 0 {
-		out = append(out, networkCommands)
-		calc.logger.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
-			"got the network commands")
 	}
 
 	diff, err := calc.sys.UpdateChanged(state, spec, changedSystems)
 	if err != nil {
 		return nil, err
 	}
+	additionalNetworkCmds, err := calc.resolver.CreateNetworks(networkState, diff.AddedNetworks, nil)
+	if err != nil {
+		return nil, err
+	}
+	networkCommands = append(networkCommands, additionalNetworkCmds...)
+	if len(networkCommands) > 0 {
+		out = append(out, networkCommands)
+		calc.logger.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
+			"got the network commands")
+	}
+
 	servicesToAdd = append(servicesToAdd, diff.Added...)
 	servicesToRemove = append(servicesToRemove, diff.Removed...)
 
@@ -172,11 +178,14 @@ func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Com
 			Hosts: hosts,
 		},
 	}
-	cmd, err := command.NewCommand(order, "0")
+	cmd, err := command.NewCommand(order, FirstInstance)
 	return [][]command.Command{[]command.Command{cmd}}, err
 }
 
 func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCommands {
+	if !calc.conf.Output.NoParallelCommands {
+		return in
+	}
 	out := [][]command.Command{}
 	for _, segment := range in {
 		for _, cmd := range segment {
@@ -190,8 +199,8 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
 
 	state := entity.NewState()
-	network, err := entity.NewNetworkState(calc.netConf.GlobalNetwork,
-		calc.netConf.SidecarNetwork, calc.netConf.MaxNodesPerNetwork)
+	network, err := entity.NewNetworkState(calc.conf.Network.GlobalNetwork,
+		calc.conf.Network.SidecarNetwork, calc.conf.Network.MaxNodesPerNetwork)
 	if err != nil {
 		return nil, err
 	}

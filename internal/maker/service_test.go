@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/config/defaults"
 	mockConvert "github.com/whiteblock/definition/internal/mocks/converter"
 	mockSearch "github.com/whiteblock/definition/internal/mocks/search"
 	"github.com/whiteblock/definition/schema"
@@ -97,7 +98,7 @@ func TestService_FromSystem(t *testing.T) {
 
 	searcher.On("FindSidecarsByService", mock.Anything, mock.Anything).Return(nil).Once()
 
-	serv := NewService(searcher, nil, logrus.New())
+	serv := NewService(defaults.Defaults{}, searcher, nil, logrus.New())
 	require.NotNil(t, serv)
 
 	results, err := serv.FromSystem(schema.RootSchema{}, testSystemComp)
@@ -138,7 +139,7 @@ func TestService_FromTask(t *testing.T) {
 
 	convert := new(mockConvert.Service)
 	convert.On("FromTaskRunner", mock.Anything).Return(schema.Service{}).Once()
-	serv := NewService(searcher, convert, logrus.New())
+	serv := NewService(defaults.Defaults{}, searcher, convert, logrus.New())
 	require.NotNil(t, serv)
 
 	res, err := serv.FromTask(schema.RootSchema{}, schema.Task{

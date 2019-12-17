@@ -16,19 +16,24 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package merger
+package defaults
 
 import (
-	"github.com/whiteblock/definition/schema"
-
-	"github.com/imdario/mergo"
-	"github.com/jinzhu/copier"
+	"github.com/spf13/viper"
 )
 
-func MergeSystemLeft(sys schema.SystemComponent, systems ...schema.SystemComponent) (system schema.SystemComponent) {
-	copier.Copy(&system, sys)
-	for _, merging := range systems {
-		mergo.Map(&system, merging, mergo.WithOverride)
-	}
-	return
+type Network struct {
+	Name string `mapstructure:"defaultNetworkName"`
+}
+
+func NewNetwork(v *viper.Viper) (out Network, err error) {
+	return out, v.Unmarshal(&out)
+}
+
+func setNetworkBindings(v *viper.Viper) error {
+	return v.BindEnv("defaultNetworkName", "DEFAULT_NETWORK_NAME")
+}
+
+func setNetworkDefaults(v *viper.Viper) {
+	v.SetDefault("defaultNetworkName", "default")
 }
