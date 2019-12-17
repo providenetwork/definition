@@ -29,61 +29,31 @@ import (
 func main() {
 
 	startingPoint := []byte(`services:
-  - name: geth
-    image: ethereum/client-go
+  - name: prysm-beacon
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:latest
     args:
-      - --dev
-      - --logfile=/var/log/geth/geth.log
-    shared-volumes:
-      - source-path: /var/log/geth
-        name: geth-logs
-    input-files:
-      - source-path: foobar
-        destination-path: /var/log/foo
-        template: false
+      - --datadir=/data
+      - --init-sync-no-verify
     resources:
-      cpus: 2
-      memory: 4 GB
-      storage: 5 GiB
-sidecars:
-  - name: "yes"
-    sidecar-to:
-      - geth
-    script:
-      inline: "yes"
-    resources:
-      cpus: 1
-      memory: 512 MB
-      storage: 5 GiB
+      cpus: 7
+      memory: 10 GB
+      storage: 100 GiB
 task-runners:
-  - name: geth-transactions
-    image: ubuntu:latest
-    script:
-      inline: echo hello
+  - name: unnecessary-task
+    script: 
+      inline: sleep 600
 tests:
-  - name: exercise-geth
-    description: run a geth testnet and execute some simple transactions
+  - name: simple-prysm-exercise
+    description: run a prysm testnet and validate some blocks
     system:
-      - type: geth
-        count: 2
-        port-mappings: 
-        - "8888:8888"
+      - name: beacon-node-testnet
+        type: prysm-beacon
+        count: 4
     phases:
-      - name: baseline-tps
+      - name: basic
         tasks:
-          - type: geth-transactions
-            timeout: 5 m`)
- /*     - name: tps-with-latency
-        system:
-          - type: geth
-            name: geth
-            resources:
-              networks:
-                - name: default
-                  latency: 100 ms
-        tasks:
-          - type: geth-transactions
-            timeout: 5 m`*/
+          - type: unnecessary-task
+            timeout: infinite`)
 
 	def, err := definition.SchemaYAML(startingPoint)
 	if err != nil {

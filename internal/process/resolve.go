@@ -163,13 +163,19 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		if err != nil {
 			return nil, err
 		}
+		attachCmds, err := resolver.deps.AttachNetworks(bucket, service.Name, service.Networks)
+		if err != nil {
+			return nil, err
+		}
+		out[3] = append(out[3], attachCmds...)
+		
 
 		if !service.IsTask {
 			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.Networks)
 			if err != nil {
 				return nil, err
 			}
-			out[2] = append(out[2], emulationCmds...)
+			out[4] = append(out[4], emulationCmds...)
 		}
 
 		fileCmds, err := resolver.deps.Files(bucket, service)
