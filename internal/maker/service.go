@@ -246,6 +246,9 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 		task.Networks = []schema.Network{}
 	}
 	out := entity.GetDefaultService(sp.defaults)
+	if task.Timeout.IsInfinite() || task.Timeout.Duration.Nanoseconds() > 0 {
+		out.Timeout = task.Timeout
+	}
 	return out, mergo.Map(&out, entity.Service{
 		Name:            namer.Task(task, index),
 		Networks:        task.Networks,
