@@ -72,8 +72,7 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 			if err != nil {
 				return nil, err
 			}
-			order := resolver.cmdMaker.CreateNetwork(
-				resolver.namer.Network(network), subnet)
+			order := resolver.cmdMaker.CreateNetwork(network.Name, subnet)
 			cmd, err := command.NewCommand(order, "0")
 			if err != nil {
 				return nil, err
@@ -168,7 +167,6 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 			return nil, err
 		}
 		out[3] = append(out[3], attachCmds...)
-		
 
 		if !service.IsTask {
 			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.Networks)
