@@ -67,8 +67,9 @@ func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
 	networkStatus := map[string]int{}
 	networks := map[string]schema.Network{}
 	if len(system.Resources.Networks) == 0 {
-		networkStatus[sp.defaults.Network.Name] |= 0x01
-		networks[sp.defaults.Network.Name] = schema.Network{Name: sp.defaults.Network.Name}
+		name := sp.defaults.Network.Name
+		networkStatus[name] = 0x03
+		networks[name] = schema.Network{Name: name}
 	}
 	for _, network := range system.Resources.Networks {
 		networkStatus[network.Name] |= 0x01
