@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"github.com/Whiteblock/go-prettyjson"
 	"github.com/whiteblock/definition"
+	"os"
+	"strconv"
 )
 
 func main() {
@@ -46,7 +48,7 @@ func main() {
 sidecars:
   - name: "yes"
     sidecar-to:
-      - nginx
+      - geth
     script:
       inline: "yes"
     resources:
@@ -63,15 +65,15 @@ tests:
     description: run a geth testnet and execute some simple transactions
     system:
       - type: geth
-        count: 60
+        count: 2
         port-mappings: 
         - "8888:8888"
     phases:
       - name: baseline-tps
         tasks:
           - type: geth-transactions
-            timeout: 5 m
-      - name: tps-with-latency
+            timeout: 5 m`)
+ /*     - name: tps-with-latency
         system:
           - type: geth
             name: geth
@@ -81,14 +83,26 @@ tests:
                   latency: 100 ms
         tasks:
           - type: geth-transactions
-            timeout: 5 m`)
+            timeout: 5 m`*/
 
 	def, err := definition.SchemaYAML(startingPoint)
-	fmt.Println(err)
-	tests, err := definition.GetTests(def)
+	if err != nil {
+		panic(err)
+	}
 
-	out, _ := prettyjson.Marshal(tests)
+	tests, err := definition.GetTests(def)
+	if err != nil {
+		panic(err)
+	}
+	cmds := tests[0].Commands
+	out, _ := prettyjson.Marshal(cmds)
+	if len(os.Args) > 1 {
+		index, err := strconv.Atoi(os.Args[1])
+		if err != nil {
+			panic(err)
+		}
+		out, _ = prettyjson.Marshal(cmds[index])
+	}
 	fmt.Println(string(out))
-	fmt.Println(err)
 
 }

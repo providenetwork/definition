@@ -19,8 +19,12 @@
 package entity
 
 import (
+	"reflect"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/imdario/mergo"
 )
 
 type Service struct {
@@ -35,4 +39,72 @@ type Service struct {
 	Timeout        command.Timeout
 	IsTask         bool
 	IgnoreExitCode bool
+}
+
+func (serv Service) Equal(serv2 Service) bool {
+	return reflect.DeepEqual(serv, serv2)
+}
+
+func (serv Service) CalculateDiff(serv2 Service) ServiceDiff {
+	out := ServiceDiff{Name: serv.Name, Parent: &serv2}
+
+	sidecars := map[string]int{}
+	allSidecars := map[string]schema.Sidecar{}
+
+	for _, sidecar := range serv.Sidecars {
+		sidecars[sidecar.Name] |= 0x01
+		allSidecars[sidecar.Name] = sidecar
+	}
+
+	for _, sidecar := range serv2.Sidecars {
+		sidecars[sidecar.Name] |= 0x02
+		allSidecars[sidecar.Name] = sidecar
+	}
+
+	for sidecar, status := range sidecars {
+		switch status {
+		case 0x03: // Sidecar exists in both
+			continue
+		case 0x02: // Sidecar exists only in the new service
+			out.AddSidecars = append(out.AddSidecars, allSidecars[sidecar])
+		case 0x01: // Sidecar exists only in the old service
+			out.RemoveSidecars = append(out.RemoveSidecars, allSidecars[sidecar])
+		}
+	}
+
+	networks := map[string]schema.Network{}
+	networkStatus := map[string]int{}
+	for _, network := range serv.Networks {
+		networkStatus[network.Name] |= 0x01
+		networks[network.Name] = network
+	}
+
+	for _, network := range serv2.Networks {
+		if _, exists := networks[network.Name]; exists { //Update
+			if !reflect.DeepEqual(networks[network.Name], network) {
+				tmp := networks[network.Name]
+				mergo.Map(&tmp, network, mergo.WithOverride)
+				networks[network.Name] = tmp
+				networkStatus[network.Name] = 0x04
+				continue
+			}
+		} else {
+			networks[network.Name] = network
+		}
+		networkStatus[network.Name] |= 0x02
+	}
+
+	for networkName, status := range networkStatus {
+		switch status {
+		case 0x04: // Needs update
+			out.UpdateNetworks = append(out.UpdateNetworks, networks[networkName])
+		case 0x03: // Both have
+			continue
+		case 0x02: // Only new has
+			out.AddNetworks = append(out.AddNetworks, networks[networkName])
+		case 0x01:
+			out.DetachNetworks = append(out.DetachNetworks, networks[networkName])
+		}
+	}
+	return out
 }

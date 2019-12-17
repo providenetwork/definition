@@ -36,7 +36,7 @@ import (
 
 type Service interface {
 	FromSystemDiff(spec schema.RootSchema, system schema.SystemComponent,
-		merged schema.SystemComponent) ([]entity.Service, error)
+		merged schema.SystemComponent) (*entity.SystemDiff, error)
 
 	FromSystem(spec schema.RootSchema, system schema.SystemComponent) ([]entity.Service, error)
 	FromTask(spec schema.RootSchema, task schema.Task, index int) (entity.Service, error)
@@ -59,25 +59,62 @@ func NewService(
 }
 
 func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
-	system schema.SystemComponent, merged schema.SystemComponent) ([]entity.Service, error) {
+	system schema.SystemComponent, merged schema.SystemComponent) (*entity.SystemDiff, error) {
 
-	if merged.Count == system.Count {
-		return nil, nil
+	out := &entity.SystemDiff{}
+
+	networkStatus := map[string]int{}
+	networks := map[string]schema.Network{}
+	for _, network := range system.Resources.Networks {
+		networkStatus[network.Name] |= 0x01
+		networks[network.Name] = network
 	}
-	if merged.Count < system.Count {
-		out := []entity.Service{} //We are removing nodes, so only need name
-		for i := merged.Count; i < system.Count; i++ {
-			out = append(out, entity.Service{Name: sp.namer.SystemService(merged, int(i))})
+
+	for _, network := range merged.Resources.Networks {
+		networkStatus[network.Name] |= 0x02
+		networks[network.Name] = network
+	}
+
+	for networkName, status := range networkStatus {
+		switch status {
+		case 0x03:
+			continue
+		case 0x02:
+			out.AddedNetworks = append(out.AddedNetworks, networks[networkName])
+		case 0x01:
+			out.RemovedNetworks = append(out.RemovedNetworks, networks[networkName])
+			continue
 		}
-		return out, nil
 	}
 
 	services, err := sp.FromSystem(spec, merged)
 	if err != nil {
 		return nil, err
 	}
-	services = services[int(merged.Count-system.Count):]
-	return services, nil
+
+	oldServices, err := sp.FromSystem(spec, system)
+	if err != nil {
+		return nil, err
+	}
+	oldLength := len(oldServices)
+	newLength := len(services)
+
+	max := newLength
+	if oldLength > max {
+		max = oldLength
+	}
+
+	for i := 0; i < max; i++ {
+		if i >= oldLength {
+			out.Added = append(out.Added, services[i])
+		} else if i >= newLength {
+			out.Removed = append(out.Removed, oldServices[i])
+		} else if !services[i].Equal(oldServices[i]) {
+			out.Modified = append(out.Modified, services[i].CalculateDiff(oldServices[i]))
+		}
+	}
+
+	return out, nil
 }
 
 func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
@@ -146,6 +183,8 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 				Name: sp.namer.DefaultNetwork(system),
 			},
 		}
+	} else {
+
 	}
 
 	for _, sidecar := range system.Sidecars {

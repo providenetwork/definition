@@ -56,10 +56,12 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	networkState entity.NetworkState,
 	spec schema.RootSchema,
 	phase schema.Phase,
-	dist *entity.ResourceDist, index int) ([][]command.Command, error) {
+	dist *entity.ResourceDist,
+	index int) ([][]command.Command, error) {
 
-	changedSystems, systems, hasChanged := calc.sys.GetAlreadyExists(state, phase.System)
-
+	out := [][]command.Command{}
+	changedSystems, systems, _ := calc.sys.GetAlreadyExists(state, phase.System)
+	calc.logger.WithField("systems", systems).Info("adding these systems")
 	servicesToAdd, err := calc.sys.Add(state, spec, systems)
 	if err != nil {
 		return nil, err
@@ -70,14 +72,22 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		return nil, err
 	}
 
-	if hasChanged {
-		add, remove, err := calc.sys.UpdateChanged(state, spec, changedSystems)
-		if err != nil {
-			return nil, err
-		}
-		servicesToAdd = append(servicesToAdd, add...)
-		servicesToRemove = append(servicesToRemove, remove...)
+	networkCommands, err := calc.resolver.CreateNetworks(phase.System, networkState)
+	if err != nil {
+		return nil, err
 	}
+	if len(networkCommands) > 0 {
+		out = append(out, networkCommands)
+		calc.logger.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
+			"got the network commands")
+	}
+
+	diff, err := calc.sys.UpdateChanged(state, spec, changedSystems)
+	if err != nil {
+		return nil, err
+	}
+	servicesToAdd = append(servicesToAdd, diff.Added...)
+	servicesToRemove = append(servicesToRemove, diff.Removed...)
 
 	servicesForTasks, err := calc.sys.Tasks(state, spec, phase.Tasks)
 	if err != nil {
@@ -91,20 +101,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		"removing": servicesToRemove,
 		"systems":  systems,
 		"changed":  changedSystems,
-	}).Trace("calculating command diff")
-
-	networkCommands, err := calc.resolver.CreateNetworks(phase.System, networkState)
-	if err != nil {
-		return nil, err
-	}
-
-	out := [][]command.Command{}
-
-	if len(networkCommands) > 0 {
-		out = append(out, networkCommands)
-		calc.logger.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
-			"got the network commands")
-	}
+	}).Debug("calculating command diff")
 
 	phaseDist, err := dist.GetPhase(index)
 	if err != nil {
@@ -120,6 +117,23 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		calc.logger.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace(
 			"got the removal commands")
 		out = append(out, removalCommands...)
+	}
+
+	updateCommands, err := calc.resolver.UpdateServices(phaseDist, diff.Modified)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(updateCommands) > 0 {
+		for i, set := range updateCommands {
+			calc.logger.WithFields(logrus.Fields{
+				"count": len(set),
+				"set":   i,
+			}).Trace("got the update commands set")
+			if len(set) > 0 {
+				out = append(out, set)
+			}
+		}
 	}
 
 	addCommands, err := calc.resolver.CreateServices(spec, networkState, phaseDist, servicesToAdd)

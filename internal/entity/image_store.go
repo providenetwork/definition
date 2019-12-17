@@ -16,16 +16,32 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package schema
+package entity
 
-type Network struct {
-	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
-	Bandwidth  string `yaml:"bandwidth,omitempty" json:"bandwidth,omitempty"`
-	Latency    string `yaml:"latency,omitempty" json:"latency,omitempty"`
-	PacketLoss string `yaml:"packet-loss,omitempty" json:"packet-loss,omitempty"`
+type ImageStore struct {
+	store map[string]map[string]map[string]string
 }
 
-// HasEmulation checks if the network struct has any emulation included
-func (net Network) HasEmulation() bool {
-	return net.Bandwidth != "" || net.Latency != "" || net.PacketLoss != ""
+func (is *ImageStore) Insert(instance, image string, meta map[string]string) {
+	if is.store == nil {
+		is.store = map[string]map[string]map[string]string{}
+	}
+
+	if is.store[instance] == nil {
+		is.store[instance] = map[string]map[string]string{}
+	}
+
+	is.store[instance][image] = meta
+}
+
+func (is *ImageStore) ForEach(fn func(instance, image string, meta map[string]string) error) error {
+	for instance, images := range is.store {
+		for image, meta := range images {
+			err := fn(instance, image, meta)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

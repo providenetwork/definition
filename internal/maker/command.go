@@ -29,7 +29,7 @@ import (
 	"github.com/docker/docker/api/types/strslice"
 )
 
-//  Command handles the simple schema -> order conversions
+// Command handles the simple schema -> order conversions
 type Command interface {
 	CreateNetwork(name string, network entity.Network) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
@@ -41,10 +41,11 @@ type Command interface {
 	StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	PullImage(image string) command.Order
 	File(name string, input schema.InputFile) command.Order
-	AttachNetwork(service entity.Service, network schema.Network) command.Order
-	Emulation(service entity.Service, network schema.Network) (command.Order, error)
+	AttachNetwork(service string, network string) command.Order
+	DetachNetwork(service string, network string) command.Order
+	Emulation(serviceName string, network schema.Network) (command.Order, error)
 
-	RemoveContainer(service entity.Service) command.Order
+	RemoveContainer(name string) command.Order
 }
 
 type commandMaker struct {
@@ -169,17 +170,27 @@ func (cmd commandMaker) StartSidecar(parent entity.Service, sidecar schema.Sidec
 	return cmd.startContainer(cmd.namer.Sidecar(parent, sidecar), false, command.Timeout{})
 }
 
-func (cmd commandMaker) AttachNetwork(service entity.Service, network schema.Network) command.Order {
+func (cmd commandMaker) AttachNetwork(service string, network string) command.Order {
 	return command.Order{
 		Type: command.Attachnetwork,
 		Payload: command.ContainerNetwork{
-			ContainerName: service.Name,
-			Network:       cmd.namer.Network(network),
+			ContainerName: service,
+			Network:       network,
 		},
 	}
 }
 
-func (cmd commandMaker) Emulation(service entity.Service, network schema.Network) (command.Order, error) {
+func (cmd commandMaker) DetachNetwork(service string, network string) command.Order {
+	return command.Order{
+		Type: command.Detachnetwork,
+		Payload: command.ContainerNetwork{
+			ContainerName: service,
+			Network:       network,
+		},
+	}
+}
+
+func (cmd commandMaker) Emulation(serviceName string, network schema.Network) (command.Order, error) {
 
 	loss, err := cmd.network.GetPacketLoss(network)
 	if err != nil {
@@ -192,8 +203,8 @@ func (cmd commandMaker) Emulation(service entity.Service, network schema.Network
 	return command.Order{
 		Type: command.Emulation,
 		Payload: command.Netconf{
-			Container:   service.Name,
-			Network:     cmd.namer.Network(network),
+			Container:   serviceName,
+			Network:     network.Name,
 			Limit:       0, //NYI
 			Loss:        loss,
 			Delay:       int(delay),
@@ -205,11 +216,11 @@ func (cmd commandMaker) Emulation(service entity.Service, network schema.Network
 	}, nil
 }
 
-func (cmd commandMaker) RemoveContainer(service entity.Service) command.Order {
+func (cmd commandMaker) RemoveContainer(name string) command.Order {
 	return command.Order{
 		Type: command.Removecontainer,
 		Payload: command.SimpleName{
-			Name: service.Name,
+			Name: name,
 		},
 	}
 }

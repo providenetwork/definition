@@ -73,6 +73,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 					logger,
 				),
 				merger.NewSystem(),
+				logger,
 			),
 			process.NewResolve(
 				maker.NewCommand(

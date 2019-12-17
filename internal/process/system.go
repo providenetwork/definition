@@ -26,6 +26,8 @@ import (
 	"github.com/whiteblock/definition/internal/merger"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
+
+	"github.com/sirupsen/logrus"
 )
 
 //System is for diff calculations
@@ -34,12 +36,12 @@ type System interface {
 		[]schema.SystemComponent, []schema.SystemComponent, bool)
 
 	UpdateChanged(state *entity.State, spec schema.RootSchema,
-		systems []schema.SystemComponent) (toAdd []entity.Service,
-		toRemove []entity.Service, err error)
+		systems []schema.SystemComponent) (*entity.SystemDiff, error)
 
 	//  Add modifies State
 	Add(state *entity.State, spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Service, error)
-	//Remove modifies state
+
+	// Remove modifies state
 	Remove(state *entity.State, spec schema.RootSchema, systems []string) ([]entity.Service, error)
 
 	Tasks(state *entity.State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error)
@@ -49,37 +51,35 @@ type system struct {
 	namer  parser.Names
 	maker  maker.Service
 	merger merger.System
+	log    logrus.Ext1FieldLogger
 }
 
 func NewSystem(
 	namer parser.Names,
 	maker maker.Service,
-	merger merger.System) System {
-	return &system{namer: namer, maker: maker, merger: merger}
+	merger merger.System,
+	log logrus.Ext1FieldLogger) System {
+	return &system{namer: namer, maker: maker, merger: merger, log: log}
 }
 
 func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
-	systems []schema.SystemComponent) (toAdd []entity.Service,
-	toRemove []entity.Service, err error) {
+	systems []schema.SystemComponent) (diff *entity.SystemDiff, err error) {
 
+	diff = &entity.SystemDiff{}
 	for _, systemUpdate := range systems {
 		name := sys.namer.SystemComponent(systemUpdate)
 		old, exists := state.SystemState[name]
 		if !exists {
-			return nil, nil, fmt.Errorf("system \"%s\" not found", name)
+			return nil, fmt.Errorf("system \"%s\" not found", name)
 		}
 		system := sys.merger.MergeLeft(systemUpdate, old)
-
-		serv, err := sys.maker.FromSystemDiff(spec, old, system)
+		sys.log.WithField("system", system).Debug("merged the systems")
+		sysDiff, err := sys.maker.FromSystemDiff(spec, old, system)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
+		diff.Append(sysDiff)
 
-		if system.Count < old.Count {
-			toRemove = append(toRemove, serv...)
-		} else {
-			toAdd = append(toAdd, serv...)
-		}
 		state.SystemState[name] = system
 	}
 	return
@@ -129,7 +129,9 @@ func (sys system) Add(state *entity.State, spec schema.RootSchema,
 }
 
 //Remove modifies state
-func (sys system) Remove(state *entity.State, spec schema.RootSchema, systems []string) ([]entity.Service, error) {
+func (sys system) Remove(state *entity.State, spec schema.RootSchema,
+	systems []string) ([]entity.Service, error) {
+
 	out := []entity.Service{}
 	for _, toRemove := range systems {
 		system, exists := state.SystemState[toRemove]
@@ -148,7 +150,9 @@ func (sys system) Remove(state *entity.State, spec schema.RootSchema, systems []
 	return out, nil
 }
 
-func (sys system) Tasks(state *entity.State, spec schema.RootSchema, tasks []schema.Task) ([]entity.Service, error) {
+func (sys system) Tasks(state *entity.State, spec schema.RootSchema,
+	tasks []schema.Task) ([]entity.Service, error) {
+
 	out := []entity.Service{}
 	for i, task := range tasks {
 		service, err := sys.maker.FromTask(spec, task, i)

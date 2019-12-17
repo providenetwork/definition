@@ -19,6 +19,7 @@
 package process
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/whiteblock/definition/command"
@@ -39,7 +40,12 @@ type Resolve interface {
 		services []entity.Service) ([][]command.Command, error)
 
 	RemoveServices(dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error)
+	UpdateServices(dist entity.PhaseDist, services []entity.ServiceDiff) ([][]command.Command, error)
 }
+
+var (
+	ErrBucketNotFound = errors.New("could not find bucket")
+)
 
 type resolve struct {
 	cmdMaker maker.Command
@@ -58,6 +64,7 @@ func NewResolve(
 
 func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 	networkState entity.NetworkState) ([]command.Command, error) {
+
 	out := []command.Command{}
 	for _, system := range systems {
 		for _, network := range system.Resources.Networks {
@@ -95,88 +102,86 @@ func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
 }
 
 //instance -> images -> meta
-func (resolver resolve) pullImages(allImages map[string]map[string]map[string]string) ([]command.Command, error) {
-
+func (resolver resolve) pullImages(images *entity.ImageStore) ([]command.Command, error) {
 	out := []command.Command{}
-	for instance, images := range allImages {
-		for image, meta := range images {
-			order := resolver.cmdMaker.PullImage(image)
-			cmd, err := command.NewCommand(order, instance)
-			if err != nil {
-				return nil, err
-			}
-			mergo.Map(&cmd.Meta, meta)
-			out = append(out, cmd)
+	return out, images.ForEach(func(instance, image string, meta map[string]string) error {
+		order := resolver.cmdMaker.PullImage(image)
+		cmd, err := command.NewCommand(order, instance)
+		if err != nil {
+			return err
 		}
-
-	}
-	return out, nil
+		mergo.Map(&cmd.Meta, meta)
+		out = append(out, cmd)
+		return nil
+	})
 }
 
 func (resolver resolve) CreateServices(spec schema.RootSchema, networkState entity.NetworkState,
 	dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 5)
-	images := map[string]map[string]map[string]string{}
+	images := &entity.ImageStore{}
 	for _, service := range services {
+		bucket := dist.FindBucket(service.Name)
+		if bucket == -1 {
+			return nil, ErrBucketNotFound
+		}
 
-		createCmd, startCmd, err := resolver.deps.Container(spec, dist, service)
+		createCmd, startCmd, err := resolver.deps.Container(bucket, service)
 		if err != nil {
 			return nil, err
 		}
+		images.Insert(createCmd.Target.IP, service.SquashedService.Image, service.Labels)
 
-		if images[createCmd.Target.IP] == nil {
-			images[createCmd.Target.IP] = map[string]map[string]string{}
-		}
-		images[createCmd.Target.IP][service.SquashedService.Image] = service.Labels
-
-		if !service.IsTask && len(service.Sidecars) > 0 {
-			sidecarCmds, err := resolver.deps.Sidecars(spec, dist, service)
-			if err != nil {
-				return nil, err
+		if !service.IsTask {
+			if len(service.Sidecars) > 0 {
+				sidecarCmds, err := resolver.deps.Sidecars(bucket, service, service.Sidecars)
+				if err != nil {
+					return nil, err
+				}
+				for _, cmd := range sidecarCmds[0] {
+					if cmd.Order.Type != command.Createcontainer {
+						continue
+					}
+					payload, ok := cmd.Order.Payload.(command.Container)
+					if !ok {
+						continue
+					}
+					images.Insert(cmd.Target.IP, payload.Image, service.Labels)
+				}
+				out[3] = append(out[3], sidecarCmds[0]...)
+				out[4] = append(out[4], sidecarCmds[1]...)
 			}
-			for _, cmd := range sidecarCmds[0] {
-				if cmd.Order.Type != command.Createcontainer {
-					continue
-				}
-				payload, ok := cmd.Order.Payload.(command.Container)
-				if !ok {
-					continue
-				}
-				if images[cmd.Target.IP] == nil {
-					images[cmd.Target.IP] = map[string]map[string]string{}
-				}
-				images[cmd.Target.IP][payload.Image] = service.Labels
-			}
-			out[3] = append(out[3], sidecarCmds[0]...)
-			out[4] = append(out[4], sidecarCmds[1]...)
-			sidecarNetworkCmd, err := resolver.deps.SidecarNetwork(spec, networkState, dist, service)
+			sidecarNetworkCmd, err := resolver.deps.SidecarNetwork(bucket, networkState, service)
 			if err != nil {
 				return nil, err
 			}
 			out[0] = append(out[0], sidecarNetworkCmd)
 		}
 
-		volumeCmds, err := resolver.deps.Volumes(spec, dist, service)
+		volumeCmds, err := resolver.deps.Volumes(bucket, service)
 		if err != nil {
 			return nil, err
 		}
 
-		emulationCmds, err := resolver.deps.Emulation(spec, dist, service)
-		if err != nil {
-			return nil, err
+		if !service.IsTask {
+			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.Networks)
+			if err != nil {
+				return nil, err
+			}
+			out[2] = append(out[2], emulationCmds...)
 		}
 
-		fileCmds, err := resolver.deps.Files(dist, service)
+		fileCmds, err := resolver.deps.Files(bucket, service)
 		if err != nil {
 			return nil, err
 		}
 
 		out[0] = append(out[0], volumeCmds...)
-		out[0] = append(out[0], fileCmds...)
+		out[3] = append(out[3], fileCmds...)
 		out[1] = append(out[1], createCmd)
 		out[2] = append(out[2], startCmd)
-		out[2] = append(out[2], emulationCmds...)
+
 	}
 	cmds, err := resolver.pullImages(images)
 	if err != nil {
@@ -195,12 +200,12 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 	}
 	out := []command.Command{}
 	for _, service := range services {
-		order := resolver.cmdMaker.RemoveContainer(service)
 		bucket := dist.FindBucket(service.Name)
 		if bucket == -1 {
-			return nil, fmt.Errorf("could not find bucket")
+			return nil, ErrBucketNotFound
 		}
 
+		order := resolver.cmdMaker.RemoveContainer(service.Name)
 		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
@@ -210,4 +215,91 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 	}
 	//  If needed, we can also add commands for removing volumes and networks
 	return [][]command.Command{out}, nil
+}
+
+/**
+ *
+type ServiceDiff struct {
+	Name           string
+	RemoveSidecars []schema.Sidecar
+}
+*/
+
+func (resolver resolve) UpdateServices(dist entity.PhaseDist,
+	services []entity.ServiceDiff) ([][]command.Command, error) {
+
+	out := make([][]command.Command, 3)
+
+	for _, service := range services {
+		bucket := dist.FindBucket(service.Name)
+		if bucket == -1 {
+			return nil, ErrBucketNotFound
+		}
+
+		if len(service.AddNetworks) > 0 {
+			addNetworkCmds, err := resolver.deps.AttachNetworks(bucket, service.Name, service.AddNetworks)
+			if err != nil {
+				return nil, err
+			}
+			out[0] = append(out[0], addNetworkCmds...)
+
+			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.AddNetworks)
+			if err != nil {
+				return nil, err
+			}
+			out[1] = append(out[1], emulationCmds...)
+		}
+
+		if len(service.UpdateNetworks) > 0 {
+			resolver.log.WithField("service", service.Name).Info("updating networks")
+			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.UpdateNetworks)
+			if err != nil {
+				return nil, err
+			}
+			out[0] = append(out[0], emulationCmds...)
+		}
+
+		if len(service.DetachNetworks) > 0 {
+			addNetworkCmds, err := resolver.deps.DetachNetworks(bucket, service.Name, service.DetachNetworks)
+			if err != nil {
+				return nil, err
+			}
+			out[0] = append(out[0], addNetworkCmds...)
+		}
+
+		if len(service.AddSidecars) > 0 {
+			images := &entity.ImageStore{}
+			sidecarCmds, err := resolver.deps.Sidecars(bucket, *service.Parent, service.AddSidecars)
+			if err != nil {
+				return nil, err
+			}
+			for _, cmd := range sidecarCmds[0] {
+				if cmd.Order.Type != command.Createcontainer {
+					continue
+				}
+				payload, ok := cmd.Order.Payload.(command.Container)
+				if !ok {
+					continue
+				}
+				images.Insert(cmd.Target.IP, payload.Image, service.Parent.Labels)
+			}
+
+			cmds, err := resolver.pullImages(images)
+			if err != nil {
+				return nil, err
+			}
+			out[0] = append(out[0], cmds...)
+			out[1] = append(out[1], sidecarCmds[0]...)
+			out[2] = append(out[2], sidecarCmds[1]...)
+		}
+		for _, sidecarToRemove := range service.RemoveSidecars {
+			cmd, err := resolver.deps.RemoveContainer(bucket,
+				resolver.namer.Sidecar(*service.Parent, sidecarToRemove))
+			if err != nil {
+				return nil, err
+			}
+			out[1] = append(out[1], cmd)
+		}
+	}
+	return out, nil
 }

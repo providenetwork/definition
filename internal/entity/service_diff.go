@@ -16,16 +16,19 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package schema
+package entity
 
-type Network struct {
-	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
-	Bandwidth  string `yaml:"bandwidth,omitempty" json:"bandwidth,omitempty"`
-	Latency    string `yaml:"latency,omitempty" json:"latency,omitempty"`
-	PacketLoss string `yaml:"packet-loss,omitempty" json:"packet-loss,omitempty"`
-}
+import (
+	"github.com/whiteblock/definition/schema"
+)
 
-// HasEmulation checks if the network struct has any emulation included
-func (net Network) HasEmulation() bool {
-	return net.Bandwidth != "" || net.Latency != "" || net.PacketLoss != ""
+type ServiceDiff struct {
+	Name           string
+	AddNetworks    []schema.Network
+	UpdateNetworks []schema.Network
+	DetachNetworks []schema.Network
+	AddSidecars    []schema.Sidecar
+	RemoveSidecars []schema.Sidecar
+
+	Parent *Service
 }

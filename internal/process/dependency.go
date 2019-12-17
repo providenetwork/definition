@@ -30,22 +30,27 @@ import (
 )
 
 type Dependency interface {
-	Container(spec schema.RootSchema, dist entity.PhaseDist,
-		service entity.Service) (create command.Command, start command.Command, err error)
+	AttachNetworks(bucket int, container string,
+		networks []schema.Network) ([]command.Command, error)
 
-	Emulation(spec schema.RootSchema, dist entity.PhaseDist,
-		service entity.Service) ([]command.Command, error)
+	//Container returns create, start, error
+	Container(bucket int, service entity.Service) (command.Command, command.Command, error)
 
-	Files(dist entity.PhaseDist, service entity.Service) ([]command.Command, error)
+	DetachNetworks(bucket int, container string,
+		networks []schema.Network) ([]command.Command, error)
 
-	Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
-		service entity.Service) ([][]command.Command, error)
+	Emulation(bucket int, container string, networks []schema.Network) ([]command.Command, error)
 
-	SidecarNetwork(spec schema.RootSchema, networkState entity.NetworkState,
-		dist entity.PhaseDist, service entity.Service) (command.Command, error)
+	Files(bucket int, service entity.Service) ([]command.Command, error)
 
-	Volumes(spec schema.RootSchema, dist entity.PhaseDist,
-		service entity.Service) ([]command.Command, error)
+	RemoveContainer(bucket int, name string) (command.Command, error)
+
+	Sidecars(bucket int, service entity.Service, sidecars []schema.Sidecar) ([][]command.Command, error)
+
+	SidecarNetwork(bucket int, networkState entity.NetworkState,
+		service entity.Service) (command.Command, error)
+
+	Volumes(bucket int, service entity.Service) ([]command.Command, error)
 }
 
 type dependency struct {
@@ -61,21 +66,16 @@ func NewDependency(
 	return &dependency{cmdMaker: cmdMaker, parser: parser, log: log}
 }
 
-func (dep dependency) Emulation(spec schema.RootSchema, dist entity.PhaseDist,
-	service entity.Service) ([]command.Command, error) {
-	if service.IsTask {
-		return []command.Command{}, nil
-	}
-	bucket := dist.FindBucket(service.Name)
-	if bucket == -1 {
-		return nil, fmt.Errorf("could not find bucket")
-	}
+func (dep dependency) Emulation(bucket int, container string,
+	networks []schema.Network) ([]command.Command, error) {
+
 	out := []command.Command{}
-	for _, network := range service.Networks {
+	for _, network := range networks {
 		if !network.HasEmulation() {
+			dep.log.WithField("network", network).Debug("skipping network which doesn't have emulation")
 			continue
 		}
-		order, err := dep.cmdMaker.Emulation(service, network)
+		order, err := dep.cmdMaker.Emulation(container, network)
 		if err != nil {
 			return nil, err
 		}
@@ -88,14 +88,36 @@ func (dep dependency) Emulation(spec schema.RootSchema, dist entity.PhaseDist,
 	return out, nil
 }
 
-func (dep dependency) Container(spec schema.RootSchema, dist entity.PhaseDist,
-	service entity.Service) (create command.Command, start command.Command, err error) {
-
-	bucket := dist.FindBucket(service.Name)
-	if bucket == -1 {
-		err = fmt.Errorf("could not find bucket")
-		return
+func (dep dependency) DetachNetworks(bucket int, container string,
+	networks []schema.Network) ([]command.Command, error) {
+	out := []command.Command{}
+	for _, network := range networks {
+		order := dep.cmdMaker.DetachNetwork(container, network.Name)
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
 	}
+	return out, nil
+}
+
+func (dep dependency) AttachNetworks(bucket int, container string,
+	networks []schema.Network) ([]command.Command, error) {
+	out := []command.Command{}
+	for _, network := range networks {
+		order := dep.cmdMaker.AttachNetwork(container, network.Name)
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	return out, nil
+}
+
+func (dep dependency) Container(bucket int, service entity.Service) (
+	create command.Command, start command.Command, err error) {
 
 	order := dep.cmdMaker.CreateContainer(service)
 
@@ -120,13 +142,9 @@ func (dep dependency) Container(spec schema.RootSchema, dist entity.PhaseDist,
 	return
 }
 
-func (dep dependency) files(dist entity.PhaseDist, service entity.Service, name string,
+func (dep dependency) files(bucket int, service entity.Service, name string,
 	inputs []schema.InputFile) ([]command.Command, error) {
 
-	bucket := dist.FindBucket(service.Name)
-	if bucket == -1 {
-		return nil, fmt.Errorf("could not find bucket")
-	}
 	out := []command.Command{}
 	for _, input := range inputs {
 		order := dep.cmdMaker.File(name, input)
@@ -139,13 +157,13 @@ func (dep dependency) files(dist entity.PhaseDist, service entity.Service, name 
 	return out, nil
 }
 
-func (dep dependency) Files(dist entity.PhaseDist, service entity.Service) ([]command.Command, error) {
-	cmds, err := dep.files(dist, service, service.Name, service.SquashedService.InputFiles)
+func (dep dependency) Files(bucket int, service entity.Service) ([]command.Command, error) {
+	cmds, err := dep.files(bucket, service, service.Name, service.SquashedService.InputFiles)
 	if err != nil {
 		return nil, err
 	}
 	for _, sidecar := range service.Sidecars {
-		sCmds, err := dep.files(dist, service, sidecar.Name, sidecar.InputFiles)
+		sCmds, err := dep.files(bucket, service, sidecar.Name, sidecar.InputFiles)
 		if err != nil {
 			return nil, err
 		}
@@ -155,15 +173,11 @@ func (dep dependency) Files(dist entity.PhaseDist, service entity.Service) ([]co
 
 }
 
-func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
-	service entity.Service) ([][]command.Command, error) {
+func (dep dependency) Sidecars(bucket int, service entity.Service,
+	sidecars []schema.Sidecar) ([][]command.Command, error) {
 
-	bucket := dist.FindBucket(service.Name)
-	if bucket == -1 {
-		return nil, fmt.Errorf("could not find bucket")
-	}
 	out := make([][]command.Command, 2)
-	for _, sidecar := range service.Sidecars {
+	for _, sidecar := range sidecars {
 
 		order := dep.cmdMaker.CreateSidecar(service, sidecar)
 		create, err := command.NewCommand(order, fmt.Sprint(bucket))
@@ -194,13 +208,9 @@ func (dep dependency) Sidecars(spec schema.RootSchema, dist entity.PhaseDist,
 	return out, nil
 }
 
-func (dep dependency) SidecarNetwork(spec schema.RootSchema, networkState entity.NetworkState,
-	dist entity.PhaseDist, service entity.Service) (command.Command, error) {
+func (dep dependency) SidecarNetwork(bucket int, networkState entity.NetworkState,
+	service entity.Service) (command.Command, error) {
 
-	bucket := dist.FindBucket(service.Name)
-	if bucket == -1 {
-		return command.Command{}, fmt.Errorf("could not find bucket")
-	}
 	subnet, err := networkState.GetNextLocal(bucket)
 	if err != nil {
 		return command.Command{}, err
@@ -209,13 +219,12 @@ func (dep dependency) SidecarNetwork(spec schema.RootSchema, networkState entity
 	return command.NewCommand(order, fmt.Sprint(bucket))
 }
 
-func (dep dependency) Volumes(spec schema.RootSchema, dist entity.PhaseDist,
-	service entity.Service) ([]command.Command, error) {
+func (dep dependency) RemoveContainer(bucket int, name string) (command.Command, error) {
+	order := dep.cmdMaker.RemoveContainer(name)
+	return command.NewCommand(order, fmt.Sprint(bucket))
+}
 
-	bucket := dist.FindBucket(service.Name)
-	if bucket == -1 {
-		return nil, fmt.Errorf("could not find bucket")
-	}
+func (dep dependency) Volumes(bucket int, service entity.Service) ([]command.Command, error) {
 	out := []command.Command{}
 	for _, volume := range service.SquashedService.SharedVolumes {
 		order := dep.cmdMaker.CreateVolume(volume)
