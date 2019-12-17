@@ -238,7 +238,7 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 	if len(task.Networks) == 0 {
 		task.Networks = []schema.Network{}
 	}
-	return entity.Service{
+	out := entity.Service{
 		Name:            namer.Task(task, index),
 		Networks:        task.Networks,
 		SquashedService: service,
@@ -246,5 +246,10 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 		IgnoreExitCode:  task.IgnoreExitCode,
 		Timeout:         task.Timeout,
 		IsTask:          true,
-	}, nil
+	}
+
+	if out.SquashedService.Image != "" {
+		out.SquashedService.Image = "ubuntu:18.04"
+	}
+	return out, nil
 }

@@ -176,6 +176,16 @@ func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Com
 	return [][]command.Command{[]command.Command{cmd}}, err
 }
 
+func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCommands {
+	out := [][]command.Command{}
+	for _, segment := range in {
+		for _, cmd := range segment {
+			out = append(out, []command.Command{cmd})
+		}
+	}
+	return entity.TestCommands(out)
+}
+
 func (calc testCalculator) Commands(spec schema.RootSchema,
 	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
 
@@ -185,6 +195,7 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 	if err != nil {
 		return nil, err
 	}
+	network.GetNextGlobal() //don't use the first entry
 
 	phase := schema.Phase{System: spec.Tests[index].System}
 	out := entity.TestCommands{}
@@ -192,18 +203,18 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 	if err != nil {
 		return nil, err
 	}
-	out = out.Append(sCmds)
+	out = out.Append(calc.breakUpCommands(sCmds))
 	cmds, err := calc.handlePhase(state, network, spec, phase, dist, 0)
 	if err != nil {
 		return nil, err
 	}
-	out = out.Append(cmds)
+	out = out.Append(calc.breakUpCommands(cmds))
 	for i, phase := range spec.Tests[index].Phases {
 		cmds, err = calc.handlePhase(state, network, spec, phase, dist, i+1)
 		if err != nil {
 			return nil, err
 		}
-		out = out.Append(cmds)
+		out = out.Append(calc.breakUpCommands(cmds))
 	}
 	out.MetaInject("test", spec.Tests[index].Name)
 	return out, nil

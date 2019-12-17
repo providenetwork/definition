@@ -37,6 +37,9 @@ func (is *ImageStore) Insert(instance, image string, meta map[string]string) {
 func (is *ImageStore) ForEach(fn func(instance, image string, meta map[string]string) error) error {
 	for instance, images := range is.store {
 		for image, meta := range images {
+			if image == "" {
+				continue
+			}
 			err := fn(instance, image, meta)
 			if err != nil {
 				return err

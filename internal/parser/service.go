@@ -89,7 +89,10 @@ func (sp *serviceParser) GetImage(service entity.Service) string {
 }
 
 func (sp *serviceParser) GetNetworks(service entity.Service) (out []string) {
-	return []string{sp.GetSidecarNetwork(service)}
+	if !service.IsTask {
+		return []string{sp.GetSidecarNetwork(service)}
+	}
+	return []string{}
 }
 
 func (sp *serviceParser) GetSidecarNetwork(service entity.Service) string {
