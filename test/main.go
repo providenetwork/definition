@@ -29,31 +29,42 @@ import (
 func main() {
 
 	startingPoint := []byte(`services:
-  - name: prysm-beacon
-    image: gcr.io/prysmaticlabs/prysm/beacon-chain:latest
-    args:
-      - --datadir=/data
-      - --init-sync-no-verify
+  - name: lighthouse
+    image: sigp/lighthouse
+    shared-volumes:
+      - source-path: /var/log/lighthouse
+        name: lighthouse-logs
     resources:
-      cpus: 7
-      memory: 10 GB
+      cpus: 5
+      memory: 8 GB
       storage: 100 GiB
 task-runners:
-  - name: unnecessary-task
-    script: 
-      inline: sleep 600
+  - name: run-lighthouse
+    script:
+      inline: lighthouse bn testnet -f quick 4 1575650550   
 tests:
-  - name: simple-prysm-exercise
-    description: run a prysm testnet and validate some blocks
+  - name: exercise-lighthouse
+    description: run a lighthouse testnet and validate some blocks
     system:
-      - name: beacon-node-testnet
-        type: prysm-beacon
-        count: 4
+      - name: lighthouse-partition-a
+        type: lighthouse
+        count: 2
+        resources:
+          networks:
+            - name: common-net
+            - name: partition-a-network
+      - name: lighthouse-partition-b
+        type: lighthouse
+        count: 2
+        resources:
+          networks:
+            - name: common-net
+            - name: partition-b-network
     phases:
-      - name: basic
+      - name: baseline
         tasks:
-          - type: unnecessary-task
-            timeout: infinite`)
+          - type: run-lighthouse
+            timeout: 2m `)
 
 	def, err := definition.SchemaYAML(startingPoint)
 	if err != nil {

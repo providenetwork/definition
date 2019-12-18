@@ -176,7 +176,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		if err != nil {
 			return nil, err
 		}
-		out[3] = append(out[3], attachCmds...)
+		out[2] = append(out[2], attachCmds...)
 
 		if !service.IsTask {
 			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.Networks)
@@ -192,9 +192,9 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		}
 
 		out[0] = append(out[0], volumeCmds...)
-		out[3] = append(out[3], fileCmds...)
+		out[2] = append(out[2], fileCmds...)
 		out[1] = append(out[1], createCmd)
-		out[2] = append(out[2], startCmd)
+		out[3] = append(out[3], startCmd)
 
 	}
 	cmds, err := resolver.pullImages(images)
