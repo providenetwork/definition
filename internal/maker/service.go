@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/namer"
@@ -46,13 +47,15 @@ type serviceMaker struct {
 	searcher search.Schema
 	convert  converter.Service
 	log      logrus.Ext1FieldLogger
+	defaults defaults.Defaults
 }
 
 func NewService(
+	defaults defaults.Defaults,
 	searcher search.Schema,
 	convert converter.Service,
 	log logrus.Ext1FieldLogger) Service {
-	return &serviceMaker{searcher: searcher,
+	return &serviceMaker{searcher: searcher, defaults: defaults,
 		convert: convert, log: log}
 }
 
@@ -63,6 +66,11 @@ func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
 
 	networkStatus := map[string]int{}
 	networks := map[string]schema.Network{}
+	if len(system.Resources.Networks) == 0 {
+		name := sp.defaults.Network.Name
+		networkStatus[name] = 0x03
+		networks[name] = schema.Network{Name: name}
+	}
 	for _, network := range system.Resources.Networks {
 		networkStatus[network.Name] |= 0x01
 		networks[network.Name] = network
@@ -72,6 +80,7 @@ func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
 		networkStatus[network.Name] |= 0x02
 		networks[network.Name] = network
 	}
+	sp.log.WithField("networkStatus", networkStatus).Trace("got the network status")
 
 	for networkName, status := range networkStatus {
 		switch status {
@@ -81,7 +90,6 @@ func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
 			out.AddedNetworks = append(out.AddedNetworks, networks[networkName])
 		case 0x01:
 			out.RemovedNetworks = append(out.RemovedNetworks, networks[networkName])
-			continue
 		}
 	}
 
@@ -166,23 +174,22 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		}).Debug("processed port mapping")
 		portMapping[hostPort] = cntrPort
 	}
+	base := entity.GetDefaultService(sp.defaults)
 
-	base := entity.Service{
-		Name:            "",
-		Bucket:          -1,
-		SquashedService: squashed,
-		Networks:        system.Resources.Networks,
-		Sidecars:        sp.searcher.FindSidecarsByService(spec, system.Type),
-		Ports:           portMapping,
+	base.Networks = system.Resources.Networks
+	base.Sidecars = sp.searcher.FindSidecarsByService(spec, system.Type)
+	base.Ports = portMapping
+	err = mergo.Map(&base.SquashedService, squashed, mergo.WithOverride)
+	if err != nil {
+		return nil, err
 	}
+
 	if len(base.Networks) == 0 {
 		base.Networks = []schema.Network{
 			schema.Network{
 				Name: namer.DefaultNetwork(system),
 			},
 		}
-	} else {
-
 	}
 
 	for _, sidecar := range system.Sidecars {
@@ -238,7 +245,11 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 	if len(task.Networks) == 0 {
 		task.Networks = []schema.Network{}
 	}
-	out := entity.Service{
+	out := entity.GetDefaultService(sp.defaults)
+	if task.Timeout.IsInfinite() || task.Timeout.Duration.Nanoseconds() > 0 {
+		out.Timeout = task.Timeout
+	}
+	return out, mergo.Map(&out, entity.Service{
 		Name:            namer.Task(task, index),
 		Networks:        task.Networks,
 		SquashedService: service,
@@ -246,10 +257,5 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 		IgnoreExitCode:  task.IgnoreExitCode,
 		Timeout:         task.Timeout,
 		IsTask:          true,
-	}
-
-	if out.SquashedService.Image != "" {
-		out.SquashedService.Image = "ubuntu:18.04"
-	}
-	return out, nil
+	}, mergo.WithOverride)
 }

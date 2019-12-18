@@ -32,7 +32,6 @@ type Service interface {
 	GetEntrypoint(service entity.Service) string
 	GetImage(service entity.Service) string
 
-	GetSidecarNetwork(service entity.Service) string
 	GetNetworks(service entity.Service) []string
 	GetMemory(service entity.Service) int64
 	GetVolumes(service entity.Service) []command.Mount
@@ -77,7 +76,6 @@ func (sp *serviceParser) GetMemory(service entity.Service) int64 {
 		return sp.defaults.Memory
 	}
 	return res.Memory
-
 }
 
 func (sp *serviceParser) GetImage(service entity.Service) string {
@@ -90,13 +88,9 @@ func (sp *serviceParser) GetImage(service entity.Service) string {
 
 func (sp *serviceParser) GetNetworks(service entity.Service) (out []string) {
 	if !service.IsTask {
-		return []string{sp.GetSidecarNetwork(service)}
+		return []string{namer.SidecarNetwork(service)}
 	}
 	return []string{}
-}
-
-func (sp *serviceParser) GetSidecarNetwork(service entity.Service) string {
-	return namer.SidecarNetwork(service)
 }
 
 func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {

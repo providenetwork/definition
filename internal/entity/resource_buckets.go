@@ -19,7 +19,7 @@
 package entity
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/whiteblock/definition/config"
 
@@ -31,6 +31,12 @@ type ResourceBuckets interface {
 	Remove(segments []Segment) error
 	Resources() []Bucket
 }
+
+var (
+	ErrSizeLimitExceeded = errors.New("size limit exceeded")
+	ErrSegmentTooLarge   = errors.New("segment size too large")
+	ErrSegmentNotFound   = errors.New("segment not found")
+)
 
 type resourceBuckets struct {
 	conf    config.Bucket
@@ -45,16 +51,15 @@ func NewResourceBuckets(conf config.Bucket, log logrus.Ext1FieldLogger) Resource
 func (rb *resourceBuckets) add(segment Segment) error {
 	for i := range rb.buckets {
 		if rb.buckets[i].tryAdd(segment) {
-			rb.log.WithField("bucket", i).Trace("inserted a segment")
 			return nil
 		}
 	}
 	if int64(len(rb.buckets)) == rb.conf.MaxBuckets {
-		return fmt.Errorf("size limits exceeded")
+		return ErrSizeLimitExceeded
 	}
 	bucket := NewBucket(&rb.conf, rb.log)
 	if !bucket.tryAdd(segment) {
-		return fmt.Errorf("segment size too large")
+		return ErrSegmentTooLarge
 	}
 	rb.buckets = append(rb.buckets, bucket)
 	return nil
@@ -79,7 +84,7 @@ func (rb *resourceBuckets) remove(segment Segment) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("couldn't remove segment, doesn't exist")
+	return ErrSegmentNotFound
 }
 
 func (rb *resourceBuckets) Remove(segments []Segment) error {

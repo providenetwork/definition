@@ -28,16 +28,19 @@ import (
 //  Config is the union of all of the configuration structures of this
 //library, so that it may be passed in directly by the user
 type Config struct {
-	//Bucket is the configuration for buckets
+	// Bucket is the configuration for buckets
 	Bucket Bucket
 
-	//Logger is the configuration for the loggers
+	// Output is the configuration for the command output
+	Output Output
+
+	// Logger is the configuration for the loggers
 	Logger Logger
 
-	//Network is the configuration for the networks
+	// Network is the configuration for the networks
 	Network Network
 
-	//  Defaults is the configuration of the defaults
+	// Defaults is the configuration of the defaults
 	Defaults defaults.Defaults
 }
 
@@ -54,6 +57,11 @@ func New(v *viper.Viper) (conf Config, err error) {
 	}
 
 	conf.Network, err = NewNetwork(v)
+	if err != nil {
+		return Config{}, err
+	}
+
+	conf.Output, err = NewOutput(v)
 	if err != nil {
 		return Config{}, err
 	}
@@ -80,6 +88,11 @@ func SetViperBindings(v *viper.Viper) error {
 		return err
 	}
 
+	err = setOutputBindings(v)
+	if err != nil {
+		return err
+	}
+
 	return defaults.SetViperBindings(v)
 }
 
@@ -89,6 +102,7 @@ func SetViperDefaults(v *viper.Viper) {
 	setLoggerDefaults(v)
 	setBucketDefaults(v)
 	setNetworkDefaults(v)
+	setOutputDefaults(v)
 	defaults.SetViperDefaults(v)
 }
 

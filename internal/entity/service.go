@@ -19,9 +19,11 @@
 package entity
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/imdario/mergo"
@@ -39,6 +41,29 @@ type Service struct {
 	Timeout        command.Timeout
 	IsTask         bool
 	IgnoreExitCode bool
+}
+
+func GetDefaultService(def defaults.Defaults) Service {
+	return Service{
+		Name:   "",
+		Bucket: -1,
+		SquashedService: schema.Service{
+			Name:          "",
+			Description:   "",
+			SharedVolumes: nil,
+			Resources: schema.Resources{
+				Cpus:    def.Resources.CPUs,
+				Memory:  fmt.Sprintf("%dMB", def.Resources.Memory),
+				Storage: fmt.Sprintf("%dMB", def.Resources.Storage),
+			},
+			Args:        nil,
+			Environment: nil,
+			Image:       def.Service.Image,
+			InputFiles:  nil,
+		},
+		Networks: nil,
+		Sidecars: nil,
+	}
 }
 
 func (serv Service) Equal(serv2 Service) bool {

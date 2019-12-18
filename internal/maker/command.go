@@ -80,7 +80,7 @@ func (cmd commandMaker) createNetwork(name string, network entity.Network, globa
 }
 
 func (cmd commandMaker) CreateNetwork(name string, network entity.Network) command.Order {
-	return cmd.createNetwork(name, network, true)
+	return cmd.createNetwork(namer.Network(name), network, true)
 }
 
 func (cmd commandMaker) PullImage(image string) command.Order {
@@ -173,7 +173,7 @@ func (cmd commandMaker) AttachNetwork(service string, network string) command.Or
 		Type: command.Attachnetwork,
 		Payload: command.ContainerNetwork{
 			ContainerName: service,
-			Network:       network,
+			Network:       namer.Network(network),
 		},
 	}
 }
@@ -183,7 +183,7 @@ func (cmd commandMaker) DetachNetwork(service string, network string) command.Or
 		Type: command.Detachnetwork,
 		Payload: command.ContainerNetwork{
 			ContainerName: service,
-			Network:       network,
+			Network:       namer.Network(network),
 		},
 	}
 }

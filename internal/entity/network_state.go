@@ -19,7 +19,7 @@
 package entity
 
 import (
-	"fmt"
+	"errors"
 	"math"
 
 	neta "github.com/dspinhirne/netaddr-go"
@@ -29,6 +29,15 @@ type NetworkState interface {
 	GetNextGlobal() (Network, error)
 	GetNextLocal(instance int) (Network, error)
 }
+
+var (
+	ErrNoMoreGlobalNetworks = errors.New("no more global networks")
+	ErrNoMoreLocalNetworks  = errors.New("no more local networks")
+)
+
+const (
+	IPv4Len uint = 32
+)
 
 type networkState struct {
 	prefixLen uint
@@ -41,7 +50,7 @@ type networkState struct {
 }
 
 func NewNetworkState(globalCIDR string, localCIDR string, maxNodes int) (NetworkState, error) {
-	prefixLen := uint(32) - uint(math.Ceil(math.Log2(float64(maxNodes+3))))
+	prefixLen := IPv4Len - uint(math.Ceil(math.Log2(float64(maxNodes+3))))
 	global, err := neta.ParseIPv4Net(globalCIDR)
 	if err != nil {
 		return nil, err
@@ -51,7 +60,6 @@ func NewNetworkState(globalCIDR string, localCIDR string, maxNodes int) (Network
 		global:       global,
 		local:        local,
 		prefixLen:    prefixLen,
-		globalIndex:  0,
 		localIndexes: map[int]uint32{},
 	}, err
 }
@@ -59,18 +67,18 @@ func NewNetworkState(globalCIDR string, localCIDR string, maxNodes int) (Network
 func (ns *networkState) GetNextGlobal() (Network, error) {
 	net := ns.global.NthSubnet(ns.prefixLen, ns.globalIndex)
 	if net == nil {
-		return Network{}, fmt.Errorf("no more global networks!")
+		return Network{}, ErrNoMoreGlobalNetworks
 	}
 	ns.globalIndex++
 	return Network{network: net}, nil
 }
 
 func (ns *networkState) GetNextLocal(instance int) (Network, error) {
-	index, _ := ns.localIndexes[instance]
+	index := ns.localIndexes[instance]
 
 	net := ns.local.NthSubnet(ns.prefixLen, index)
 	if net == nil {
-		return Network{}, fmt.Errorf("no more local networks!")
+		return Network{}, ErrNoMoreLocalNetworks
 	}
 	ns.localIndexes[instance]++
 	return Network{network: net}, nil

@@ -38,11 +38,11 @@ func InputFileVolume(input schema.InputFile) string {
 }
 
 func DefaultNetwork(sys schema.SystemComponent) string {
-	return "net-" + capString(SystemComponent(sys), 11)
+	return Network(SystemComponent(sys))
 }
 
-func Network(network schema.Network) string {
-	return "net-" + capString(network.Name, 11)
+func Network(name string) string {
+	return "net-" + capString(name, 11)
 }
 
 func Sidecar(parent entity.Service, sidecar schema.Sidecar) string {

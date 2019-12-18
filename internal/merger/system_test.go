@@ -32,8 +32,7 @@ func TestSystem_MergeLeft_Count(t *testing.T) {
 	}
 	add := schema.SystemComponent{}
 
-	sys := NewSystem()
-	res := sys.MergeLeft(base, add)
+	res := MergeSystemLeft(base, add)
 
 	assert.Equal(t, base.Count, res.Count)
 }

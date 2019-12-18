@@ -22,7 +22,6 @@ import (
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/distribute"
 	"github.com/whiteblock/definition/internal/maker"
-	"github.com/whiteblock/definition/internal/merger"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/internal/process"
 	"github.com/whiteblock/definition/internal/search"
@@ -50,7 +49,6 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 						conf.Defaults.Resources,
 					),
 				),
-				merger.NewSystem(),
 			),
 			logger,
 		),
@@ -60,14 +58,14 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 	//  Commands
 	cmds := process.NewCommands(
 		process.NewTestCalculator(
-			conf.Network,
+			conf,
 			process.NewSystem(
 				maker.NewService(
+					conf.Defaults,
 					search.NewSchema(),
 					converter.NewService(),
 					logger,
 				),
-				merger.NewSystem(),
 				logger,
 			),
 			process.NewResolve(
@@ -95,6 +93,7 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 						parser.NewNetwork(),
 					),
 					maker.NewService(
+						conf.Defaults,
 						search.NewSchema(),
 						converter.NewService(),
 						logger,

@@ -33,7 +33,9 @@ import (
 )
 
 type Resolve interface {
-	CreateNetworks(systems []schema.SystemComponent,
+	CreateNetworks(networkState entity.NetworkState,
+		networks []schema.Network, meta map[string]string) ([]command.Command, error)
+	CreateSystemNetworks(systems []schema.SystemComponent,
 		networkState entity.NetworkState) ([]command.Command, error)
 
 	CreateServices(spec schema.RootSchema, networkState entity.NetworkState, dist entity.PhaseDist,
@@ -45,6 +47,10 @@ type Resolve interface {
 
 var (
 	ErrBucketNotFound = errors.New("could not find bucket")
+)
+
+const (
+	FirstInstance = "0"
 )
 
 type resolve struct {
@@ -60,40 +66,46 @@ func NewResolve(
 	return &resolve{cmdMaker: cmdMaker, deps: deps, log: log}
 }
 
-func (resolver resolve) CreateNetworks(systems []schema.SystemComponent,
+func (resolver resolve) CreateNetworks(networkState entity.NetworkState,
+	networks []schema.Network, meta map[string]string) ([]command.Command, error) {
+	out := []command.Command{}
+	for _, network := range networks {
+		subnet, err := networkState.GetNextGlobal()
+		if err != nil {
+			return nil, err
+		}
+		order := resolver.cmdMaker.CreateNetwork(network.Name, subnet)
+		cmd, err := command.NewCommand(order, FirstInstance)
+		if err != nil {
+			return nil, err
+		}
+		err = mergo.Map(&cmd.Meta, meta)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	return out, nil
+}
+
+func (resolver resolve) CreateSystemNetworks(systems []schema.SystemComponent,
 	networkState entity.NetworkState) ([]command.Command, error) {
 
 	out := []command.Command{}
 	for _, system := range systems {
-		for _, network := range system.Resources.Networks {
-			subnet, err := networkState.GetNextGlobal()
-			if err != nil {
-				return nil, err
+		networks := system.Resources.Networks
+		if len(networks) == 0 {
+			networks = []schema.Network{
+				schema.Network{Name: namer.DefaultNetwork(system)},
 			}
-			order := resolver.cmdMaker.CreateNetwork(network.Name, subnet)
-			cmd, err := command.NewCommand(order, "0")
-			if err != nil {
-				return nil, err
-			}
-			cmd.Meta["system"] = system.Name
-			cmd.Meta["network"] = network.Name
-			out = append(out, cmd)
 		}
-		if len(system.Resources.Networks) == 0 {
-			subnet, err := networkState.GetNextGlobal()
-			if err != nil {
-				return nil, err
-			}
-			order := resolver.cmdMaker.CreateNetwork(
-				namer.DefaultNetwork(system), subnet)
-			cmd, err := command.NewCommand(order, "0")
-			if err != nil {
-				return nil, err
-			}
-			cmd.Meta["system"] = system.Name
-			cmd.Meta["network"] = namer.DefaultNetwork(system)
-			out = append(out, cmd)
+		cmds, err := resolver.CreateNetworks(networkState, networks, map[string]string{
+			"system": system.Name,
+		})
+		if err != nil {
+			return nil, err
 		}
+		out = append(out, cmds...)
 	}
 	return out, nil
 }
@@ -164,7 +176,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		if err != nil {
 			return nil, err
 		}
-		out[3] = append(out[3], attachCmds...)
+		out[2] = append(out[2], attachCmds...)
 
 		if !service.IsTask {
 			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.Networks)
@@ -180,9 +192,9 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		}
 
 		out[0] = append(out[0], volumeCmds...)
-		out[3] = append(out[3], fileCmds...)
+		out[2] = append(out[2], fileCmds...)
 		out[1] = append(out[1], createCmd)
-		out[2] = append(out[2], startCmd)
+		out[3] = append(out[3], startCmd)
 
 	}
 	cmds, err := resolver.pullImages(images)
@@ -218,14 +230,6 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 	//  If needed, we can also add commands for removing volumes and networks
 	return [][]command.Command{out}, nil
 }
-
-/**
- *
-type ServiceDiff struct {
-	Name           string
-	RemoveSidecars []schema.Sidecar
-}
-*/
 
 func (resolver resolve) UpdateServices(dist entity.PhaseDist,
 	services []entity.ServiceDiff) ([][]command.Command, error) {

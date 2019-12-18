@@ -19,6 +19,7 @@
 package distribute
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/whiteblock/definition/internal/entity"
@@ -41,18 +42,19 @@ type SystemState interface {
 	Remove(sp *entity.StatePack, systems []string) ([]entity.Segment, error)
 }
 
+var (
+	ErrSystemNotFound = errors.New("system not found")
+)
+
 type systemState struct {
 	parser parser.Resources
-	merger merger.System
 }
 
 func NewSystemState(
-	parser parser.Resources,
-	merger merger.System) SystemState {
+	parser parser.Resources) SystemState {
 
 	return &systemState{
-		parser: parser,
-		merger: merger}
+		parser: parser}
 }
 
 func (state systemState) UpdateChanged(sp *entity.StatePack, spec schema.RootSchema,
@@ -63,9 +65,9 @@ func (state systemState) UpdateChanged(sp *entity.StatePack, spec schema.RootSch
 		name := namer.SystemComponent(systemUpdate)
 		old, exists := sp.SystemState[name]
 		if !exists {
-			return nil, nil, fmt.Errorf("system \"%s\" not found", name)
+			return nil, nil, ErrSystemNotFound
 		}
-		system := state.merger.MergeLeft(systemUpdate, old)
+		system := merger.MergeSystemLeft(systemUpdate, old)
 
 		segs, err := state.parser.FromSystemDiff(spec, old, system)
 		if err != nil {
@@ -131,7 +133,7 @@ func (state *systemState) Remove(sp *entity.StatePack,
 	for _, toRemove := range systems {
 		system, exists := sp.SystemState[toRemove]
 		if !exists {
-			return nil, fmt.Errorf("system not found")
+			return nil, ErrSystemNotFound
 		}
 		segments := state.parser.SystemComponentNamesOnly(system)
 		out = append(out, segments...)
