@@ -77,7 +77,7 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	}
 	out := make([]Test, len(testCmds))
 	for i := range testCmds {
-		testCmds[i].MetaInject("org", def.OrgID)
+		testCmds[i].MetaInject("org", def.OrgID, "definition", def.ID)
 		out[i] = Test{
 			ID:               utils.GetUUIDString(),
 			OrgID:            def.OrgID,
