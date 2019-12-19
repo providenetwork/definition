@@ -20,19 +20,21 @@ package entity
 
 import (
 	"fmt"
+
 	"github.com/whiteblock/definition/command/biome"
 )
 
 type ResourceDist []PhaseDist
 
 func (rd ResourceDist) ToBiomeCommand(provider biome.CloudProvider,
-	testnetID string, orgID string) biome.CreateBiome {
+	defID string, orgID string, testID string) biome.CreateBiome {
 
 	finalDist := rd[len(rd)-1]
 	out := biome.CreateBiome{
-		TestnetID: testnetID,
-		OrgID:     orgID,
-		Instances: make([]biome.Instance, len(finalDist)),
+		DefinitionID: defID,
+		TestID:       testID,
+		OrgID:        orgID,
+		Instances:    make([]biome.Instance, len(finalDist)),
 	}
 	for i, bucket := range finalDist {
 		out.Instances[i] = biome.Instance{

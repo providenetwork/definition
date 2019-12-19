@@ -74,8 +74,8 @@ type Order struct {
 
 // Target sets the target of a command - which testnet, instance to hit
 type Target struct {
-	IP        string `json:"ip"`
-	TestnetID string `json:"testnetId"`
+	IP     string `json:"ip"`
+	TestID string `json:"testID"`
 }
 
 // Command is the command sent to Definition.
