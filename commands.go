@@ -77,17 +77,18 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	}
 	out := make([]Test, len(testCmds))
 	for i := range testCmds {
-		testCmds[i].MetaInject("org", def.OrgID)
+		testCmds[i].MetaInject("org", def.OrgID, "definition", def.ID)
+		id := utils.GetUUIDString()
 		out[i] = Test{
-			ID:               utils.GetUUIDString(),
+			ID:               id,
 			OrgID:            def.OrgID,
-			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID),
+			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID, id),
 			Commands:         [][]command.Command(testCmds[i]),
 		}
 
 		for j := range out[i].Commands {
 			for k := range out[i].Commands[j] {
-				out[i].Commands[j][k].Target.TestnetID = def.ID
+				out[i].Commands[j][k].Target.TestnetID = id
 			}
 		}
 	}

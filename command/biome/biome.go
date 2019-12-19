@@ -20,12 +20,14 @@ type Instance struct {
 
 // CreateBiome represents the create biome command
 type CreateBiome struct {
-	TestnetID string     `json:"testnetID"`
-	OrgID     string     `json:"orgID"`
-	Instances []Instance `json:"nodes"`
+	DefinitionID string     `json:"definitionID"`
+	TestID       string     `json:"testID"`
+	OrgID        string     `json:"orgID"`
+	Instances    []Instance `json:"nodes"`
 }
 
 // DestroyBiome represents the destroy biome command
 type DestroyBiome struct {
-	TestnetID string `json:"testnetID"`
+	DefinitionID string `json:"definitionID"`
+	TestID       string `json:"testID"`
 }
