@@ -88,7 +88,7 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 
 		for j := range out[i].Commands {
 			for k := range out[i].Commands[j] {
-				out[i].Commands[j][k].Target.TestnetID = id
+				out[i].Commands[j][k].Target.TestID = id
 			}
 		}
 	}
