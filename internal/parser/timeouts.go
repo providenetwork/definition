@@ -16,15 +16,21 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package schema
+package parser
 
-import "github.com/whiteblock/definition/command"
+import (
+	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/schema"
+)
 
-type Phase struct {
-	Name        string            `yaml:"name,omitempty" json:"name,omitempty"`
-	Description string            `yaml:"description,omitempty" json:"description,omitempty"`
-	System      []SystemComponent `yaml:"system,omitempty" json:"system,omitempty"`
-	Remove      []string          `yaml:"remove,omitempty" json:"remove,omitempty"`
-	Tasks       []Task            `yaml:"tasks,omitempty" json:"tasks,omitempty"`
-	Timeout     command.Timeout   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+// Timeouts extracts the global and phase timeouts from a test
+func Timeouts(test schema.Test) (phaseTOs map[string]command.Timeout, global command.Timeout) {
+	global = test.Timeout
+	if len(test.Phases) > 0 {
+		phaseTOs = map[string]command.Timeout{}
+	}
+	for _, phase := range test.Phases {
+		phaseTOs[phase.Name] = phase.Timeout
+	}
+	return
 }

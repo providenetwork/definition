@@ -103,7 +103,7 @@ tests:
 	}
 }
 
-func assertNoDupNetworks(t *testing.T, test Test) {
+func assertNoDupNetworks(t *testing.T, test command.Test) {
 	networks := map[string]bool{}
 
 	for _, outer := range test.Commands {

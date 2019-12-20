@@ -21,7 +21,6 @@ package command
 import (
 	"bytes"
 	"encoding/json"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -46,13 +45,13 @@ const (
 	Removenetwork = OrderType("removenetwork")
 	// Createvolume creates volume
 	Createvolume = OrderType("createvolume")
-	
+
 	// Removevolume removes volume
 	Removevolume = OrderType("removevolume")
-	
+
 	// Putfileincontainer puts file in container
 	Putfileincontainer = OrderType("putfileincontainer")
-	
+
 	// Emulation emulates
 	Emulation = OrderType("emulation")
 
@@ -61,9 +60,6 @@ const (
 
 	// Pullimage pre-emptively pulls the given image
 	Pullimage = OrderType("pullimage")
-
-	// Release releases control of the test, allowing it to run indefinitely
-	Release = OrderType("release")
 )
 
 // OrderPayload is a pointer interface for order payloads.
@@ -80,20 +76,13 @@ type Order struct {
 
 // Target sets the target of a command - which testnet, instance to hit
 type Target struct {
-	IP     string `json:"ip"`
-	TestID string `json:"testID"`
+	IP string `json:"ip"`
 }
 
 // Command is the command sent to Definition.
 type Command struct {
 	// ID is the unique id of this command
 	ID string `json:"id"`
-
-	// Timestamp is the creation timestamp
-	Timestamp int64 `json:"timestamp"`
-
-	// Expiration is when this command expires
-	Expiration time.Time `json:"expiration"`
 
 	// Target represents the target of this command
 	Target Target `json:"target"`
@@ -103,6 +92,9 @@ type Command struct {
 
 	// Meta is extra informative data to be passed with the command
 	Meta map[string]string `json:"meta"`
+
+	// Parent is a pointer to the Instructions object that contains this commands
+	parent *Instructions `json:"-"`
 }
 
 // NewCommand properly creates a new command
@@ -112,14 +104,26 @@ func NewCommand(order Order, endpoint string) (Command, error) {
 		return Command{}, err
 	}
 	return Command{
-		ID:        id.String(),
-		Timestamp: time.Now().Unix(),
+		ID: id.String(),
 		Target: Target{
 			IP: endpoint, //endpoint,
 		},
 		Order: order,
 		Meta:  map[string]string{},
 	}, nil
+}
+
+func (cmd Command) TestID() string {
+	if cmd.Parent() == nil {
+		return ""
+	}
+	return cmd.Parent().ID
+}
+
+// Parent exists to prevent parent from showing up when a command is marshal with
+// any marshaller
+func (cmd Command) Parent() *Instructions {
+	return cmd.parent
 }
 
 // ParseOrderPayloadInto attempts to Marshal the payload into the object pointed to by out

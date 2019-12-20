@@ -18,11 +18,14 @@
 package definition
 
 import (
+	"time"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/command/biome"
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal"
 	"github.com/whiteblock/definition/internal/distribute"
+	parse "github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/internal/process"
 
 	"github.com/pkg/errors"
@@ -32,21 +35,13 @@ import (
 
 var globalCommands Commands
 
-//Test contains the instructions necessary for the execution of a single test
-type Test struct {
-	ID               string
-	OrgID            string
-	ProvisionCommand biome.CreateBiome
-	Commands         [][]command.Command
-}
-
 // Commands is the interface of a parser that extracts commands from a definition
 type Commands interface {
 	// GetTests gets all of the commands, for both provisioner and genesis.
 	// The genesis commands will be in dependency groups, so that
 	// res[n+1] is the set of commands which require the execution of the commands
 	// In res[n].
-	GetTests(def Definition) ([]Test, error)
+	GetTests(def Definition) ([]command.Test, error)
 }
 
 type commands struct {
@@ -65,7 +60,7 @@ func NewCommands(conf config.Config) (Commands, error) {
 // res[n+1] is the set of commands which require the execution of the commands
 // In res[n]. We get both at once, since we have to compute the commands for provisioning to produce
 // the commands for Genesis.
-func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
+func (cmdParser commands) GetTests(def Definition) ([]command.Test, error) {
 	resDist, err := cmdParser.dist.Distribute(def.Spec)
 	if err != nil {
 		return nil, errors.Wrap(err, "distribute")
@@ -75,21 +70,29 @@ func (cmdParser commands) GetTests(def Definition) ([]Test, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "interpret")
 	}
-	out := make([]Test, len(testCmds))
-	for i := range testCmds {
-		testCmds[i].MetaInject("org", def.OrgID, "definition", def.ID)
-		id := utils.GetUUIDString()
-		out[i] = Test{
-			ID:               id,
-			OrgID:            def.OrgID,
-			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID, id),
-			Commands:         [][]command.Command(testCmds[i]),
-		}
 
-		for j := range out[i].Commands {
-			for k := range out[i].Commands[j] {
-				out[i].Commands[j][k].Target.TestID = id
-			}
+	out := make([]command.Test, len(testCmds))
+	for i := range testCmds {
+
+		id := utils.GetUUIDString()
+		testCmds[i].MetaInject(
+			command.OrgIDKey, def.OrgID,
+			command.DefinitionIDKey, def.ID,
+			command.TestIDKey, id)
+
+		phases, global := parse.Timeouts(def.Spec.Tests[i])
+
+		out[i] = command.Test{
+			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID, id),
+			Instructions: command.Instructions{
+				ID:            id,
+				OrgID:         def.OrgID,
+				DefinitionID:  def.ID,
+				Timestamp:     time.Now(),
+				Commands:      [][]command.Command(testCmds[i]),
+				PhaseTimeouts: phases,
+				GlobalTimeout: global,
+			},
 		}
 	}
 	return out, nil
@@ -118,7 +121,7 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 // The genesis commands will be in dependency groups, so that
 // res[n+1] is the set of commands which require the execution of the commands
 // In res[n].
-func GetTests(def Definition) ([]Test, error) {
+func GetTests(def Definition) ([]command.Test, error) {
 	return globalCommands.GetTests(def)
 }
 
