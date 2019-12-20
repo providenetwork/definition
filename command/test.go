@@ -97,6 +97,9 @@ func (instruct *Instructions) next() error {
 
 	phase, err := instruct.Phase()
 	if err != nil {
+		if errors.Is(err, ErrNoPhase) {
+			return nil
+		}
 		return err
 	}
 
