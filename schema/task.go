@@ -18,9 +18,7 @@
 
 package schema
 
-import (
-	"github.com/whiteblock/definition/command"
-)
+import "github.com/whiteblock/definition/command"
 
 type Task struct {
 	Type           string            `yaml:"type,omitempty" json:"type,omitempty"`

@@ -47,6 +47,8 @@ type Command interface {
 	Emulation(serviceName string, network schema.Network) (command.Order, error)
 
 	RemoveContainer(name string) command.Order
+
+	Release() command.Order
 }
 
 type commandMaker struct {
@@ -231,5 +233,11 @@ func (cmd commandMaker) startContainer(name string, isTask bool, timeout command
 			Attach:  isTask,
 			Timeout: timeout,
 		},
+	}
+}
+
+func (cmd commandMaker) Release() command.Order {
+	return command.Order{
+		Type: command.Release,
 	}
 }

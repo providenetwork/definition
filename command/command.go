@@ -46,10 +46,13 @@ const (
 	Removenetwork = OrderType("removenetwork")
 	// Createvolume creates volume
 	Createvolume = OrderType("createvolume")
+	
 	// Removevolume removes volume
 	Removevolume = OrderType("removevolume")
+	
 	// Putfileincontainer puts file in container
 	Putfileincontainer = OrderType("putfileincontainer")
+	
 	// Emulation emulates
 	Emulation = OrderType("emulation")
 
@@ -58,6 +61,9 @@ const (
 
 	// Pullimage pre-emptively pulls the given image
 	Pullimage = OrderType("pullimage")
+
+	// Release releases control of the test, allowing it to run indefinitely
+	Release = OrderType("release")
 )
 
 // OrderPayload is a pointer interface for order payloads.
@@ -66,9 +72,9 @@ type OrderPayload interface {
 
 // Order to be executed by Definition
 type Order struct {
-	//Type is the type of the order
+	// Type is the type of the order
 	Type OrderType `json:"type"`
-	//Payload is the payload object of the order
+	// Payload is the payload object of the order
 	Payload OrderPayload `json:"payload"`
 }
 
@@ -82,12 +88,19 @@ type Target struct {
 type Command struct {
 	// ID is the unique id of this command
 	ID string `json:"id"`
+
 	// Timestamp is the creation timestamp
 	Timestamp int64 `json:"timestamp"`
+
+	// Expiration is when this command expires
+	Expiration time.Time `json:"expiration"`
+
 	// Target represents the target of this command
 	Target Target `json:"target"`
+
 	// Order is the action of the command, it represents what needs to be done
 	Order Order `json:"order"`
+
 	// Meta is extra informative data to be passed with the command
 	Meta map[string]string `json:"meta"`
 }

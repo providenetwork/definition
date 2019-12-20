@@ -31,7 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//System is for diff calculations
+// System is for diff calculations
 type System interface {
 	GetAlreadyExists(state *entity.State, systems []schema.SystemComponent) (
 		[]schema.SystemComponent, []schema.SystemComponent, bool)
@@ -39,7 +39,7 @@ type System interface {
 	UpdateChanged(state *entity.State, spec schema.RootSchema,
 		systems []schema.SystemComponent) (*entity.SystemDiff, error)
 
-	//  Add modifies State
+	// Add modifies State
 	Add(state *entity.State, spec schema.RootSchema, systems []schema.SystemComponent) ([]entity.Service, error)
 
 	// Remove modifies state
