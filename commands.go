@@ -25,6 +25,7 @@ import (
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal"
 	"github.com/whiteblock/definition/internal/distribute"
+	parse "github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/internal/process"
 
 	"github.com/pkg/errors"
@@ -79,14 +80,18 @@ func (cmdParser commands) GetTests(def Definition) ([]command.Test, error) {
 			command.DefinitionIDKey, def.ID,
 			command.TestIDKey, id)
 
+		phases, global := parse.Timeouts(def.Spec.Tests[i])
+
 		out[i] = command.Test{
 			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID, id),
 			Instructions: command.Instructions{
-				ID:           id,
-				OrgID:        def.OrgID,
-				DefinitionID: def.ID,
-				Timestamp:    time.Now(),
-				Commands:     [][]command.Command(testCmds[i]),
+				ID:            id,
+				OrgID:         def.OrgID,
+				DefinitionID:  def.ID,
+				Timestamp:     time.Now(),
+				Commands:      [][]command.Command(testCmds[i]),
+				PhaseTimeouts: phases,
+				GlobalTimeout: global,
 			},
 		}
 	}

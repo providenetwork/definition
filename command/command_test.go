@@ -30,8 +30,8 @@ func TestCommand_ParseOrderPayloadInto_Success(t *testing.T) {
 	containerName := "tester"
 	networkName := "testnet"
 	cmd := Command{
-		ID:        "TEST",
-		Target:    Target{IP: "0.0.0.0"},
+		ID:     "TEST",
+		Target: Target{IP: "0.0.0.0"},
 		Order: Order{
 			Type: Attachnetwork,
 			Payload: map[string]string{
@@ -50,8 +50,8 @@ func TestCommand_ParseOrderPayloadInto_Failure(t *testing.T) {
 	containerName := "tester"
 	networkName := "testnet"
 	cmd := Command{
-		ID:        "TEST",
-		Target:    Target{IP: "0.0.0.0"},
+		ID:     "TEST",
+		Target: Target{IP: "0.0.0.0"},
 		Order: Order{
 			Type: Attachnetwork,
 			Payload: map[string]string{
@@ -69,8 +69,8 @@ func TestCommand_ParseOrderPayloadInto_Failure(t *testing.T) {
 
 func TestDeserSerRoundtripCommand(t *testing.T) {
 	command := Command{
-		ID:        "",
-		Target:    Target{},
+		ID:     "",
+		Target: Target{},
 		Order: Order{
 			Type:    Startcontainer,
 			Payload: map[string]interface{}{"name": "test"},
