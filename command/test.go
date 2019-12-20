@@ -167,6 +167,31 @@ func (instruct *Instructions) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+
+	if _, exists := tmp["phaseTimeouts"]; exists {
+		dat, err := json.Marshal(tmp["phaseTimeouts"])
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(dat, &instruct.PhaseTimeouts)
+		if err != nil {
+			return err
+		}
+		delete(tmp, "phaseTimeouts")
+	}
+
+	if _, exists := tmp["globalTimeout"]; exists {
+		dat, err := json.Marshal(tmp["globalTimeout"])
+		if err != nil {
+			return err
+		}
+		err = json.Unmarshal(dat, &instruct.GlobalTimeout)
+		if err != nil {
+			return err
+		}
+		delete(tmp, "globalTimeout")
+	}
+
 	err = mergo.Map(instruct, tmp)
 	if err != nil {
 		return err
