@@ -50,6 +50,7 @@ var (
 	// NoExpiration is the placeholder for the expiration to be ignored
 	NoExpiration = time.Unix(0, 0)
 
+	// NoTimeout indicates that there is no timeout duration provided
 	NoTimeout time.Duration = 1<<63 - 1
 
 	// ErrNoCommands is when commands are needed but there are none
@@ -117,7 +118,7 @@ func (instruct *Instructions) next() error {
 	return nil
 }
 
-func (instruct Instruction) NeverTerminate() bool {
+func (instruct Instructions) NeverTerminate() bool {
 	return instruct.GlobalTimeout.IsInfinite()
 }
 
