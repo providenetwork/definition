@@ -24,8 +24,6 @@ import (
 	"time"
 
 	"github.com/whiteblock/definition/command/biome"
-
-	"github.com/imdario/mergo"
 )
 
 /**
@@ -151,7 +149,7 @@ func (instruct *Instructions) Next() ([]Command, error) {
 		return nil, ErrNoCommands
 	}
 	if len(instruct.Commands) == 1 {
-		instruct.Commands = [][]Command{}
+		defer func() { instruct.Commands = [][]Command{} }()
 		return instruct.Commands[0], ErrDone
 	}
 	out := instruct.Commands[0]
@@ -162,40 +160,16 @@ func (instruct *Instructions) Next() ([]Command, error) {
 // UnmarshalJSON creates Instructions from JSON, and also handles
 // creating the links back this object
 func (instruct *Instructions) UnmarshalJSON(data []byte) error {
-	var tmp map[string]interface{}
+
+	type instructShim Instructions
+
+	var tmp instructShim
 	err := json.Unmarshal(data, &tmp)
 	if err != nil {
 		return err
 	}
+	*instruct = Instructions(tmp)
 
-	if _, exists := tmp["phaseTimeouts"]; exists {
-		dat, err := json.Marshal(tmp["phaseTimeouts"])
-		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(dat, &instruct.PhaseTimeouts)
-		if err != nil {
-			return err
-		}
-		delete(tmp, "phaseTimeouts")
-	}
-
-	if _, exists := tmp["globalTimeout"]; exists {
-		dat, err := json.Marshal(tmp["globalTimeout"])
-		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(dat, &instruct.GlobalTimeout)
-		if err != nil {
-			return err
-		}
-		delete(tmp, "globalTimeout")
-	}
-
-	err = mergo.Map(instruct, tmp)
-	if err != nil {
-		return err
-	}
 	for i := range instruct.Commands {
 		for j := range instruct.Commands[i] {
 			instruct.Commands[i][j].parent = instruct
