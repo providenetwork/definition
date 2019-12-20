@@ -46,13 +46,13 @@ const (
 	Removenetwork = OrderType("removenetwork")
 	// Createvolume creates volume
 	Createvolume = OrderType("createvolume")
-	
+
 	// Removevolume removes volume
 	Removevolume = OrderType("removevolume")
-	
+
 	// Putfileincontainer puts file in container
 	Putfileincontainer = OrderType("putfileincontainer")
-	
+
 	// Emulation emulates
 	Emulation = OrderType("emulation")
 
@@ -92,9 +92,6 @@ type Command struct {
 	// Timestamp is the creation timestamp
 	Timestamp int64 `json:"timestamp"`
 
-	// Expiration is when this command expires
-	Expiration time.Time `json:"expiration"`
-
 	// Target represents the target of this command
 	Target Target `json:"target"`
 
@@ -103,6 +100,9 @@ type Command struct {
 
 	// Meta is extra informative data to be passed with the command
 	Meta map[string]string `json:"meta"`
+
+	// Parent is a pointer to the Instructions object that contains this commands
+	Parent *Instructions
 }
 
 // NewCommand properly creates a new command
