@@ -28,9 +28,21 @@ import (
 	"github.com/imdario/mergo"
 )
 
+/**
+ * Note: changing any of these constants is a breaking change, so use caution.
+ */
 const (
 	// PhaseKey is the meta key for the phase name
 	PhaseKey = "phase"
+
+	// OrgIDKey is the location of the org id in meta
+	OrgIDKey = "org"
+
+	// TestIDKey is the location of the test id in the meta
+	TestIDKey = "testRun"
+
+	// DefinitionIDKey is the location of the definition in the meta
+	DefinitionIDKey = "definition"
 )
 
 var (
@@ -63,7 +75,7 @@ type Instructions struct {
 	Timestamp    time.Time   `json:"timestamp,omitempty"`
 	Commands     [][]Command `json:"commands,omitempty"`
 
-	Round            int64                `json:"round,omitempty"`
+	Round            int                  `json:"round,omitempty"`
 	GlobalTimeout    Timeout              `json:"globalTimeout,omitempty"`
 	GlobalExpiration time.Time            `json:"globalExpiration,omitempty"`
 	PhaseTimeouts    map[string]Timeout   `json:"phaseTimeouts,omitempty"`

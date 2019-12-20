@@ -31,7 +31,6 @@ func TestCommand_ParseOrderPayloadInto_Success(t *testing.T) {
 	networkName := "testnet"
 	cmd := Command{
 		ID:        "TEST",
-		Timestamp: 4,
 		Target:    Target{IP: "0.0.0.0"},
 		Order: Order{
 			Type: Attachnetwork,
@@ -52,7 +51,6 @@ func TestCommand_ParseOrderPayloadInto_Failure(t *testing.T) {
 	networkName := "testnet"
 	cmd := Command{
 		ID:        "TEST",
-		Timestamp: 4,
 		Target:    Target{IP: "0.0.0.0"},
 		Order: Order{
 			Type: Attachnetwork,
@@ -72,7 +70,6 @@ func TestCommand_ParseOrderPayloadInto_Failure(t *testing.T) {
 func TestDeserSerRoundtripCommand(t *testing.T) {
 	command := Command{
 		ID:        "",
-		Timestamp: 0,
 		Target:    Target{},
 		Order: Order{
 			Type:    Startcontainer,
