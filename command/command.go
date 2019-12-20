@@ -97,12 +97,6 @@ type Command struct {
 	parent *Instructions `json:"-"`
 }
 
-// Parent exists to prevent parent from showing up when a command is marshal with
-// any marshaller
-func (cmd Command) Parent() *Instructions {
-	return cmd.parent
-}
-
 // NewCommand properly creates a new command
 func NewCommand(order Order, endpoint string) (Command, error) {
 	id, err := uuid.NewRandom()
@@ -117,6 +111,19 @@ func NewCommand(order Order, endpoint string) (Command, error) {
 		Order: order,
 		Meta:  map[string]string{},
 	}, nil
+}
+
+func (cmd Command) TestID() string {
+	if cmd.Parent() == nil {
+		return ""
+	}
+	return cmd.Parent().ID
+}
+
+// Parent exists to prevent parent from showing up when a command is marshal with
+// any marshaller
+func (cmd Command) Parent() *Instructions {
+	return cmd.parent
 }
 
 // ParseOrderPayloadInto attempts to Marshal the payload into the object pointed to by out
