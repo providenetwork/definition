@@ -20,38 +20,127 @@ package command
 
 import (
 	"encoding/json"
+	"errors"
+	"time"
 
 	"github.com/whiteblock/definition/command/biome"
+
+	"github.com/imdario/mergo"
+)
+
+const (
+	// PhaseKey is the meta key for the phase name
+	PhaseKey = "phase"
+)
+
+var (
+
+	// NoExpiration is the placeholder for the expiration to be ignored
+	NoExpiration = time.Unix(-1, -1)
+
+	// ErrNoCommands is when commands are needed but there are none
+	ErrNoCommands = errors.New("there are no commands")
+
+	// ErrNoPhase means that the commands meta doesn't include phase data
+	ErrNoPhase = errors.New("phase not found")
+
+	// ErrDone is given when isntructions is finished after this round
+	ErrDone = errors.New("all done")
 )
 
 // Test contains the instructions necessary for the execution of a single test
 type Test struct {
 	Instructions
-	ProvisionCommand biome.CreateBiome
+	ProvisionCommand biome.CreateBiome `json:"provisionCommand"`
 }
 
 // Instructions contains all of the execution based information, for use in anything that executes the
 // Commands
 type Instructions struct {
-	ID           string              `json:"id"`
-	OrgID        string              `json:"orgID"`
-	DefinitionID string              `json:"definitionID"`
-	Commands     [][]command.Command `json:"commands"`
+	ID           string      `json:"id,omitempty"`
+	OrgID        string      `json:"orgID,omitempty"`
+	DefinitionID string      `json:"definitionID,omitempty"`
+	Timestamp    time.Time   `json:"timestamp,omitempty"`
+	Commands     [][]Command `json:"commands,omitempty"`
+
+	Round            int64                `json:"round,omitempty"`
+	GlobalTimeout    Timeout              `json:"globalTimeout,omitempty"`
+	GlobalExpiration time.Time            `json:"globalExpiration,omitempty"`
+	PhaseTimeouts    map[string]Timeout   `json:"phaseTimeouts,omitempty"`
+	PhaseExpirations map[string]time.Time `json:"phaseExpirations,omitempty"`
 }
 
-// NextRound pops the first element off of Commmands. If this results in Commands being
-// empty, it returns false
-func (instruct *Instructions) NextRound() bool {
-	if len(instruct.Commands) < 2 {
-		instruct.Commands = [][]command.Command{}
-		return false
+// handle the meta changes for next
+func (instruct *Instructions) next() error {
+	defer func() { instruct.Round++ }()
+	if instruct.Round == 0 {
+		instruct.PhaseTimeouts = map[string]Timeout{}
+		instruct.PhaseExpirations = map[string]time.Time{}
+		if !instruct.GlobalTimeout.IsInfinite() && instruct.GlobalTimeout.Duration.Nanoseconds() != 0 {
+			instruct.GlobalExpiration = time.Now().Add(instruct.GlobalTimeout.Duration)
+		} else {
+			instruct.GlobalExpiration = NoExpiration
+		}
 	}
-	instruct.Commands = instruct.Commands[1:]
-	return true
+
+	phase, err := instruct.Phase()
+	if err != nil {
+		return err
+	}
+	_, exists := instruct.PhaseExpirations[phase]
+	if !exists {
+		to, hasPhaseTimeout := instruct.PhaseTimeouts[phase]
+		if hasPhaseTimeout {
+			instruct.PhaseExpirations[phase] = time.Now().Add(to.Duration)
+		} else {
+			instruct.PhaseExpirations[phase] = NoExpiration
+		}
+	}
+	return nil
 }
-func (instruct Instructions) GetNextCommands() []command.Commands {
+
+// Next pops the first element off of Commands. If this results in Commands being
+// empty, it returns ErrNoCommands
+func (instruct *Instructions) Next() ([]Command, error) {
 	if len(instruct.Commands) == 0 {
-		return nil
+		return nil, ErrNoCommands
 	}
-	return instruct.Commands[0]
+	if len(instruct.Commands) == 1 {
+		instruct.Commands = [][]Command{}
+		return instruct.Commands[0], ErrDone
+	}
+	out := instruct.Commands[0]
+	instruct.Commands = instruct.Commands[1:]
+	return out, instruct.next()
+}
+
+// UnmarshalJSON creates Instructions from JSON, and also handles
+// creating the links back this object
+func (instruct *Instructions) UnmarshalJSON(data []byte) error {
+	var tmp map[string]interface{}
+	err := json.Unmarshal(data, &tmp)
+	if err != nil {
+		return err
+	}
+	err = mergo.Map(instruct, tmp)
+	if err != nil {
+		return err
+	}
+	for i := range instruct.Commands {
+		for j := range instruct.Commands[i] {
+			instruct.Commands[i][j].parent = instruct
+		}
+	}
+	return nil
+}
+
+func (instruct Instructions) Phase() (string, error) {
+	if len(instruct.Commands) == 0 || len(instruct.Commands[0]) == 0 {
+		return "", ErrNoCommands
+	}
+	out, exists := instruct.Commands[0][0].Meta[PhaseKey]
+	if !exists {
+		return "", ErrNoPhase
+	}
+	return out, nil
 }

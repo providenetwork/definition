@@ -21,7 +21,6 @@ package command
 import (
 	"bytes"
 	"encoding/json"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -61,9 +60,6 @@ const (
 
 	// Pullimage pre-emptively pulls the given image
 	Pullimage = OrderType("pullimage")
-
-	// Release releases control of the test, allowing it to run indefinitely
-	Release = OrderType("release")
 )
 
 // OrderPayload is a pointer interface for order payloads.
@@ -80,17 +76,13 @@ type Order struct {
 
 // Target sets the target of a command - which testnet, instance to hit
 type Target struct {
-	IP     string `json:"ip"`
-	TestID string `json:"testID"`
+	IP string `json:"ip"`
 }
 
 // Command is the command sent to Definition.
 type Command struct {
 	// ID is the unique id of this command
 	ID string `json:"id"`
-
-	// Timestamp is the creation timestamp
-	Timestamp int64 `json:"timestamp"`
 
 	// Target represents the target of this command
 	Target Target `json:"target"`
@@ -102,7 +94,13 @@ type Command struct {
 	Meta map[string]string `json:"meta"`
 
 	// Parent is a pointer to the Instructions object that contains this commands
-	Parent *Instructions
+	parent *Instructions `json:"-"`
+}
+
+// Parent exists to prevent parent from showing up when a command is marshal with
+// any marshaller
+func (cmd Command) Parent() *Instructions {
+	return cmd.parent
 }
 
 // NewCommand properly creates a new command
@@ -112,8 +110,7 @@ func NewCommand(order Order, endpoint string) (Command, error) {
 		return Command{}, err
 	}
 	return Command{
-		ID:        id.String(),
-		Timestamp: time.Now().Unix(),
+		ID: id.String(),
 		Target: Target{
 			IP: endpoint, //endpoint,
 		},
