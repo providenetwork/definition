@@ -48,7 +48,9 @@ const (
 var (
 
 	// NoExpiration is the placeholder for the expiration to be ignored
-	NoExpiration = time.Unix(-1, -1)
+	NoExpiration = time.Unix(0, 0)
+
+	NoTimeout time.Duration = 1<<63 - 1
 
 	// ErrNoCommands is when commands are needed but there are none
 	ErrNoCommands = errors.New("there are no commands")
@@ -87,7 +89,6 @@ func (instruct *Instructions) next() error {
 	defer func() { instruct.Round++ }()
 	if instruct.Round == 0 {
 		instruct.PhaseTimeouts = map[string]Timeout{}
-		instruct.PhaseExpirations = map[string]time.Time{}
 		if !instruct.GlobalTimeout.IsInfinite() && instruct.GlobalTimeout.Duration.Nanoseconds() != 0 {
 			instruct.GlobalExpiration = time.Now().Add(instruct.GlobalTimeout.Duration)
 		} else {
@@ -99,6 +100,11 @@ func (instruct *Instructions) next() error {
 	if err != nil {
 		return err
 	}
+
+	if instruct.PhaseExpirations == nil {
+		return nil
+	}
+
 	_, exists := instruct.PhaseExpirations[phase]
 	if !exists {
 		to, hasPhaseTimeout := instruct.PhaseTimeouts[phase]
@@ -109,6 +115,32 @@ func (instruct *Instructions) next() error {
 		}
 	}
 	return nil
+}
+
+func (instruct Instruction) NeverTerminate() bool {
+	return instruct.GlobalTimeout.IsInfinite()
+}
+
+func (instruct Instructions) GetTimeRemaining() (time.Duration, error) {
+	out := NoTimeout
+	now := time.Now()
+	if instruct.GlobalExpiration.Unix() != 0 && instruct.GlobalExpiration.Sub(now) < out {
+		out = instruct.GlobalExpiration.Sub(now)
+	}
+
+	phase, err := instruct.Phase()
+	if err != nil {
+		return out, err
+	}
+	exp, exists := instruct.PhaseExpirations[phase]
+	if !exists {
+		return out, nil
+	}
+	if exp.Sub(now) < out {
+		out = exp.Sub(now)
+	}
+	return out, nil
+
 }
 
 // Next pops the first element off of Commands. If this results in Commands being
