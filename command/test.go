@@ -67,6 +67,20 @@ type Test struct {
 	ProvisionCommand biome.CreateBiome `json:"provisionCommand"`
 }
 
+// UnmarshalJSON prevents Instructions from taking this over
+func (instruct *Test) UnmarshalJSON(data []byte) error {
+
+	type testShim Test
+
+	var tmp testShim
+	err := json.Unmarshal(data, &tmp)
+	if err != nil {
+		return err
+	}
+	*instruct = Test(tmp)
+	return nil
+}
+
 // Instructions contains all of the execution based information, for use in anything that executes the
 // Commands
 type Instructions struct {
