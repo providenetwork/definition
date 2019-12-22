@@ -78,7 +78,18 @@ func (instruct *Test) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*instruct = Test(tmp)
-	return nil
+
+	nextStep := map[string]interface{}{}
+	err = json.Unmarshal(data, &nextStep)
+	if err != nil {
+		return err
+	}
+
+	tmp2, err := json.Marshal(nextStep["provisionCommand"])
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(tmp2, &instruct.ProvisionCommand)
 }
 
 // Instructions contains all of the execution based information, for use in anything that executes the
