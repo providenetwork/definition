@@ -19,8 +19,7 @@
 package converter
 
 import (
-	"strings"
-
+	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/jinzhu/copier"
@@ -51,7 +50,7 @@ func (serv *service) FromTaskRunner(taskRunner schema.TaskRunner) schema.Service
 	for _, output := range taskRunner.OutputFiles {
 		out.SharedVolumes = append(out.SharedVolumes, schema.SharedVolume{
 			SourcePath: output,
-			Name:       strings.Replace(output, "/", "-", -1),
+			Name:       namer.SanitizeVolumeName(output),
 		})
 	}
 	return out
