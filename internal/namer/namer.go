@@ -34,7 +34,14 @@ func capString(s string, size int) string {
 }
 
 func InputFileVolume(input schema.InputFile) string {
-	return strings.Replace(input.DestinationPath, "/", "-", -1)
+	return SanitizeVolumeName(input.DestinationPath)
+}
+
+func SanitizeVolumeName(volName string) string {
+	if strings.HasPrefix(volName, "/") {
+		volName = "wb_" + volName[1:]
+	}
+	return strings.Replace(volName, "/", "-", -1)
 }
 
 func DefaultNetwork(sys schema.SystemComponent) string {
