@@ -34,7 +34,7 @@ func capString(s string, size int) string {
 }
 
 func InputFileVolume(input schema.InputFile) string {
-	return strings.Replace(input.DestinationPath, "/", "-", 0)
+	return strings.Replace(input.DestinationPath, "/", "-", -1)
 }
 
 func DefaultNetwork(sys schema.SystemComponent) string {

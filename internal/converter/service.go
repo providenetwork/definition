@@ -51,7 +51,7 @@ func (serv *service) FromTaskRunner(taskRunner schema.TaskRunner) schema.Service
 	for _, output := range taskRunner.OutputFiles {
 		out.SharedVolumes = append(out.SharedVolumes, schema.SharedVolume{
 			SourcePath: output,
-			Name:       strings.Replace(output, "/", "-", 0),
+			Name:       strings.Replace(output, "/", "-", -1),
 		})
 	}
 	return out
