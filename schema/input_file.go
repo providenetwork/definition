@@ -19,7 +19,7 @@
 package schema
 
 import (
-	"path/filepath"
+	//"path/filepath"
 )
 
 type InputFile struct {
@@ -39,8 +39,8 @@ func (in InputFile) Source() string {
 // expected to change in the near future. (Also, there might be some logic behind it as well in
 // the future)
 func (in InputFile) Destination() string {
-	if in.DestinationPath[len(in.DestinationPath)-1] == '/' {
+	/*if in.DestinationPath[len(in.DestinationPath)-1] == '/' {
 		return filepath.Join(in.DestinationPath, in.SourcePath)
-	}
+	}*/
 	return in.DestinationPath
 }
