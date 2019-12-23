@@ -19,6 +19,8 @@
 package entity
 
 import (
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/whiteblock/definition/schema"
@@ -166,6 +168,14 @@ func TestService_CalculateDiff(t *testing.T) {
 		},
 		Parent: &services[0],
 	}
+
+	sort.Slice(diff1.AddSidecars, func(i, j int) bool {
+		return strings.Compare(diff1.AddSidecars[i].Name, diff1.AddSidecars[j].Name) < 0
+	})
+
+	sort.Slice(diff4.RemoveSidecars, func(i, j int) bool {
+		return strings.Compare(diff4.RemoveSidecars[i].Name, diff4.RemoveSidecars[j].Name) < 0
+	})
 
 	assert.Equal(t, expectedDiff1, diff1)
 	assert.Equal(t, expectedDiff2, diff2)

@@ -1,6 +1,6 @@
 /*
 	Copyright 2019 Whiteblock Inc.
-	This file is a part of the Definitio
+	This file is a part of the Definition.
 
 	Definition is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
 package namer
 
 import (
-	"github.com/whiteblock/definition/schema"
 	"testing"
+
+	"github.com/whiteblock/definition/schema"
 )
 
 func TestNameWithSlashes(t *testing.T) {
