@@ -141,13 +141,15 @@ func (resolver resolve) CreateServices(state *entity.State, spec schema.RootSche
 			return nil, ErrBucketNotFound
 		}
 
-		net, err := state.Network.GetNextLocal(bucket)
-		if err != nil {
-			return nil, err
+		if _, ok := state.Subnets[service.Name]; !ok {
+			net, err := state.Network.GetNextLocal(bucket)
+			if err != nil {
+				return nil, err
+			}
+			state.Subnets[service.Name] = net
 		}
-		service.SidecarNet = net
 
-		createCmd, startCmd, err := resolver.deps.Container(bucket, service)
+		createCmd, startCmd, err := resolver.deps.Container(bucket, state, service)
 		if err != nil {
 			return nil, err
 		}
@@ -155,7 +157,7 @@ func (resolver resolve) CreateServices(state *entity.State, spec schema.RootSche
 
 		if !service.IsTask {
 			if len(service.Sidecars) > 0 {
-				sidecarCmds, err := resolver.deps.Sidecars(bucket, service, service.Sidecars)
+				sidecarCmds, err := resolver.deps.Sidecars(bucket, state, service, service.Sidecars)
 				if err != nil {
 					return nil, err
 				}
@@ -289,7 +291,8 @@ func (resolver resolve) UpdateServices(state *entity.State, dist entity.PhaseDis
 
 		if len(service.AddSidecars) > 0 {
 			images := &entity.ImageStore{}
-			sidecarCmds, err := resolver.deps.Sidecars(bucket, *service.Parent, service.AddSidecars)
+			sidecarCmds, err := resolver.deps.Sidecars(bucket, state, *service.Parent,
+				service.AddSidecars)
 			if err != nil {
 				return nil, err
 			}

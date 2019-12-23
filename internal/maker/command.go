@@ -32,11 +32,11 @@ import (
 type Command interface {
 	CreateNetwork(name string, network entity.Network) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
-	CreateContainer(service entity.Service) command.Order
+	CreateContainer(state *entity.State, service entity.Service) command.Order
 	CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order
 	StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order
 
-	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
+	CreateSidecar(state *entity.State, parent entity.Service, sidecar schema.Sidecar) command.Order
 	StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	PullImage(image string) command.Order
 	File(name string, input schema.InputFile) command.Order
@@ -90,7 +90,8 @@ func (cmd commandMaker) PullImage(image string) command.Order {
 	}
 }
 
-func (cmd commandMaker) CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order {
+func (cmd commandMaker) CreateSidecarNetwork(service entity.Service,
+	network entity.Network) command.Order {
 	return cmd.createNetwork(namer.SidecarNetwork(service), network, false)
 }
 
@@ -104,7 +105,7 @@ func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
 	}
 }
 
-func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
+func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Service) command.Order {
 	return command.Order{
 		Type: command.Createcontainer,
 		Payload: command.Container{
@@ -121,16 +122,19 @@ func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
 			Image:       cmd.service.GetImage(service),
 
 			Args: cmd.service.GetArgs(service),
-			IP:   cmd.service.GetIP(service),
+			IP:   cmd.service.GetIP(state, service),
 		},
 	}
 }
 
-func (cmd commandMaker) StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order {
+func (cmd commandMaker) StartContainer(service entity.Service, isTask bool,
+	timeout command.Timeout) command.Order {
 	return cmd.startContainer(service.Name, isTask, timeout)
 }
 
-func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order {
+func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service,
+	sidecar schema.Sidecar) command.Order {
+
 	return command.Order{
 		Type: command.Createcontainer,
 		Payload: command.Container{
@@ -145,7 +149,7 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			Image:       cmd.sidecar.GetImage(sidecar),
 			Args:        cmd.sidecar.GetArgs(sidecar),
 			Ports:       parent.Ports,
-			IP:          cmd.sidecar.GetIP(parent),
+			IP:          cmd.sidecar.GetIP(state, parent, sidecar),
 		},
 	}
 }
@@ -225,7 +229,9 @@ func (cmd commandMaker) RemoveContainer(name string) command.Order {
 	}
 }
 
-func (cmd commandMaker) startContainer(name string, isTask bool, timeout command.Timeout) command.Order {
+func (cmd commandMaker) startContainer(name string, isTask bool,
+	timeout command.Timeout) command.Order {
+
 	return command.Order{
 		Type: command.Startcontainer,
 		Payload: command.StartContainer{

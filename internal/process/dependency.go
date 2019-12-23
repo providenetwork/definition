@@ -35,7 +35,8 @@ type Dependency interface {
 		networks []schema.Network) ([]command.Command, error)
 
 	//Container returns create, start, error
-	Container(bucket int, service entity.Service) (command.Command, command.Command, error)
+	Container(bucket int, state *entity.State,
+		service entity.Service) (command.Command, command.Command, error)
 
 	DetachNetworks(bucket int, container string,
 		networks []schema.Network) ([]command.Command, error)
@@ -46,7 +47,8 @@ type Dependency interface {
 
 	RemoveContainer(bucket int, name string) (command.Command, error)
 
-	Sidecars(bucket int, service entity.Service, sidecars []schema.Sidecar) ([][]command.Command, error)
+	Sidecars(bucket int, state *entity.State, service entity.Service,
+		sidecars []schema.Sidecar) ([][]command.Command, error)
 
 	SidecarNetwork(bucket int, state *entity.State,
 		service entity.Service) (command.Command, error)
@@ -115,6 +117,7 @@ func (dep dependency) AttachNetworks(bucket int, state *entity.State, container 
 		if ip == nil {
 			return nil, ErrNoFreeIP
 		}
+		state.IPs[container+"_"+network.Name] = ip.String()
 		order := dep.cmdMaker.AttachNetwork(container, network.Name, ip.String())
 		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
@@ -125,10 +128,10 @@ func (dep dependency) AttachNetworks(bucket int, state *entity.State, container 
 	return out, nil
 }
 
-func (dep dependency) Container(bucket int, service entity.Service) (
+func (dep dependency) Container(bucket int, state *entity.State, service entity.Service) (
 	create command.Command, start command.Command, err error) {
 
-	order := dep.cmdMaker.CreateContainer(service)
+	order := dep.cmdMaker.CreateContainer(state, service)
 
 	create, err = command.NewCommand(order, fmt.Sprint(bucket))
 	if err != nil {
@@ -182,13 +185,13 @@ func (dep dependency) Files(bucket int, service entity.Service) ([]command.Comma
 
 }
 
-func (dep dependency) Sidecars(bucket int, service entity.Service,
+func (dep dependency) Sidecars(bucket int, state *entity.State, service entity.Service,
 	sidecars []schema.Sidecar) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 2)
 	for _, sidecar := range sidecars {
 
-		order := dep.cmdMaker.CreateSidecar(service, sidecar)
+		order := dep.cmdMaker.CreateSidecar(state, service, sidecar)
 		create, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
@@ -221,7 +224,9 @@ func (dep dependency) SidecarNetwork(bucket int, state *entity.State,
 	service entity.Service) (command.Command, error) {
 
 	return command.NewCommand(
-		dep.cmdMaker.CreateSidecarNetwork(service, service.SidecarNet),
+
+		dep.cmdMaker.CreateSidecarNetwork(service,
+			state.Subnets[service.Name]),
 		fmt.Sprint(bucket))
 }
 

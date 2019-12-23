@@ -33,7 +33,7 @@ type Service interface {
 	GetImage(service entity.Service) string
 
 	GetNetwork(service entity.Service) string
-	GetIP(service entity.Service) string
+	GetIP(state *entity.State, service entity.Service) string
 	GetMemory(service entity.Service) int64
 	GetVolumes(service entity.Service) []command.Mount
 }
@@ -94,11 +94,13 @@ func (sp *serviceParser) GetNetwork(service entity.Service) string {
 	return "none"
 }
 
-func (sp *serviceParser) GetIP(service entity.Service) string {
+func (sp *serviceParser) GetIP(state *entity.State, service entity.Service) string {
 	if service.IsTask {
 		return ""
 	}
-	return service.SidecarNet.Next().String()
+	out := state.Subnets[service.Name].Next().String()
+	state.IPs[service.Name+"_"+service.Name] = out
+	return out
 }
 
 func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {

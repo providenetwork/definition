@@ -39,7 +39,7 @@ type Sidecar interface {
 	GetLabels(parent entity.Service, sidecar schema.Sidecar) map[string]string
 	GetMemory(sidecar schema.Sidecar) string
 	GetNetwork(parent entity.Service) string
-	GetIP(parent entity.Service) string
+	GetIP(state *entity.State, parent entity.Service, sidecar schema.Sidecar) string
 	GetVolumes(sidecar schema.Sidecar) []command.Mount
 }
 
@@ -126,10 +126,10 @@ func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
 	return out
 }
 
-func (sp sidecarParser) GetIP(parent entity.Service) string {
-	ip := parent.SidecarNet.Next()
-	if ip == nil {
-		return ""
-	}
-	return ip.String()
+func (sp sidecarParser) GetIP(state *entity.State, parent entity.Service,
+	sidecar schema.Sidecar) string {
+
+	out := state.Subnets[parent.Name].Next().String()
+	state.IPs[namer.Sidecar(parent, sidecar)+"_"+parent.Name] = out
+	return out
 }

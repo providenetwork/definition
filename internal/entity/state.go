@@ -24,6 +24,7 @@ type State struct {
 	SystemState map[string]schema.SystemComponent
 	Subnets     map[string]Network
 	Network     NetworkState
+	IPs         map[string]string
 }
 
 func NewState(net NetworkState) *State {
@@ -31,5 +32,6 @@ func NewState(net NetworkState) *State {
 		SystemState: map[string]schema.SystemComponent{},
 		Subnets:     map[string]Network{},
 		Network:     net,
+		IPs:         map[string]string{},
 	}
 }

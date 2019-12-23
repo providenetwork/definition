@@ -37,19 +37,19 @@ type testCalculator struct {
 	conf     config.Config
 	sys      System
 	resolver Resolve
-	logger   logrus.Ext1FieldLogger
+	log      logrus.Ext1FieldLogger
 }
 
 func NewTestCalculator(
 	conf config.Config,
 	sys System,
 	resolver Resolve,
-	logger logrus.Ext1FieldLogger) TestCalculator {
+	log logrus.Ext1FieldLogger) TestCalculator {
 	return &testCalculator{
 		conf:     conf,
 		sys:      sys,
 		resolver: resolver,
-		logger:   logger}
+		log:      log}
 }
 
 func (calc testCalculator) handlePhase(state *entity.State,
@@ -60,7 +60,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 
 	out := [][]command.Command{}
 	changedSystems, systems, _ := calc.sys.GetAlreadyExists(state, phase.System)
-	calc.logger.WithField("systems", systems).Info("adding these systems")
+	calc.log.WithField("systems", systems).Info("adding these systems")
 
 	networkCommands, err := calc.resolver.CreateSystemNetworks(state, phase.System)
 	if err != nil {
@@ -90,7 +90,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	networkCommands = append(networkCommands, additionalNetworkCmds...)
 	if len(networkCommands) > 0 {
 		out = append(out, networkCommands)
-		calc.logger.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
+		calc.log.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
 			"got the network commands")
 	}
 
@@ -104,7 +104,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	servicesToAdd = append(servicesToAdd, servicesForTasks...)
 	//Break it down into commands now
 
-	calc.logger.WithFields(logrus.Fields{
+	calc.log.WithFields(logrus.Fields{
 		"adding":   servicesToAdd,
 		"removing": servicesToRemove,
 		"systems":  systems,
@@ -122,7 +122,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	}
 
 	if len(removalCommands) > 0 {
-		calc.logger.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace(
+		calc.log.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace(
 			"got the removal commands")
 		out = append(out, removalCommands...)
 	}
@@ -134,7 +134,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 
 	if len(updateCommands) > 0 {
 		for i, set := range updateCommands {
-			calc.logger.WithFields(logrus.Fields{
+			calc.log.WithFields(logrus.Fields{
 				"count": len(set),
 				"set":   i,
 			}).Trace("got the update commands set")
@@ -151,7 +151,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 
 	if len(addCommands) > 0 {
 		for i, set := range addCommands {
-			calc.logger.WithFields(logrus.Fields{
+			calc.log.WithFields(logrus.Fields{
 				"count": len(set),
 				"set":   i,
 			}).Trace("got the add commands set")
@@ -229,5 +229,6 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 		out = out.Append(calc.breakUpCommands(cmds))
 	}
 	out.MetaInject("test", spec.Tests[index].Name)
+	calc.log.Error(state.IPs)
 	return out, nil
 }

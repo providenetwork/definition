@@ -41,7 +41,6 @@ type Service struct {
 	Timeout        command.Timeout
 	IsTask         bool
 	IgnoreExitCode bool
-	SidecarNet     Network
 }
 
 func GetDefaultService(def defaults.Defaults) Service {
