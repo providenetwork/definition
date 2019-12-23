@@ -33,16 +33,18 @@ import (
 )
 
 type Resolve interface {
-	CreateNetworks(networkState entity.NetworkState,
+	CreateNetworks(state *entity.State,
 		networks []schema.Network, meta map[string]string) ([]command.Command, error)
-	CreateSystemNetworks(systems []schema.SystemComponent,
-		networkState entity.NetworkState) ([]command.Command, error)
+	CreateSystemNetworks(state *entity.State, systems []schema.SystemComponent) ([]command.Command,
+		error)
 
-	CreateServices(spec schema.RootSchema, networkState entity.NetworkState, dist entity.PhaseDist,
+	CreateServices(state *entity.State, spec schema.RootSchema, dist entity.PhaseDist,
 		services []entity.Service) ([][]command.Command, error)
 
 	RemoveServices(dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error)
-	UpdateServices(dist entity.PhaseDist, services []entity.ServiceDiff) ([][]command.Command, error)
+
+	UpdateServices(state *entity.State, dist entity.PhaseDist,
+		services []entity.ServiceDiff) ([][]command.Command, error)
 }
 
 var (
@@ -66,15 +68,18 @@ func NewResolve(
 	return &resolve{cmdMaker: cmdMaker, deps: deps, log: log}
 }
 
-func (resolver resolve) CreateNetworks(networkState entity.NetworkState,
+func (resolver resolve) CreateNetworks(state *entity.State,
 	networks []schema.Network, meta map[string]string) ([]command.Command, error) {
 	out := []command.Command{}
 	for _, network := range networks {
-		subnet, err := networkState.GetNextGlobal()
-		if err != nil {
-			return nil, err
+		if _, ok := state.Subnets[network.Name]; !ok {
+			subnet, err := state.Network.GetNextGlobal()
+			if err != nil {
+				return nil, err
+			}
+			state.Subnets[network.Name] = subnet
 		}
-		order := resolver.cmdMaker.CreateNetwork(network.Name, subnet)
+		order := resolver.cmdMaker.CreateNetwork(network.Name, state.Subnets[network.Name])
 		cmd, err := command.NewCommand(order, FirstInstance)
 		if err != nil {
 			return nil, err
@@ -88,18 +93,18 @@ func (resolver resolve) CreateNetworks(networkState entity.NetworkState,
 	return out, nil
 }
 
-func (resolver resolve) CreateSystemNetworks(systems []schema.SystemComponent,
-	networkState entity.NetworkState) ([]command.Command, error) {
+func (resolver resolve) CreateSystemNetworks(state *entity.State,
+	systems []schema.SystemComponent) ([]command.Command, error) {
 
 	out := []command.Command{}
 	for _, system := range systems {
 		networks := system.Resources.Networks
 		if len(networks) == 0 {
 			networks = []schema.Network{
-				schema.Network{Name: namer.DefaultNetwork(system)},
+				{Name: namer.DefaultNetwork(system)},
 			}
 		}
-		cmds, err := resolver.CreateNetworks(networkState, networks, map[string]string{
+		cmds, err := resolver.CreateNetworks(state, networks, map[string]string{
 			"system": system.Name,
 		})
 		if err != nil {
@@ -125,7 +130,7 @@ func (resolver resolve) pullImages(images *entity.ImageStore) ([]command.Command
 	})
 }
 
-func (resolver resolve) CreateServices(spec schema.RootSchema, networkState entity.NetworkState,
+func (resolver resolve) CreateServices(state *entity.State, spec schema.RootSchema,
 	dist entity.PhaseDist, services []entity.Service) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 5)
@@ -136,7 +141,15 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 			return nil, ErrBucketNotFound
 		}
 
-		createCmd, startCmd, err := resolver.deps.Container(bucket, service)
+		if _, ok := state.Subnets[service.Name]; !ok {
+			net, err := state.Network.GetNextLocal(bucket)
+			if err != nil {
+				return nil, err
+			}
+			state.Subnets[service.Name] = net
+		}
+
+		createCmd, startCmd, err := resolver.deps.Container(bucket, state, service)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +157,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 
 		if !service.IsTask {
 			if len(service.Sidecars) > 0 {
-				sidecarCmds, err := resolver.deps.Sidecars(bucket, service, service.Sidecars)
+				sidecarCmds, err := resolver.deps.Sidecars(bucket, state, service, service.Sidecars)
 				if err != nil {
 					return nil, err
 				}
@@ -161,7 +174,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 				out[3] = append(out[3], sidecarCmds[0]...)
 				out[4] = append(out[4], sidecarCmds[1]...)
 			}
-			sidecarNetworkCmd, err := resolver.deps.SidecarNetwork(bucket, networkState, service)
+			sidecarNetworkCmd, err := resolver.deps.SidecarNetwork(bucket, state, service)
 			if err != nil {
 				return nil, err
 			}
@@ -172,7 +185,7 @@ func (resolver resolve) CreateServices(spec schema.RootSchema, networkState enti
 		if err != nil {
 			return nil, err
 		}
-		attachCmds, err := resolver.deps.AttachNetworks(bucket, service.Name, service.Networks)
+		attachCmds, err := resolver.deps.AttachNetworks(bucket, state, service.Name, service.Networks)
 		if err != nil {
 			return nil, err
 		}
@@ -231,7 +244,7 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 	return [][]command.Command{out}, nil
 }
 
-func (resolver resolve) UpdateServices(dist entity.PhaseDist,
+func (resolver resolve) UpdateServices(state *entity.State, dist entity.PhaseDist,
 	services []entity.ServiceDiff) ([][]command.Command, error) {
 
 	out := make([][]command.Command, 3)
@@ -243,13 +256,15 @@ func (resolver resolve) UpdateServices(dist entity.PhaseDist,
 		}
 
 		if len(service.AddNetworks) > 0 {
-			addNetworkCmds, err := resolver.deps.AttachNetworks(bucket, service.Name, service.AddNetworks)
+			addNetworkCmds, err := resolver.deps.AttachNetworks(bucket, state,
+				service.Name, service.AddNetworks)
 			if err != nil {
 				return nil, err
 			}
 			out[0] = append(out[0], addNetworkCmds...)
 
-			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.AddNetworks)
+			emulationCmds, err := resolver.deps.Emulation(bucket,
+				service.Name, service.AddNetworks)
 			if err != nil {
 				return nil, err
 			}
@@ -266,7 +281,8 @@ func (resolver resolve) UpdateServices(dist entity.PhaseDist,
 		}
 
 		if len(service.DetachNetworks) > 0 {
-			addNetworkCmds, err := resolver.deps.DetachNetworks(bucket, service.Name, service.DetachNetworks)
+			addNetworkCmds, err := resolver.deps.DetachNetworks(bucket, service.Name,
+				service.DetachNetworks)
 			if err != nil {
 				return nil, err
 			}
@@ -275,7 +291,8 @@ func (resolver resolve) UpdateServices(dist entity.PhaseDist,
 
 		if len(service.AddSidecars) > 0 {
 			images := &entity.ImageStore{}
-			sidecarCmds, err := resolver.deps.Sidecars(bucket, *service.Parent, service.AddSidecars)
+			sidecarCmds, err := resolver.deps.Sidecars(bucket, state, *service.Parent,
+				service.AddSidecars)
 			if err != nil {
 				return nil, err
 			}

@@ -32,7 +32,8 @@ type Service interface {
 	GetEntrypoint(service entity.Service) string
 	GetImage(service entity.Service) string
 
-	GetNetworks(service entity.Service) []string
+	GetNetwork(service entity.Service) string
+	GetIP(state *entity.State, service entity.Service) string
 	GetMemory(service entity.Service) int64
 	GetVolumes(service entity.Service) []command.Mount
 }
@@ -86,11 +87,20 @@ func (sp *serviceParser) GetImage(service entity.Service) string {
 	return service.SquashedService.Image
 }
 
-func (sp *serviceParser) GetNetworks(service entity.Service) (out []string) {
+func (sp *serviceParser) GetNetwork(service entity.Service) string {
 	if !service.IsTask {
-		return []string{namer.SidecarNetwork(service)}
+		return namer.SidecarNetwork(service)
 	}
-	return []string{}
+	return "none"
+}
+
+func (sp *serviceParser) GetIP(state *entity.State, service entity.Service) string {
+	if service.IsTask {
+		return ""
+	}
+	out := state.Subnets[service.Name].Next().String()
+	state.IPs[service.Name] = out
+	return out
 }
 
 func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
@@ -105,12 +115,5 @@ func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
 		})
 	}
 
-	for _, inputVol := range service.SquashedService.InputFiles {
-		out = append(out, command.Mount{
-			Name:      namer.InputFileVolume(inputVol),
-			Directory: inputVol.DestinationPath,
-			ReadOnly:  false,
-		})
-	}
 	return out
 }

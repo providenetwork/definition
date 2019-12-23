@@ -1,6 +1,6 @@
 /*
 	Copyright 2019 Whiteblock Inc.
-	This file is a part of the Definitio
+	This file is a part of the Definition.
 
 	Definition is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -19,27 +19,18 @@
 package namer
 
 import (
-	"github.com/whiteblock/definition/schema"
 	"testing"
 )
 
 func TestNameWithSlashes(t *testing.T) {
-	result := InputFileVolume(schema.InputFile{
-		SourcePath:      "",
-		DestinationPath: "wat/now",
-		Template:        false,
-	})
+	result := SanitizeVolumeName("wat/now")
 	if result != "wat-now" {
 		t.Fatalf("Invalid text substitution %s", result)
 	}
 }
 
 func TestNameWithStartingSlash(t *testing.T) {
-	result := InputFileVolume(schema.InputFile{
-		SourcePath:      "",
-		DestinationPath: "/wat/now",
-		Template:        false,
-	})
+	result := SanitizeVolumeName("/wat/now")
 	if result != "wb_wat-now" {
 		t.Fatalf("Invalid text substitution %s", result)
 	}

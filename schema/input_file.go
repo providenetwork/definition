@@ -18,6 +18,10 @@
 
 package schema
 
+import (
+	"path/filepath"
+)
+
 type InputFile struct {
 	SourcePath      string `yaml:"source-path,omitempty" json:"source-path,omitempty"`
 	DestinationPath string `yaml:"destination-path,omitempty" json:"destination-path,omitempty"`
@@ -27,6 +31,16 @@ type InputFile struct {
 // GetSource makes it easy to change the name of the source member, as it is
 // expected to change in the near future. (Also, there might be some logic behind it as well in
 // the future)
-func (in InputFile) GetSource() string {
+func (in InputFile) Source() string {
 	return in.SourcePath
+}
+
+// GetDestination makes it easy to change the name of the source member, as it is
+// expected to change in the near future. (Also, there might be some logic behind it as well in
+// the future)
+func (in InputFile) Destination() string {
+	if in.DestinationPath[len(in.DestinationPath)-1] == '/' {
+		return filepath.Join(in.DestinationPath, in.SourcePath)
+	}
+	return in.DestinationPath
 }

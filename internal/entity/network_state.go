@@ -67,10 +67,10 @@ func NewNetworkState(globalCIDR string, localCIDR string, maxNodes int) (Network
 func (ns *networkState) GetNextGlobal() (Network, error) {
 	net := ns.global.NthSubnet(ns.prefixLen, ns.globalIndex)
 	if net == nil {
-		return Network{}, ErrNoMoreGlobalNetworks
+		return nil, ErrNoMoreGlobalNetworks
 	}
 	ns.globalIndex++
-	return Network{network: net}, nil
+	return NewNetwork(net), nil
 }
 
 func (ns *networkState) GetNextLocal(instance int) (Network, error) {
@@ -78,8 +78,8 @@ func (ns *networkState) GetNextLocal(instance int) (Network, error) {
 
 	net := ns.local.NthSubnet(ns.prefixLen, index)
 	if net == nil {
-		return Network{}, ErrNoMoreLocalNetworks
+		return nil, ErrNoMoreLocalNetworks
 	}
 	ns.localIndexes[instance]++
-	return Network{network: net}, nil
+	return NewNetwork(net), nil
 }

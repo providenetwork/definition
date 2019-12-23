@@ -20,6 +20,7 @@ package process
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config"
@@ -37,23 +38,22 @@ type testCalculator struct {
 	conf     config.Config
 	sys      System
 	resolver Resolve
-	logger   logrus.Ext1FieldLogger
+	log      logrus.Ext1FieldLogger
 }
 
 func NewTestCalculator(
 	conf config.Config,
 	sys System,
 	resolver Resolve,
-	logger logrus.Ext1FieldLogger) TestCalculator {
+	log logrus.Ext1FieldLogger) TestCalculator {
 	return &testCalculator{
 		conf:     conf,
 		sys:      sys,
 		resolver: resolver,
-		logger:   logger}
+		log:      log}
 }
 
 func (calc testCalculator) handlePhase(state *entity.State,
-	networkState entity.NetworkState,
 	spec schema.RootSchema,
 	phase schema.Phase,
 	dist *entity.ResourceDist,
@@ -61,7 +61,13 @@ func (calc testCalculator) handlePhase(state *entity.State,
 
 	out := [][]command.Command{}
 	changedSystems, systems, _ := calc.sys.GetAlreadyExists(state, phase.System)
-	calc.logger.WithField("systems", systems).Info("adding these systems")
+	calc.log.WithField("systems", systems).Info("adding these systems")
+
+	networkCommands, err := calc.resolver.CreateSystemNetworks(state, phase.System)
+	if err != nil {
+		return nil, err
+	}
+
 	servicesToAdd, err := calc.sys.Add(state, spec, systems)
 	if err != nil {
 		return nil, err
@@ -72,23 +78,20 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		return nil, err
 	}
 
-	networkCommands, err := calc.resolver.CreateSystemNetworks(phase.System, networkState)
-	if err != nil {
-		return nil, err
-	}
-
 	diff, err := calc.sys.UpdateChanged(state, spec, changedSystems)
 	if err != nil {
 		return nil, err
 	}
-	additionalNetworkCmds, err := calc.resolver.CreateNetworks(networkState, diff.AddedNetworks, nil)
+
+	additionalNetworkCmds, err := calc.resolver.CreateNetworks(state, diff.AddedNetworks, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	networkCommands = append(networkCommands, additionalNetworkCmds...)
 	if len(networkCommands) > 0 {
 		out = append(out, networkCommands)
-		calc.logger.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
+		calc.log.WithFields(logrus.Fields{"count": len(networkCommands)}).Trace(
 			"got the network commands")
 	}
 
@@ -102,7 +105,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	servicesToAdd = append(servicesToAdd, servicesForTasks...)
 	//Break it down into commands now
 
-	calc.logger.WithFields(logrus.Fields{
+	calc.log.WithFields(logrus.Fields{
 		"adding":   servicesToAdd,
 		"removing": servicesToRemove,
 		"systems":  systems,
@@ -120,19 +123,19 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	}
 
 	if len(removalCommands) > 0 {
-		calc.logger.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace(
+		calc.log.WithFields(logrus.Fields{"count": len(removalCommands)}).Trace(
 			"got the removal commands")
 		out = append(out, removalCommands...)
 	}
 
-	updateCommands, err := calc.resolver.UpdateServices(phaseDist, diff.Modified)
+	updateCommands, err := calc.resolver.UpdateServices(state, phaseDist, diff.Modified)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(updateCommands) > 0 {
 		for i, set := range updateCommands {
-			calc.logger.WithFields(logrus.Fields{
+			calc.log.WithFields(logrus.Fields{
 				"count": len(set),
 				"set":   i,
 			}).Trace("got the update commands set")
@@ -142,14 +145,14 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		}
 	}
 
-	addCommands, err := calc.resolver.CreateServices(spec, networkState, phaseDist, servicesToAdd)
+	addCommands, err := calc.resolver.CreateServices(state, spec, phaseDist, servicesToAdd)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(addCommands) > 0 {
 		for i, set := range addCommands {
-			calc.logger.WithFields(logrus.Fields{
+			calc.log.WithFields(logrus.Fields{
 				"count": len(set),
 				"set":   i,
 			}).Trace("got the add commands set")
@@ -198,12 +201,13 @@ func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCo
 func (calc testCalculator) Commands(spec schema.RootSchema,
 	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
 
-	state := entity.NewState()
 	network, err := entity.NewNetworkState(calc.conf.Network.GlobalNetwork,
 		calc.conf.Network.SidecarNetwork, calc.conf.Network.MaxNodesPerNetwork)
 	if err != nil {
 		return nil, err
 	}
+	state := entity.NewState(network)
+
 	network.GetNextGlobal() //don't use the first entry
 
 	phase := schema.Phase{System: spec.Tests[index].System}
@@ -213,18 +217,46 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 		return nil, err
 	}
 	out = out.Append(calc.breakUpCommands(sCmds))
-	cmds, err := calc.handlePhase(state, network, spec, phase, dist, 0)
+	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
 	if err != nil {
 		return nil, err
 	}
 	out = out.Append(calc.breakUpCommands(cmds))
 	for i, phase := range spec.Tests[index].Phases {
-		cmds, err = calc.handlePhase(state, network, spec, phase, dist, i+1)
+		cmds, err = calc.handlePhase(state, spec, phase, dist, i+1)
 		if err != nil {
 			return nil, err
 		}
 		out = out.Append(calc.breakUpCommands(cmds))
 	}
 	out.MetaInject("test", spec.Tests[index].Name)
+
+	envVars := map[string]string{}
+	for name, ip := range state.IPs {
+		name = strings.Replace(name, "-", "_", -1)
+		name = strings.ToUpper(name)
+		envVars[name] = ip
+	}
+	for i := range out {
+		for j := range out[i] {
+			if out[i][j].Order.Type != command.Createcontainer {
+				continue
+			}
+			var order command.Container
+
+			err = out[i][j].ParseOrderPayloadInto(&order)
+			if err != nil {
+				return nil, err
+			}
+			if order.Environment == nil {
+				order.Environment = map[string]string{}
+			}
+			for key, val := range envVars {
+				order.Environment[key] = val
+			}
+
+			out[i][j].Order.Payload = order
+		}
+	}
 	return out, nil
 }

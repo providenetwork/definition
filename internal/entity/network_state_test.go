@@ -32,17 +32,17 @@ func TestNetworkState_GetNextGlobal(t *testing.T) {
 
 	net, err := state.GetNextGlobal()
 	require.NoError(t, err)
-	require.NotNil(t, net.network)
+	require.NotNil(t, net)
 	assert.Equal(t, "10.0.0.0/22", net.Subnet())
 
 	net, err = state.GetNextGlobal()
 	require.NoError(t, err)
-	require.NotNil(t, net.network)
+	require.NotNil(t, net)
 	assert.Equal(t, "10.0.4.0/22", net.Subnet())
 
 	net, err = state.GetNextGlobal()
 	require.NoError(t, err)
-	require.NotNil(t, net.network)
+	require.NotNil(t, net)
 	assert.Equal(t, "10.0.8.0/22", net.Subnet())
 }
 
@@ -54,17 +54,17 @@ func TestNetworkState_GetNextLocal(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		net, err := state.GetNextLocal(i)
 		require.NoError(t, err)
-		require.NotNil(t, net.network)
+		require.NotNil(t, net)
 		assert.Equal(t, "172.16.0.0/22", net.Subnet())
 
 		net, err = state.GetNextLocal(i)
 		require.NoError(t, err)
-		require.NotNil(t, net.network)
+		require.NotNil(t, net)
 		assert.Equal(t, "172.16.4.0/22", net.Subnet())
 
 		net, err = state.GetNextLocal(i)
 		require.NoError(t, err)
-		require.NotNil(t, net.network)
+		require.NotNil(t, net)
 		assert.Equal(t, "172.16.8.0/22", net.Subnet())
 	}
 

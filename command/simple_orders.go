@@ -30,6 +30,8 @@ type ContainerNetwork struct {
 	ContainerName string `json:"container"`
 	// Name of the network.
 	Network string `json:"network"`
+	// IP is the IP address of the container in this network
+	IP string `json:"ip,omitempty"`
 }
 
 // FileAndContainer is a file and container order payload.
@@ -49,6 +51,7 @@ type SetupSwarm struct {
 // PullImage contains the information necessary to pull a docker image from a registry
 type PullImage struct {
 	Image string `json:"image"`
+
 	// RegistryAuth is the base64 encoded credentials for the registry (optional)
-	RegistryAuth string `json:"registryAuth,omitonempty"`
+	RegistryAuth string `json:"registryAuth,omitempty"`
 }

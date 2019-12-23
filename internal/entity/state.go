@@ -18,14 +18,20 @@
 
 package entity
 
-import (
-	"github.com/whiteblock/definition/schema"
-)
+import "github.com/whiteblock/definition/schema"
 
 type State struct {
 	SystemState map[string]schema.SystemComponent
+	Subnets     map[string]Network
+	Network     NetworkState
+	IPs         map[string]string
 }
 
-func NewState() *State {
-	return &State{SystemState: map[string]schema.SystemComponent{}}
+func NewState(net NetworkState) *State {
+	return &State{
+		SystemState: map[string]schema.SystemComponent{},
+		Subnets:     map[string]Network{},
+		Network:     net,
+		IPs:         map[string]string{},
+	}
 }

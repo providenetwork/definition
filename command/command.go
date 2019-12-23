@@ -94,7 +94,7 @@ type Command struct {
 	Meta map[string]string `json:"meta"`
 
 	// Parent is a pointer to the Instructions object that contains this commands
-	parent *Instructions `json:"-"`
+	parent *Instructions
 }
 
 // NewCommand properly creates a new command

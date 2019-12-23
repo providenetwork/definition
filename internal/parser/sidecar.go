@@ -28,7 +28,6 @@ import (
 	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/schema"
 
-	"github.com/docker/docker/api/types/strslice"
 	"github.com/jinzhu/copier"
 )
 
@@ -39,7 +38,8 @@ type Sidecar interface {
 	GetImage(sidecar schema.Sidecar) string
 	GetLabels(parent entity.Service, sidecar schema.Sidecar) map[string]string
 	GetMemory(sidecar schema.Sidecar) string
-	GetNetwork(parent entity.Service) strslice.StrSlice
+	GetNetwork(parent entity.Service) string
+	GetIP(state *entity.State, parent entity.Service, sidecar schema.Sidecar) string
 	GetVolumes(sidecar schema.Sidecar) []command.Mount
 }
 
@@ -104,8 +104,8 @@ func (sp sidecarParser) GetLabels(parent entity.Service, sidecar schema.Sidecar)
 	return labels
 }
 
-func (sp sidecarParser) GetNetwork(parent entity.Service) strslice.StrSlice {
-	return strslice.StrSlice([]string{namer.SidecarNetwork(parent)})
+func (sp sidecarParser) GetNetwork(parent entity.Service) string {
+	return namer.SidecarNetwork(parent)
 }
 
 func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
@@ -123,12 +123,13 @@ func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
 		})
 	}
 
-	for _, inputVol := range sidecar.InputFiles {
-		out = append(out, command.Mount{
-			Name:      namer.InputFileVolume(inputVol),
-			Directory: inputVol.DestinationPath,
-			ReadOnly:  false,
-		})
-	}
+	return out
+}
+
+func (sp sidecarParser) GetIP(state *entity.State, parent entity.Service,
+	sidecar schema.Sidecar) string {
+
+	out := state.Subnets[parent.Name].Next().String()
+	state.IPs[namer.Sidecar(parent, sidecar)+"_"+parent.Name] = out
 	return out
 }

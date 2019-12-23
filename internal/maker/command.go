@@ -26,23 +26,21 @@ import (
 	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
-
-	"github.com/docker/docker/api/types/strslice"
 )
 
 // Command handles the simple schema -> order conversions
 type Command interface {
 	CreateNetwork(name string, network entity.Network) command.Order
 	CreateVolume(volume schema.SharedVolume) command.Order
-	CreateContainer(service entity.Service) command.Order
+	CreateContainer(state *entity.State, service entity.Service) command.Order
 	CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order
 	StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order
 
-	CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
+	CreateSidecar(state *entity.State, parent entity.Service, sidecar schema.Sidecar) command.Order
 	StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order
 	PullImage(image string) command.Order
 	File(name string, input schema.InputFile) command.Order
-	AttachNetwork(service string, network string) command.Order
+	AttachNetwork(service string, network string, ip string) command.Order
 	DetachNetwork(service string, network string) command.Order
 	Emulation(serviceName string, network schema.Network) (command.Order, error)
 
@@ -92,7 +90,8 @@ func (cmd commandMaker) PullImage(image string) command.Order {
 	}
 }
 
-func (cmd commandMaker) CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order {
+func (cmd commandMaker) CreateSidecarNetwork(service entity.Service,
+	network entity.Network) command.Order {
 	return cmd.createNetwork(namer.SidecarNetwork(service), network, false)
 }
 
@@ -106,7 +105,7 @@ func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
 	}
 }
 
-func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
+func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Service) command.Order {
 	return command.Order{
 		Type: command.Createcontainer,
 		Payload: command.Container{
@@ -115,22 +114,27 @@ func (cmd commandMaker) CreateContainer(service entity.Service) command.Order {
 			Environment: service.SquashedService.Environment,
 			Labels:      service.Labels,
 			Name:        service.Name,
-			Network:     strslice.StrSlice(cmd.service.GetNetworks(service)),
+			Network:     cmd.service.GetNetwork(service),
 			Ports:       service.Ports,
 			Volumes:     cmd.service.GetVolumes(service),
 			Cpus:        fmt.Sprint(cmd.service.GetCPUs(service)),
 			Memory:      fmt.Sprint(cmd.service.GetMemory(service)),
 			Image:       cmd.service.GetImage(service),
-			Args:        cmd.service.GetArgs(service),
+
+			Args: cmd.service.GetArgs(service),
+			IP:   cmd.service.GetIP(state, service),
 		},
 	}
 }
 
-func (cmd commandMaker) StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order {
+func (cmd commandMaker) StartContainer(service entity.Service, isTask bool,
+	timeout command.Timeout) command.Order {
 	return cmd.startContainer(service.Name, isTask, timeout)
 }
 
-func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order {
+func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service,
+	sidecar schema.Sidecar) command.Order {
+
 	return command.Order{
 		Type: command.Createcontainer,
 		Payload: command.Container{
@@ -138,13 +142,14 @@ func (cmd commandMaker) CreateSidecar(parent entity.Service, sidecar schema.Side
 			Environment: sidecar.Environment,
 			Labels:      cmd.sidecar.GetLabels(parent, sidecar),
 			Name:        namer.Sidecar(parent, sidecar),
-			Network:     strslice.StrSlice(cmd.sidecar.GetNetwork(parent)),
+			Network:     cmd.sidecar.GetNetwork(parent),
 			Volumes:     cmd.sidecar.GetVolumes(sidecar),
 			Cpus:        cmd.sidecar.GetCPUs(sidecar),
 			Memory:      cmd.sidecar.GetMemory(sidecar),
 			Image:       cmd.sidecar.GetImage(sidecar),
 			Args:        cmd.sidecar.GetArgs(sidecar),
 			Ports:       parent.Ports,
+			IP:          cmd.sidecar.GetIP(state, parent, sidecar),
 		},
 	}
 }
@@ -157,8 +162,8 @@ func (cmd commandMaker) File(name string, input schema.InputFile) command.Order 
 			ContainerName: name,
 			File: command.File{
 				Mode:        0644,
-				Destination: input.DestinationPath,
-				ID:          input.GetSource(),
+				Destination: input.Destination(),
+				ID:          input.Source(),
 			},
 		},
 	}
@@ -168,12 +173,13 @@ func (cmd commandMaker) StartSidecar(parent entity.Service, sidecar schema.Sidec
 	return cmd.startContainer(namer.Sidecar(parent, sidecar), false, command.Timeout{})
 }
 
-func (cmd commandMaker) AttachNetwork(service string, network string) command.Order {
+func (cmd commandMaker) AttachNetwork(service string, network string, ip string) command.Order {
 	return command.Order{
 		Type: command.Attachnetwork,
 		Payload: command.ContainerNetwork{
 			ContainerName: service,
 			Network:       namer.Network(network),
+			IP:            ip,
 		},
 	}
 }
@@ -223,7 +229,9 @@ func (cmd commandMaker) RemoveContainer(name string) command.Order {
 	}
 }
 
-func (cmd commandMaker) startContainer(name string, isTask bool, timeout command.Timeout) command.Order {
+func (cmd commandMaker) startContainer(name string, isTask bool,
+	timeout command.Timeout) command.Order {
+
 	return command.Order{
 		Type: command.Startcontainer,
 		Payload: command.StartContainer{
