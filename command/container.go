@@ -28,27 +28,25 @@ import (
 	"github.com/whiteblock/utility/utils"
 )
 
-// NetworkConfig represents a docker network configuration
-type NetworkConfig struct {
-	// EndpointsConfig TODO: this will be removed
-	EndpointsConfig map[string]*network.EndpointSettings
-}
-
 // Container represents a docker container, this is calculated from the payload of the Run command
 type Container struct {
 	// BoundCpus are the cpus which the container will be set with an affinity for.
 	BoundCPUs []int `json:"boundCPUs,omitonempty"`
+
 	// EntryPoint overrides the docker containers entrypoint if non-empty
 	EntryPoint string `json:"entrypoint"`
+
 	// Environment represents the environment kv which will be provided to the container
 	Environment map[string]string `json:"environment"`
 
 	// Labels are any identifier which are to be attached to the container
 	Labels map[string]string `json:"labels"`
-	//N ame is the unique name of the docker container
+
+	// Name is the unique name of the docker container
 	Name string `json:"name"`
+
 	// Network is the primary network(s) for this container to be attached to
-	Network strslice.StrSlice `json:"network"`
+	Network string `json:"network"`
 
 	// Ports to be opened for each container, each port associated.
 	Ports map[int]int `json:"ports"`
@@ -68,8 +66,12 @@ type Container struct {
 
 	// Image is the docker image
 	Image string `json:"image"`
+
 	// Args are the arguments passed to the containers entrypoint
 	Args []string `json:"args"`
+
+	// IP is the IP address on the primary network
+	IP string `json:"ip"`
 }
 
 // GetMemory gets the memory value as an integer.
