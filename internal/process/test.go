@@ -20,6 +20,7 @@ package process
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config"
@@ -229,6 +230,33 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 		out = out.Append(calc.breakUpCommands(cmds))
 	}
 	out.MetaInject("test", spec.Tests[index].Name)
-	calc.log.Error(state.IPs)
+
+	envVars := map[string]string{}
+	for name, ip := range state.IPs {
+		name = strings.Replace(name, "-", "_", -1)
+		name = strings.ToUpper(name)
+		envVars[name] = ip
+	}
+	for i := range out {
+		for j := range out[i] {
+			if out[i][j].Order.Type != command.Createcontainer {
+				continue
+			}
+			var order command.Container
+
+			err = out[i][j].ParseOrderPayloadInto(&order)
+			if err != nil {
+				return nil, err
+			}
+			if order.Environment == nil {
+				order.Environment = map[string]string{}
+			}
+			for key, val := range envVars {
+				order.Environment[key] = val
+			}
+
+			out[i][j].Order.Payload = order
+		}
+	}
 	return out, nil
 }

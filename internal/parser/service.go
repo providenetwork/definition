@@ -99,7 +99,7 @@ func (sp *serviceParser) GetIP(state *entity.State, service entity.Service) stri
 		return ""
 	}
 	out := state.Subnets[service.Name].Next().String()
-	state.IPs[service.Name+"_"+service.Name] = out
+	state.IPs[service.Name] = out
 	return out
 }
 
