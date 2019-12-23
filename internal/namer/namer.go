@@ -33,10 +33,6 @@ func capString(s string, size int) string {
 	return fmt.Sprintf("%x", h.Sum(nil))[:size]
 }
 
-func InputFileVolume(input schema.InputFile) string {
-	return SanitizeVolumeName(input.DestinationPath)
-}
-
 func SanitizeVolumeName(volName string) string {
 	if strings.HasPrefix(volName, "/") {
 		volName = "wb_" + volName[1:]

@@ -53,7 +53,6 @@ func NewTestCalculator(
 }
 
 func (calc testCalculator) handlePhase(state *entity.State,
-	networkState entity.NetworkState,
 	spec schema.RootSchema,
 	phase schema.Phase,
 	dist *entity.ResourceDist,
@@ -62,6 +61,12 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	out := [][]command.Command{}
 	changedSystems, systems, _ := calc.sys.GetAlreadyExists(state, phase.System)
 	calc.logger.WithField("systems", systems).Info("adding these systems")
+
+	networkCommands, err := calc.resolver.CreateSystemNetworks(state, phase.System)
+	if err != nil {
+		return nil, err
+	}
+
 	servicesToAdd, err := calc.sys.Add(state, spec, systems)
 	if err != nil {
 		return nil, err
@@ -72,19 +77,16 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		return nil, err
 	}
 
-	networkCommands, err := calc.resolver.CreateSystemNetworks(phase.System, networkState)
-	if err != nil {
-		return nil, err
-	}
-
 	diff, err := calc.sys.UpdateChanged(state, spec, changedSystems)
 	if err != nil {
 		return nil, err
 	}
-	additionalNetworkCmds, err := calc.resolver.CreateNetworks(networkState, diff.AddedNetworks, nil)
+
+	additionalNetworkCmds, err := calc.resolver.CreateNetworks(state, diff.AddedNetworks, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	networkCommands = append(networkCommands, additionalNetworkCmds...)
 	if len(networkCommands) > 0 {
 		out = append(out, networkCommands)
@@ -125,7 +127,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		out = append(out, removalCommands...)
 	}
 
-	updateCommands, err := calc.resolver.UpdateServices(phaseDist, diff.Modified)
+	updateCommands, err := calc.resolver.UpdateServices(state, phaseDist, diff.Modified)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,7 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		}
 	}
 
-	addCommands, err := calc.resolver.CreateServices(spec, networkState, phaseDist, servicesToAdd)
+	addCommands, err := calc.resolver.CreateServices(state, spec, phaseDist, servicesToAdd)
 	if err != nil {
 		return nil, err
 	}
@@ -198,12 +200,13 @@ func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCo
 func (calc testCalculator) Commands(spec schema.RootSchema,
 	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
 
-	state := entity.NewState()
 	network, err := entity.NewNetworkState(calc.conf.Network.GlobalNetwork,
 		calc.conf.Network.SidecarNetwork, calc.conf.Network.MaxNodesPerNetwork)
 	if err != nil {
 		return nil, err
 	}
+	state := entity.NewState(network)
+
 	network.GetNextGlobal() //don't use the first entry
 
 	phase := schema.Phase{System: spec.Tests[index].System}
@@ -213,13 +216,13 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 		return nil, err
 	}
 	out = out.Append(calc.breakUpCommands(sCmds))
-	cmds, err := calc.handlePhase(state, network, spec, phase, dist, 0)
+	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
 	if err != nil {
 		return nil, err
 	}
 	out = out.Append(calc.breakUpCommands(cmds))
 	for i, phase := range spec.Tests[index].Phases {
-		cmds, err = calc.handlePhase(state, network, spec, phase, dist, i+1)
+		cmds, err = calc.handlePhase(state, spec, phase, dist, i+1)
 		if err != nil {
 			return nil, err
 		}

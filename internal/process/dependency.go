@@ -18,6 +18,7 @@
 package process
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/whiteblock/definition/command"
@@ -30,7 +31,7 @@ import (
 )
 
 type Dependency interface {
-	AttachNetworks(bucket int, container string,
+	AttachNetworks(bucket int, state *entity.State, container string,
 		networks []schema.Network) ([]command.Command, error)
 
 	//Container returns create, start, error
@@ -47,11 +48,15 @@ type Dependency interface {
 
 	Sidecars(bucket int, service entity.Service, sidecars []schema.Sidecar) ([][]command.Command, error)
 
-	SidecarNetwork(bucket int, networkState entity.NetworkState,
+	SidecarNetwork(bucket int, state *entity.State,
 		service entity.Service) (command.Command, error)
 
 	Volumes(bucket int, service entity.Service) ([]command.Command, error)
 }
+
+var (
+	ErrNoFreeIP = errors.New("out of ip address to allocate")
+)
 
 type dependency struct {
 	parser   maker.Service
@@ -102,11 +107,15 @@ func (dep dependency) DetachNetworks(bucket int, container string,
 	return out, nil
 }
 
-func (dep dependency) AttachNetworks(bucket int, container string,
+func (dep dependency) AttachNetworks(bucket int, state *entity.State, container string,
 	networks []schema.Network) ([]command.Command, error) {
 	out := []command.Command{}
 	for _, network := range networks {
-		order := dep.cmdMaker.AttachNetwork(container, network.Name)
+		ip := state.Subnets[network.Name].Next()
+		if ip == nil {
+			return nil, ErrNoFreeIP
+		}
+		order := dep.cmdMaker.AttachNetwork(container, network.Name, ip.String())
 		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
@@ -208,15 +217,12 @@ func (dep dependency) Sidecars(bucket int, service entity.Service,
 	return out, nil
 }
 
-func (dep dependency) SidecarNetwork(bucket int, networkState entity.NetworkState,
+func (dep dependency) SidecarNetwork(bucket int, state *entity.State,
 	service entity.Service) (command.Command, error) {
 
-	subnet, err := networkState.GetNextLocal(bucket)
-	if err != nil {
-		return command.Command{}, err
-	}
-	order := dep.cmdMaker.CreateSidecarNetwork(service, subnet)
-	return command.NewCommand(order, fmt.Sprint(bucket))
+	return command.NewCommand(
+		dep.cmdMaker.CreateSidecarNetwork(service, service.SidecarNet),
+		fmt.Sprint(bucket))
 }
 
 func (dep dependency) RemoveContainer(bucket int, name string) (command.Command, error) {

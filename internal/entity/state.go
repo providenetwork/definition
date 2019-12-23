@@ -23,10 +23,10 @@ import "github.com/whiteblock/definition/schema"
 type State struct {
 	SystemState map[string]schema.SystemComponent
 	Subnets     map[string]Network
-	Network     entity.NetworkState
+	Network     NetworkState
 }
 
-func NewState(net entity.NetworkState) *State {
+func NewState(net NetworkState) *State {
 	return &State{
 		SystemState: map[string]schema.SystemComponent{},
 		Subnets:     map[string]Network{},

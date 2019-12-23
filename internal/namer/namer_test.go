@@ -20,27 +20,17 @@ package namer
 
 import (
 	"testing"
-
-	"github.com/whiteblock/definition/schema"
 )
 
 func TestNameWithSlashes(t *testing.T) {
-	result := InputFileVolume(schema.InputFile{
-		SourcePath:      "",
-		DestinationPath: "wat/now",
-		Template:        false,
-	})
+	result := SanitizeVolumeName("wat/now")
 	if result != "wat-now" {
 		t.Fatalf("Invalid text substitution %s", result)
 	}
 }
 
 func TestNameWithStartingSlash(t *testing.T) {
-	result := InputFileVolume(schema.InputFile{
-		SourcePath:      "",
-		DestinationPath: "/wat/now",
-		Template:        false,
-	})
+	result := SanitizeVolumeName("/wat/now")
 	if result != "wb_wat-now" {
 		t.Fatalf("Invalid text substitution %s", result)
 	}
