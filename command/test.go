@@ -216,7 +216,7 @@ func (instruct *Instructions) PlaceInProperIDs(files []common.Metadata) {
 					continue
 				}
 				payload := instruct.Commands[j][k].Order.Payload.(FileAndContainer)
-				if payload.File.ID == files[i].FilenameWithPath() {
+				if payload.File.ID == files[i].Path {
 					payload.File.ID = files[i].ID
 					instruct.Commands[j][k].Order.Payload = payload
 				}
