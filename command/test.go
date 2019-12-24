@@ -24,6 +24,8 @@ import (
 	"time"
 
 	"github.com/whiteblock/definition/command/biome"
+
+	"github.com/whiteblock/utility/common"
 )
 
 /**
@@ -204,6 +206,23 @@ func (instruct *Instructions) UnmarshalJSON(data []byte) error {
 		}
 	}
 	return nil
+}
+
+func (instruct *Instructions) PlaceInProperIDs(files []common.Metadata) {
+	for i := range files {
+		for j := range instruct.Commands {
+			for k := range instruct.Commands[j] {
+				if instruct.Commands[j][k].Order.Type != Putfileincontainer {
+					continue
+				}
+				payload := instruct.Commands[j][k].Order.Payload.(FileAndContainer)
+				if payload.File.ID == files[i].FilenameWithPath() {
+					payload.File.ID = files[i].ID
+					instruct.Commands[j][k].Order.Payload = payload
+				}
+			}
+		}
+	}
 }
 
 func (instruct Instructions) Phase() (string, error) {

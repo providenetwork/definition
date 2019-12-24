@@ -18,7 +18,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.5.0
 	github.com/stretchr/testify v1.4.0
-	github.com/whiteblock/utility v0.0.0-20191204153325-8c91068475f3
+	github.com/whiteblock/utility v0.0.0-20191224222157-30a6d5335ebc
 	github.com/xeipuuv/gojsonschema v1.2.0
 	gopkg.in/yaml.v2 v2.2.7
 	gotest.tools v2.2.0+incompatible // indirect

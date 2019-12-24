@@ -19,7 +19,7 @@
 package schema
 
 import (
-	//"path/filepath"
+//"path/filepath"
 )
 
 type InputFile struct {

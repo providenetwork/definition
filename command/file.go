@@ -24,6 +24,6 @@ type File struct {
 	Mode int64 `json:"mode"`
 	// Destination is the mount point of the file
 	Destination string `json:"destination"`
-	// Data is the contents of the file
+	// ID is the UUID of the file
 	ID string `json:"id"`
 }

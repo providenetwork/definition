@@ -30,6 +30,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"github.com/whiteblock/utility/common"
 	"github.com/whiteblock/utility/utils"
 )
 
@@ -41,7 +42,7 @@ type Commands interface {
 	// The genesis commands will be in dependency groups, so that
 	// res[n+1] is the set of commands which require the execution of the commands
 	// In res[n].
-	GetTests(def Definition) ([]command.Test, error)
+	GetTests(def Definition, files ...common.Metadata) ([]command.Test, error)
 }
 
 type commands struct {
@@ -60,7 +61,7 @@ func NewCommands(conf config.Config) (Commands, error) {
 // res[n+1] is the set of commands which require the execution of the commands
 // In res[n]. We get both at once, since we have to compute the commands for provisioning to produce
 // the commands for Genesis.
-func (cmdParser commands) GetTests(def Definition) ([]command.Test, error) {
+func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]command.Test, error) {
 	resDist, err := cmdParser.dist.Distribute(def.Spec)
 	if err != nil {
 		return nil, errors.Wrap(err, "distribute")
@@ -94,6 +95,7 @@ func (cmdParser commands) GetTests(def Definition) ([]command.Test, error) {
 				GlobalTimeout: global,
 			},
 		}
+		out[i].PlaceInProperIDs(files)
 	}
 	return out, nil
 }
