@@ -123,7 +123,7 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 // The genesis commands will be in dependency groups, so that
 // res[n+1] is the set of commands which require the execution of the commands
 // In res[n].
-func GetTests(def Definition) ([]command.Test, error) {
+func GetTests(def Definition, files ...common.Metadata) ([]command.Test, error) {
 	return globalCommands.GetTests(def)
 }
 
