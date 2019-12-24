@@ -128,7 +128,7 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 // res[n+1] is the set of commands which require the execution of the commands
 // In res[n].
 func GetTests(def Definition, files ...common.Metadata) ([]command.Test, error) {
-	return globalCommands.GetTests(def)
+	return globalCommands.GetTests(def, files...)
 }
 
 func init() {
