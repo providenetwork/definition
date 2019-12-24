@@ -48,12 +48,13 @@ type Commands interface {
 type commands struct {
 	proc process.Commands
 	dist distribute.Distributor
+	conf config.Config
 }
 
 // NewCommands creates a new command extractor from the given viper config
 func NewCommands(conf config.Config) (Commands, error) {
 	proc, dist, err := internal.GetFunctionality(conf)
-	return &commands{proc: proc, dist: dist}, err
+	return &commands{conf: conf, proc: proc, dist: dist}, err
 }
 
 // GetTests gets all of the commands, for both provisioner and genesis.
@@ -71,7 +72,10 @@ func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]
 	if err != nil {
 		return nil, errors.Wrap(err, "interpret")
 	}
-
+	logger, err := cmdParser.conf.Logger.GetLogger()
+	if err != nil {
+		return nil, err
+	}
 	out := make([]command.Test, len(testCmds))
 	for i := range testCmds {
 
@@ -95,7 +99,7 @@ func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]
 				GlobalTimeout: global,
 			},
 		}
-		out[i].PlaceInProperIDs(files)
+		out[i].PlaceInProperIDs(logger, files)
 	}
 	return out, nil
 }

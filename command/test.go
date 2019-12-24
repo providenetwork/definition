@@ -25,6 +25,7 @@ import (
 
 	"github.com/whiteblock/definition/command/biome"
 
+	"github.com/sirupsen/logrus"
 	"github.com/whiteblock/utility/common"
 )
 
@@ -208,7 +209,7 @@ func (instruct *Instructions) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (instruct *Instructions) PlaceInProperIDs(files []common.Metadata) {
+func (instruct *Instructions) PlaceInProperIDs(log logrus.Ext1FieldLogger, files []common.Metadata) {
 	for i := range files {
 		for j := range instruct.Commands {
 			for k := range instruct.Commands[j] {
@@ -216,9 +217,18 @@ func (instruct *Instructions) PlaceInProperIDs(files []common.Metadata) {
 					continue
 				}
 				payload := instruct.Commands[j][k].Order.Payload.(FileAndContainer)
+				log.WithFields(logrus.Fields{
+					"sourcePath": payload.File.ID,
+					"metaPath":   files[i].Path,
+				}).Debug("checking if these match")
 				if payload.File.ID == files[i].Path {
 					payload.File.ID = files[i].ID
 					instruct.Commands[j][k].Order.Payload = payload
+
+					log.WithFields(logrus.Fields{
+						"payload": payload,
+						"id":      payload.File.ID,
+					}).Info("updating payload with file id")
 				}
 			}
 		}
