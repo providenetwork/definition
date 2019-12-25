@@ -18,9 +18,7 @@
 
 package schema
 
-import (
-	"path/filepath"
-)
+import ()
 
 type InputFile struct {
 	SourcePath      string `yaml:"source-path,omitempty" json:"source-path,omitempty"`
@@ -39,8 +37,8 @@ func (in InputFile) Source() string {
 // expected to change in the near future. (Also, there might be some logic behind it as well in
 // the future)
 func (in InputFile) Destination() string {
-	if in.DestinationPath[len(in.DestinationPath)-1] == '/' {
+	/*if in.DestinationPath[len(in.DestinationPath)-1] == '/' {
 		return filepath.Join(in.DestinationPath, filepath.Base(in.SourcePath))
-	}
+	}*/
 	return in.DestinationPath
 }

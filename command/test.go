@@ -21,6 +21,7 @@ package command
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/whiteblock/definition/command/biome"
@@ -125,7 +126,7 @@ func (instruct *Instructions) next() error {
 
 	phase, err := instruct.Phase()
 	if err != nil {
-		if errors.Is(err, ErrNoPhase) {
+		if strings.Contains(err.Error(), ErrNoPhase.Error()) {
 			return nil
 		}
 		return err
@@ -222,6 +223,7 @@ func (instruct *Instructions) PlaceInProperIDs(log logrus.Ext1FieldLogger, files
 					"metaPath":   files[i].Path,
 				}).Debug("checking if these match")
 				if payload.File.ID == files[i].Path {
+					payload.File.Meta = files[i]
 					payload.File.ID = files[i].ID
 					instruct.Commands[j][k].Order.Payload = payload
 
