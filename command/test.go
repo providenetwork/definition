@@ -21,7 +21,6 @@ package command
 import (
 	"encoding/json"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/whiteblock/definition/command/biome"
@@ -126,7 +125,7 @@ func (instruct *Instructions) next() error {
 
 	phase, err := instruct.Phase()
 	if err != nil {
-		if strings.Contains(err.Error(), ErrNoPhase.Error()) {
+		if errors.Is(err, ErrNoPhase) {
 			return nil
 		}
 		return err
