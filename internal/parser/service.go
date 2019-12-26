@@ -19,6 +19,9 @@
 package parser
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
@@ -36,6 +39,7 @@ type Service interface {
 	GetIP(state *entity.State, service entity.Service) string
 	GetMemory(service entity.Service) int64
 	GetVolumes(service entity.Service) []command.Mount
+	GetDirectories(service entity.Service) []command.Mount
 }
 
 type serviceParser struct {
@@ -113,6 +117,40 @@ func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
 			Directory: sharedVol.SourcePath,
 			ReadOnly:  false,
 		})
+	}
+
+	out = append(out, sp.GetDirectories(service)...)
+
+	return out
+}
+
+func (sp *serviceParser) GetDirectories(service entity.Service) []command.Mount {
+	dirs := GetServiceDirectories(service)
+	out := []command.Mount{}
+	for _, dir := range dirs {
+		out = append(out, command.Mount{
+			Name:      namer.InputFileVolume(service, dir),
+			Directory: dir,
+			ReadOnly:  false,
+		})
+	}
+	return out
+}
+
+func GetServiceDirectories(service entity.Service) []string {
+	dirs := map[string]bool{}
+	for _, inputFiles := range service.SquashedService.InputFiles {
+		dst := inputFiles.Destination()
+		if strings.HasSuffix(dst, "/") {
+			dirs[dst] = true
+		} else {
+			dirs[filepath.Dir(dst)] = true
+		}
+	}
+
+	out := []string{}
+	for dir := range dirs {
+		out = append(out, dir)
 	}
 
 	return out
