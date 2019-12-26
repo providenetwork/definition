@@ -78,6 +78,8 @@ func (resolver resolve) CreateNetworks(state *entity.State,
 				return nil, err
 			}
 			state.Subnets[network.Name] = subnet
+		}else{
+			continue
 		}
 		order := resolver.cmdMaker.CreateNetwork(network.Name, state.Subnets[network.Name])
 		cmd, err := command.NewCommand(order, FirstInstance)

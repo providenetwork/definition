@@ -19,6 +19,7 @@
 package definition
 
 import (
+    "strings"
 	"testing"
 
 	"github.com/whiteblock/definition/command"
@@ -31,66 +32,253 @@ import (
 func TestAllTheThings(t *testing.T) {
 
 	startingPoint := []byte(`services:
-  - name: geth
-    image: go-ethereum
-    args:
-      - --dev
-      - --logfile=/var/log/geth/geth.log
+  - name: Quorum1
+    image: quorumengineering/quorum:2.2.5
     shared-volumes:
-      - source-path: /var/log/geth
-        name: geth-logs
+      - source-path: /output.log
+        name: eea-logs
     resources:
-      cpus: 2
+      cpus: 4
       memory: 4 GB
-      storage: 100 GiB
-
-sidecars:
-  - name: geth-tail
-    sidecar-to:
-      - geth
-    script:
-      inline: while [ -ne /var/log/geth/geth.log ]; do sleep 1; done && tail -f /var/log/geth/geth.log
-    mounted-volumes:
-      - destination-path: /var/log/geth
-        volume-name: geth-logs
-    resources:
-      cpus: 1
-      memory: 512 MB
-      storage: 8 GiB
-
-task-runners:
-  - name: geth-transactions
-    image: nodejs
+      storage: 5 GiB
     input-files:
-      - source-path: ./transaction-generator
-        destination-path: /opt/transaction-generator
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key1
+        destination-path: /data/keystore/key1
+      - source-path: nodekey1
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
     script:
-      inline: |
-        cd /opt/transaction-generator
-        npm install
-        npm start -- --endpoint=http://  Geth-0:8545 --transaction-count=100
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1                      
+  - name: Quorum2
+    image: quorumengineering/quorum:2.2.5
+    shared-volumes:
+      - source-path: /output.log
+        name: eea-logs
+    resources:
+      cpus: 4
+      memory: 4 GB
+      storage: 5 GiB
+    input-files:
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key2
+        destination-path: /data/keystore/key2
+      - source-path: nodekey2
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
+    script:
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1                        
+  - name: Quorum3
+    image: quorumengineering/quorum:2.2.5
+    shared-volumes:
+      - source-path: /output.log
+        name: eea-logs
+    resources:
+      cpus: 4
+      memory: 4 GB
+      storage: 5 GiB
+    input-files:
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key3
+        destination-path: /data/keystore/key3
+      - source-path: nodekey3
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
+    script:
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1   
+  - name: Quorum4
+    image: quorumengineering/quorum:2.2.5
+    shared-volumes:
+      - source-path: /output.log
+        name: eea-logs
+    resources:
+      cpus: 4
+      memory: 4 GB
+      storage: 5 GiB
+    input-files:
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key4
+        destination-path: /data/keystore/key4
+      - source-path: nodekey4
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
+    script:
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1   
+  - name: Quorum5
+    image: quorumengineering/quorum:2.2.5
+    shared-volumes:
+      - source-path: /output.log
+        name: eea-logs
+    resources:
+      cpus: 4
+      memory: 4 GB
+      storage: 5 GiB
+    input-files:
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key5
+        destination-path: /data/keystore/key5
+      - source-path: nodekey5
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
+    script:
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
+  - name: Quorum6
+    image: quorumengineering/quorum:2.2.5
+    shared-volumes:
+      - source-path: /output.log
+        name: eea-logs
+    resources:
+      cpus: 4
+      memory: 4 GB
+      storage: 5 GiB
+    input-files:
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key6
+        destination-path: /data/keystore/key6
+      - source-path: nodekey6
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
+    script:
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
+  - name: Quorum7
+    image: quorumengineering/quorum:2.2.5
+    shared-volumes:
+      - source-path: /output.log
+        name: eea-logs
+    resources:
+      cpus: 4
+      memory: 4 GB
+      storage: 5 GiB
+    input-files:
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key7
+        destination-path: /data/keystore/key7
+      - source-path: nodekey7
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
+    script:
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
+  - name: ethstats
+    image: gcr.io/whiteblock/ethstats:master
+    env:
+      HOST: "0.0.0.0"
+    input-files:
+      - source-path: ws_secret.json
+        destination-path: /eth-netstats/ws_secret.json     
+task-runners:
+  - name: testnet-expiration
+    script:
+      inline: sleep 7200    
 tests:
-  - name: exercise-geth
-    description: run a geth testnet and execute some simple transactions
+  - name: testnet
+    timeout: infinite
+    description: run an EEA testnet and execute some simple transactions
     system:
-      - type: geth
-        count: 2
-    phases:
-      - name: baseline-tps
-        tasks:
-          - type: geth-transactions
-            timeout: 5 m
-      - name: tps-with-latency
-        system:
-          - type: geth
-            name: geth
-            resources:
-              networks:
-                - name: default
-                  latency: 100 ms
-        tasks:
-          - type: geth-transactions
-            timeout: 5 m`)
+      - type: Quorum1
+        count: 1
+        port-mappings:
+          - "30303:30303"
+          - "8545:8545"
+        resources: 
+            networks:
+              - name: quorum_network
+      - type: Quorum2
+        count: 1
+        port-mappings:
+          - "30304:30303"
+          - "8546:8545"
+        resources: 
+            networks:
+              - name: quorum_network
+      - type: Quorum3
+        count: 1
+        port-mappings:
+          - "30305:30303"
+          - "8547:8545"
+        resources: 
+            networks:
+              - name: quorum_network
+      - type: Quorum4
+        count: 1
+        port-mappings:
+          - "30306:30303"
+          - "8548:8545"
+        resources: 
+            networks:
+              - name: quorum_network
+      - type: Quorum5
+        count: 1
+        port-mappings:
+          - "30307:30303"
+          - "8549:8545"
+        resources: 
+            networks:
+              - name: quorum_network
+      - type: Quorum6
+        count: 1
+        port-mappings:
+          - "30308:30303"
+          - "8550:8545"
+        resources: 
+            networks:
+              - name: quorum_network
+      - type: Quorum7
+        count: 1
+        port-mappings:
+          - "30308:30303"
+          - "8551:8545"
+        resources: 
+            networks:
+              - name: quorum_network
+      - type: ethstats
+        count: 1
+        port-mappings:
+          - "80:3000"
+        resources: 
+            networks:
+              - name: quorum_network`)
 
 	def, err := SchemaYAML(startingPoint)
 	require.NoError(t, err)
@@ -99,7 +287,8 @@ tests:
 	assert.NotNil(t, tests)
 
 	for _, test := range tests {
-		assertNoDupNetworks(t, test)
+        assertNoDupNetworks(t, test)
+		assertCorrectIPEnvValues(t, test)
 	}
 }
 
@@ -122,4 +311,29 @@ func assertNoDupNetworks(t *testing.T, test command.Test) {
 		}
 	}
 
+}
+
+func assertCorrectIPEnvValues(t *testing.T, test command.Test) {
+  var env map[string]string
+    for _, outer := range test.Commands {
+        for _, inner := range outer {
+            switch inner.Order.Type{
+                case command.Createcontainer:
+                    var cont command.Container
+                    err := inner.ParseOrderPayloadInto(&cont)
+                    require.NoError(t, err)
+                    env = cont.Environment
+                    t.Log(env)
+                case command.Attachnetwork:
+                    var cont command.ContainerNetwork
+                    err := inner.ParseOrderPayloadInto(&cont)
+                    require.NoError(t, err)
+                    name := cont.ContainerName +"_QUORUM_NETWORK"
+                    name = strings.Replace(name, "-", "_", -1)
+                    name = strings.ToUpper(name)
+                    t.Log(name)
+                    require.Equal(t, env[name],cont.IP)
+            }
+        }
+    }
 }
