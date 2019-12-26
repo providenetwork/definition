@@ -45,6 +45,8 @@ type Command interface {
 	Emulation(serviceName string, network schema.Network) (command.Order, error)
 
 	RemoveContainer(name string) command.Order
+
+	Mkdir(name string) command.Order
 }
 
 type commandMaker struct {
@@ -103,6 +105,10 @@ func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
 			Labels: map[string]string{},
 		},
 	}
+}
+
+func (cmd commandMaker) Mkdir(name string) command.Order {
+	return cmd.CreateVolume(schema.SharedVolume{Name: name})
 }
 
 func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Service) command.Order {

@@ -24,6 +24,8 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
+	"github.com/whiteblock/definition/internal/namer"
+	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/imdario/mergo"
@@ -239,6 +241,16 @@ func (dep dependency) Volumes(bucket int, service entity.Service) ([]command.Com
 	out := []command.Command{}
 	for _, volume := range service.SquashedService.SharedVolumes {
 		order := dep.cmdMaker.CreateVolume(volume)
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+
+	dirs := parser.GetServiceDirectories(service)
+	for _, dir := range dirs {
+		order := dep.cmdMaker.Mkdir(namer.InputFileVolume(service, dir))
 		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err

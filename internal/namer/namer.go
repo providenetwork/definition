@@ -70,3 +70,7 @@ func SystemService(sys schema.SystemComponent, index int) string {
 func Task(task schema.Task, index int) string {
 	return fmt.Sprintf("%s-task%d", task.Type, index)
 }
+
+func InputFileVolume(service entity.Service, dir string) string {
+	return capString(service.Name+dir, 20)
+}
