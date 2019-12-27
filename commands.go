@@ -81,17 +81,17 @@ func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]
 
 		id := utils.GetUUIDString()
 		testCmds[i].MetaInject(
-			command.OrgIDKey, def.OrgID,
+			command.OrgIDKey, def.Metadata.OrgID,
 			command.DefinitionIDKey, def.ID,
 			command.TestIDKey, id)
 
 		phases, global := parse.Timeouts(def.Spec.Tests[i])
 
 		out[i] = command.Test{
-			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID, id),
+			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.Metadata.OrgID, id),
 			Instructions: command.Instructions{
 				ID:            id,
-				OrgID:         def.OrgID,
+				OrgID:         def.Metadata.OrgID,
 				DefinitionID:  def.ID,
 				Timestamp:     time.Now(),
 				Commands:      [][]command.Command(testCmds[i]),

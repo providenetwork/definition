@@ -17,22 +17,37 @@
 */
 package definition
 
-import (
-	"github.com/whiteblock/definition/schema"
-)
+type Metadata struct {
+	Name  string
+	OrgID string
 
-// Definition is the top level container for
-// the test definition specification.
-type Definition struct {
-	// ID is the defintion ID
-	ID string
+	Labels map[string]string
+}
 
-	// Spec contains the parsed test definition
-	// data as de-serialized from YAML format
-	Spec schema.RootSchema
+func (m *Metadata) ToLabels() map[string]string {
+	l := map[string]string{}
 
-	// Metadata houses a bundle of additional metadata
-	// we may want to pass down with a defintion for use
-	// when building commands
-	Metadata Metadata
+	if m.Name != "" {
+		l["name"] = m.Name
+	}
+
+	if m.OrgID != "" {
+		l["orgID"] = m.OrgID
+	}
+
+	for key, val := range m.Labels {
+		l[key] = val
+	}
+
+	return l
+}
+
+func (m *Metadata) ToFlattenedLabels() []string {
+	f := []string{}
+	for key, val := range m.ToLabels() {
+		f = append(f, key)
+		f = append(f, val)
+	}
+
+	return f
 }
