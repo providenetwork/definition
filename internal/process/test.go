@@ -201,6 +201,9 @@ func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCo
 			}
 			current = append(current, cmd)
 		}
+		if len(current) > 0 {
+			out = append(out, current)
+		}
 	}
 	return entity.TestCommands(out)
 }
