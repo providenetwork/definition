@@ -62,6 +62,12 @@ var (
 
 	// ErrDone is given when isntructions is finished after this round
 	ErrDone = errors.New("all done")
+
+	// ErrTooManyFailed represents when given more failures than commands
+	ErrTooManyFailed = errors.New("more commands failed than currently exist")
+
+	// ErrNotAllFound is for when one or more commands where not matched up with the given ids
+	ErrNotAllFound = errors.New("one or more commands where not matched up with the given ids")
 )
 
 // Test contains the instructions necessary for the execution of a single test
@@ -173,8 +179,19 @@ func (instruct Instructions) GetTimeRemaining() (time.Duration, error) {
 
 }
 
+// Peek is like Next, but does not make any state changes
+func (instruct Instructions) Peek() ([]Command, error) {
+	if len(instruct.Commands) == 0 {
+		return nil, ErrNoCommands
+	}
+	if len(instruct.Commands) == 1 {
+		return instruct.Commands[0], ErrDone
+	}
+	return instruct.Commands[0], nil
+}
+
 // Next pops the first element off of Commands. If this results in Commands being
-// empty, it returns ErrNoCommands
+// empty, it returns ErrDone.
 func (instruct *Instructions) Next() ([]Command, error) {
 	if len(instruct.Commands) == 0 {
 		return nil, ErrNoCommands
@@ -234,6 +251,37 @@ func (instruct *Instructions) PlaceInProperIDs(log logrus.Ext1FieldLogger, files
 			}
 		}
 	}
+}
+
+func (instruct *Instructions) PartialCompletion(failed []string) error {
+	if len(instruct.Commands) == 0 {
+		return ErrNoCommands
+	}
+
+	if len(failed) > len(instruct.Commands[0]) {
+		return ErrTooManyFailed
+	}
+
+	if len(failed) == len(instruct.Commands[0]) || len(failed) == 0 {
+		return nil
+	}
+
+	left := []Command{}
+	for _, failure := range failed {
+		for _, cmd := range instruct.Commands[0] {
+			if cmd.ID == failure {
+				left = append(left, cmd)
+				break
+			}
+		}
+	}
+
+	if len(left) != len(failed) {
+		return ErrNotAllFound
+	}
+
+	instruct.Commands[0] = left
+	return nil
 }
 
 func (instruct Instructions) Phase() (string, error) {
