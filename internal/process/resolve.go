@@ -78,7 +78,7 @@ func (resolver resolve) CreateNetworks(state *entity.State,
 				return nil, err
 			}
 			state.Subnets[network.Name] = subnet
-		}else{
+		} else {
 			continue
 		}
 		order := resolver.cmdMaker.CreateNetwork(network.Name, state.Subnets[network.Name])

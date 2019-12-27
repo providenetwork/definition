@@ -19,7 +19,7 @@
 package definition
 
 import (
-    "strings"
+	"strings"
 	"testing"
 
 	"github.com/whiteblock/definition/command"
@@ -287,7 +287,7 @@ tests:
 	assert.NotNil(t, tests)
 
 	for _, test := range tests {
-        assertNoDupNetworks(t, test)
+		assertNoDupNetworks(t, test)
 		assertCorrectIPEnvValues(t, test)
 	}
 }
@@ -314,26 +314,26 @@ func assertNoDupNetworks(t *testing.T, test command.Test) {
 }
 
 func assertCorrectIPEnvValues(t *testing.T, test command.Test) {
-  var env map[string]string
-    for _, outer := range test.Commands {
-        for _, inner := range outer {
-            switch inner.Order.Type{
-                case command.Createcontainer:
-                    var cont command.Container
-                    err := inner.ParseOrderPayloadInto(&cont)
-                    require.NoError(t, err)
-                    env = cont.Environment
-                    t.Log(env)
-                case command.Attachnetwork:
-                    var cont command.ContainerNetwork
-                    err := inner.ParseOrderPayloadInto(&cont)
-                    require.NoError(t, err)
-                    name := cont.ContainerName +"_QUORUM_NETWORK"
-                    name = strings.Replace(name, "-", "_", -1)
-                    name = strings.ToUpper(name)
-                    t.Log(name)
-                    require.Equal(t, env[name],cont.IP)
-            }
-        }
-    }
+	var env map[string]string
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				env = cont.Environment
+				t.Log(env)
+			case command.Attachnetwork:
+				var cont command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				name := cont.ContainerName + "_QUORUM_NETWORK"
+				name = strings.Replace(name, "-", "_", -1)
+				name = strings.ToUpper(name)
+				t.Log(name)
+				require.Equal(t, env[name], cont.IP)
+			}
+		}
+	}
 }
