@@ -208,7 +208,7 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 	}
 	state := entity.NewState(network)
 
-	network.GetNextGlobal() //don't use the first entry
+	network.GetNextGlobal() // don't use the first entry
 	network.GetNextGlobal() // sacrafice the second one to Cthulhu
 
 	phase := schema.Phase{System: spec.Tests[index].System}
