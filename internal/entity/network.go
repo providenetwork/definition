@@ -37,7 +37,7 @@ type network struct {
 func NewNetwork(net *neta.IPv4Net) Network {
 	return &network{
 		network: net,
-		inUse:   2,
+		inUse:   ReservedIPs,
 	}
 }
 
@@ -56,7 +56,7 @@ func (n *network) Next() *neta.IPv4 {
 
 func (n network) GetIPs() []string {
 	out := []string{}
-	for i := uint32(2); i < n.inUse; i++ {
+	for i := ReservedIPs; i < n.inUse; i++ {
 		net := n.network.Nth(i)
 		if net != nil {
 			out = append(out, net.String())

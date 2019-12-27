@@ -36,7 +36,8 @@ var (
 )
 
 const (
-	IPv4Len uint = 32
+	IPv4Len     uint   = 32
+	ReservedIPs uint32 = 3
 )
 
 type networkState struct {
@@ -50,7 +51,7 @@ type networkState struct {
 }
 
 func NewNetworkState(globalCIDR string, localCIDR string, maxNodes int) (NetworkState, error) {
-	prefixLen := IPv4Len - uint(math.Ceil(math.Log2(float64(maxNodes+3))))
+	prefixLen := IPv4Len - uint(math.Ceil(math.Log2(float64(maxNodes+int(ReservedIPs)+1))))
 	global, err := neta.ParseIPv4Net(globalCIDR)
 	if err != nil {
 		return nil, err
