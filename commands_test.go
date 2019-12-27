@@ -19,6 +19,7 @@
 package definition
 
 import (
+	"net"
 	"strings"
 	"testing"
 
@@ -288,7 +289,7 @@ tests:
 
 	for _, test := range tests {
 		assertNoDupNetworks(t, test)
-		assertCorrectIPEnvValues(t, test)
+		assertCorrectIPs(t, test)
 	}
 }
 
@@ -313,8 +314,12 @@ func assertNoDupNetworks(t *testing.T, test command.Test) {
 
 }
 
-func assertCorrectIPEnvValues(t *testing.T, test command.Test) {
+/*
+  This tests that all assigned IP addresses are unique and the ENV vars are set correctly
+*/
+func assertCorrectIPs(t *testing.T, test command.Test) {
 	var env map[string]string
+	ips := map[string]bool{}
 	for _, outer := range test.Commands {
 		for _, inner := range outer {
 			switch inner.Order.Type {
@@ -324,6 +329,13 @@ func assertCorrectIPEnvValues(t *testing.T, test command.Test) {
 				require.NoError(t, err)
 				env = cont.Environment
 				t.Log(env)
+
+				_, exists := ips[inner.Target.IP+cont.IP] //sidecar net ips are localized
+				require.False(t, exists)
+				ips[inner.Target.IP+cont.IP] = true
+
+				require.NotNil(t, net.ParseIP(cont.IP)) //ensure IP is valid
+
 			case command.Attachnetwork:
 				var cont command.ContainerNetwork
 				err := inner.ParseOrderPayloadInto(&cont)
@@ -333,6 +345,12 @@ func assertCorrectIPEnvValues(t *testing.T, test command.Test) {
 				name = strings.ToUpper(name)
 				t.Log(name)
 				require.Equal(t, env[name], cont.IP)
+
+				_, exists := ips[cont.IP]
+				require.False(t, exists)
+				ips[cont.IP] = true
+
+				require.NotNil(t, net.ParseIP(cont.IP)) //ensure IP is valid
 			}
 		}
 	}
