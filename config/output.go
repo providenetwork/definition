@@ -24,19 +24,32 @@ import (
 
 // Output represents the basic configuration for a bucket
 type Output struct {
-	NoParallelCommands bool `mapstructure:"noParallelCommands"`
+	MaxParallelCommands int  `mapstructure:"maxParallelCommands"`
+	AsIsCommands        bool `mapstructure:"asIsCommands"`
 }
 
 // NewOutput generates a Bucket configuration from the given viper
 // Configuration
 func NewOutput(v *viper.Viper) (out Output, err error) {
+	err = v.Unmarshal(&out)
+	if err != nil {
+		return
+	}
+	if !out.AsIsCommands && out.MaxParallelCommands <= -1 {
+		out.AsIsCommands = true //MaxParallelCommands <= 0 implies no edit
+	}
 	return out, v.Unmarshal(&out)
 }
 
 func setOutputBindings(v *viper.Viper) error {
-	return v.BindEnv("noParallelCommands", "NO_PARALLEL_COMMANDS")
+	err := v.BindEnv("asIsCommands", "AS_IS_COMMANDS")
+	if err != nil {
+		return err
+	}
+	return v.BindEnv("maxParallelCommands", "MAX_PARALLEL_COMMANDS")
 }
 
 func setOutputDefaults(v *viper.Viper) {
-	v.SetDefault("noParallelCommands", false)
+	v.SetDefault("asIsCommands", false)
+	v.SetDefault("maxParallelCommands", 10)
 }

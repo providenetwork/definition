@@ -186,13 +186,20 @@ func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Com
 }
 
 func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCommands {
-	if !calc.conf.Output.NoParallelCommands {
+	if calc.conf.Output.AsIsCommands {
 		return in
 	}
 	out := [][]command.Command{}
 	for _, segment := range in {
-		for _, cmd := range segment {
-			out = append(out, []command.Command{cmd})
+		var current []command.Command
+		for i, cmd := range segment {
+			if i%calc.conf.Output.MaxParallelCommands == 0 {
+				if current != nil {
+					out = append(out, current)
+				}
+				current = []command.Command{}
+			}
+			current = append(current, cmd)
 		}
 	}
 	return entity.TestCommands(out)
