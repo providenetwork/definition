@@ -283,7 +283,7 @@ tests:
 
 	def, err := SchemaYAML(startingPoint)
 	require.NoError(t, err)
-	tests, err := GetTests(def)
+	tests, err := GetTests(def, Meta{})
 	assert.NoError(t, err)
 	assert.NotNil(t, tests)
 

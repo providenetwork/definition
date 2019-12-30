@@ -282,7 +282,7 @@ tests:
 		panic(err)
 	}
 
-	tests, err := definition.GetTests(def)
+	tests, err := definition.GetTests(def, definition.Meta{})
 	if err != nil {
 		panic(err)
 	}

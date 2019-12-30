@@ -27,7 +27,7 @@ import (
 type ResourceDist []PhaseDist
 
 func (rd ResourceDist) ToBiomeCommand(provider biome.CloudProvider,
-	defID string, orgID string, testID string) biome.CreateBiome {
+	defID string, orgID string, testID string, domain string) biome.CreateBiome {
 
 	finalDist := rd[len(rd)-1]
 	out := biome.CreateBiome{
@@ -37,11 +37,16 @@ func (rd ResourceDist) ToBiomeCommand(provider biome.CloudProvider,
 		Instances:    make([]biome.Instance, len(finalDist)),
 	}
 	for i, bucket := range finalDist {
+		dns := ""
+		if domain != "" {
+			dns = fmt.Sprintf("%s-%d", domain, i)
+		}
 		out.Instances[i] = biome.Instance{
 			Provider: provider,
 			CPUs:     bucket.CPUs,
 			Memory:   bucket.Memory,
 			Storage:  bucket.Storage,
+			Domain:   dns,
 		}
 	}
 	return out
