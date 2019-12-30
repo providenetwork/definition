@@ -173,6 +173,10 @@ func TestService_CalculateDiff(t *testing.T) {
 		return strings.Compare(diff1.AddSidecars[i].Name, diff1.AddSidecars[j].Name) < 0
 	})
 
+	sort.Slice(diff2.AddSidecars, func(i, j int) bool {
+		return strings.Compare(diff2.AddSidecars[i].Name, diff2.AddSidecars[j].Name) < 0
+	})
+
 	sort.Slice(diff4.RemoveSidecars, func(i, j int) bool {
 		return strings.Compare(diff4.RemoveSidecars[i].Name, diff4.RemoveSidecars[j].Name) < 0
 	})

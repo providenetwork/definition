@@ -12,10 +12,11 @@ const (
 
 // Instance defines the size of each instance to create
 type Instance struct {
-	Provider CloudProvider `json:"provider,omitonempty"`
+	Provider CloudProvider `json:"provider,omitempty"`
 	CPUs     int64         `json:"cpus"`
 	Memory   int64         `json:"memory"` //MB
 	Storage  int64         `json:"storage"`
+	Domain   string        `json:"domain,omitempty"`
 }
 
 // CreateBiome represents the create biome command

@@ -42,13 +42,24 @@ type Commands interface {
 	// The genesis commands will be in dependency groups, so that
 	// res[n+1] is the set of commands which require the execution of the commands
 	// In res[n].
-	GetTests(def Definition, files ...common.Metadata) ([]command.Test, error)
+	GetTests(def Definition, meta Meta) ([]command.Test, error)
 }
 
 type commands struct {
 	proc process.Commands
 	dist distribute.Distributor
 	conf config.Config
+}
+
+// Meta is addition data for functionalities not covered in the
+// scope of the test definition schema. Such as the data on the referenced
+// files themselves
+type Meta struct {
+	// Files is the metadata of the files provided for the user. This field is optional.
+	Files []common.Metadata
+
+	// Domains are domain names for the created instances. This field is optional.
+	Domains []string
 }
 
 // NewCommands creates a new command extractor from the given viper config
@@ -62,7 +73,7 @@ func NewCommands(conf config.Config) (Commands, error) {
 // res[n+1] is the set of commands which require the execution of the commands
 // In res[n]. We get both at once, since we have to compute the commands for provisioning to produce
 // the commands for Genesis.
-func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]command.Test, error) {
+func (cmdParser commands) GetTests(def Definition, meta Meta) ([]command.Test, error) {
 	resDist, err := cmdParser.dist.Distribute(def.Spec)
 	if err != nil {
 		return nil, errors.Wrap(err, "distribute")
@@ -78,7 +89,10 @@ func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]
 	}
 	out := make([]command.Test, len(testCmds))
 	for i := range testCmds {
-
+		domain := ""
+		if len(meta.Domains) > i {
+			domain = meta.Domains[i]
+		}
 		id := utils.GetUUIDString()
 		testCmds[i].MetaInject(
 			command.OrgIDKey, def.OrgID,
@@ -88,7 +102,7 @@ func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]
 		phases, global := parse.Timeouts(def.Spec.Tests[i])
 
 		out[i] = command.Test{
-			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID, id),
+			ProvisionCommand: resDist[i].ToBiomeCommand(biome.GCPProvider, def.ID, def.OrgID, id, domain),
 			Instructions: command.Instructions{
 				ID:            id,
 				OrgID:         def.OrgID,
@@ -99,7 +113,7 @@ func (cmdParser commands) GetTests(def Definition, files ...common.Metadata) ([]
 				GlobalTimeout: global,
 			},
 		}
-		out[i].PlaceInProperIDs(logger, files)
+		out[i].PlaceInProperIDs(logger, meta.Files)
 	}
 	return out, nil
 }
@@ -127,8 +141,8 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 // The genesis commands will be in dependency groups, so that
 // res[n+1] is the set of commands which require the execution of the commands
 // In res[n].
-func GetTests(def Definition, files ...common.Metadata) ([]command.Test, error) {
-	return globalCommands.GetTests(def, files...)
+func GetTests(def Definition, meta Meta) ([]command.Test, error) {
+	return globalCommands.GetTests(def, meta)
 }
 
 func init() {
