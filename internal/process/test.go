@@ -32,6 +32,7 @@ import (
 
 type TestCalculator interface {
 	Commands(spec schema.RootSchema, dist *entity.ResourceDist, index int) (entity.TestCommands, error)
+	Env(spec schema.RootSchema, dist *entity.ResourceDist, index int) (map[string]string, error)
 }
 
 type testCalculator struct {
@@ -208,13 +209,13 @@ func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCo
 	return entity.TestCommands(out)
 }
 
-func (calc testCalculator) Commands(spec schema.RootSchema,
-	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
+func (calc testCalculator) processTest(spec schema.RootSchema,
+	dist *entity.ResourceDist, index int) (entity.TestCommands, map[string]string, error) {
 
 	network, err := entity.NewNetworkState(calc.conf.Network.GlobalNetwork,
 		calc.conf.Network.SidecarNetwork, calc.conf.Network.MaxNodesPerNetwork)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	state := entity.NewState(network)
 
@@ -224,18 +225,18 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 	out := entity.TestCommands{}
 	sCmds, err := calc.swarmInit(dist)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	out = out.Append(calc.breakUpCommands(sCmds))
 	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	out = out.Append(calc.breakUpCommands(cmds))
 	for i, phase := range spec.Tests[index].Phases {
 		cmds, err = calc.handlePhase(state, spec, phase, dist, i+1)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		out = out.Append(calc.breakUpCommands(cmds))
 	}
@@ -246,6 +247,23 @@ func (calc testCalculator) Commands(spec schema.RootSchema,
 		name = strings.Replace(name, "-", "_", -1)
 		name = strings.ToUpper(name)
 		envVars[name] = ip
+	}
+	return out, envVars, err
+}
+
+func (calc testCalculator) Env(spec schema.RootSchema,
+	dist *entity.ResourceDist, index int) (map[string]string, error) {
+
+	_, envVars, err := calc.processTest(spec, dist, index)
+	return envVars, err
+}
+
+func (calc testCalculator) Commands(spec schema.RootSchema,
+	dist *entity.ResourceDist, index int) (entity.TestCommands, error) {
+
+	out, envVars, err := calc.processTest(spec, dist, index)
+	if err != nil {
+		return nil, err
 	}
 	for i := range out {
 		for j := range out[i] {

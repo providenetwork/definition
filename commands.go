@@ -43,6 +43,9 @@ type Commands interface {
 	// res[n+1] is the set of commands which require the execution of the commands
 	// In res[n].
 	GetTests(def Definition, meta Meta) ([]command.Test, error)
+
+	// GetEnvs gets the environment variables which will be supplied to each of the containers
+	GetEnvs(def Definition) ([]map[string]string, error)
 }
 
 type commands struct {
@@ -118,6 +121,16 @@ func (cmdParser commands) GetTests(def Definition, meta Meta) ([]command.Test, e
 	return out, nil
 }
 
+// GetEnvs gets the environment variables which will be supplied to each of the containers
+func (cmdParser commands) GetEnvs(def Definition) ([]map[string]string, error) {
+	resDist, err := cmdParser.dist.Distribute(def.Spec)
+	if err != nil {
+		return nil, errors.Wrap(err, "distribute")
+	}
+
+	return cmdParser.proc.Env(def.Spec, resDist)
+}
+
 // ConfigureGlobal allows you to provide the global config for this library
 func ConfigureGlobal(conf config.Config) (err error) {
 	globalCommands, err = NewCommands(conf)
@@ -143,6 +156,11 @@ func ConfigureGlobalFromViper(v *viper.Viper) error {
 // In res[n].
 func GetTests(def Definition, meta Meta) ([]command.Test, error) {
 	return globalCommands.GetTests(def, meta)
+}
+
+// GetEnvs gets the environment variables which will be supplied to each of the containers
+func GetEnvs(def Definition) ([]map[string]string, error) {
+	return globalCommands.GetEnvs(def)
 }
 
 func init() {

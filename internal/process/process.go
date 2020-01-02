@@ -27,7 +27,12 @@ import (
 
 type Commands interface {
 	Interpret(spec schema.RootSchema, dists []*entity.ResourceDist) ([]entity.TestCommands, error)
+	Env(spec schema.RootSchema, dists []*entity.ResourceDist) ([]map[string]string, error)
 }
+
+var (
+	ErrTestsDontMatchDist = fmt.Errorf("dists does not match the tests")
+)
 
 type commandProc struct {
 	calc TestCalculator
@@ -41,7 +46,7 @@ func (cmdProc *commandProc) Interpret(spec schema.RootSchema,
 	dists []*entity.ResourceDist) ([]entity.TestCommands, error) {
 
 	if len(dists) != len(spec.Tests) {
-		return nil, fmt.Errorf("dists does not match the tests")
+		return nil, ErrTestsDontMatchDist
 	}
 	out := []entity.TestCommands{}
 	for i, dist := range dists {
@@ -50,6 +55,21 @@ func (cmdProc *commandProc) Interpret(spec schema.RootSchema,
 			return nil, err
 		}
 		out = append(out, testCommands)
+	}
+	return out, nil
+}
+
+func (cmdProc *commandProc) Env(spec schema.RootSchema, dists []*entity.ResourceDist) ([]map[string]string, error) {
+	if len(dists) != len(spec.Tests) {
+		return nil, ErrTestsDontMatchDist
+	}
+	out := []map[string]string{}
+	for i, dist := range dists {
+		environment, err := cmdProc.calc.Env(spec, dist, i)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, environment)
 	}
 	return out, nil
 }
