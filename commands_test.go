@@ -206,7 +206,7 @@ func TestAllTheThings(t *testing.T) {
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
   - name: ethstats
     image: gcr.io/whiteblock/ethstats:master
-    env:
+    environment:
       HOST: "0.0.0.0"
     input-files:
       - source-path: ws_secret.json
@@ -295,6 +295,7 @@ tests:
 		assertCorrectIPs(t, test)
 	}
 }
+
 func assertNoDataLoss(t *testing.T, def Definition) {
 	data, err := json.Marshal(def)
 	require.NoError(t, err)
@@ -387,6 +388,120 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 				ips[cont.IP] = true
 
 				require.NotNil(t, net.ParseIP(cont.IP)) //ensure IP is valid
+			}
+		}
+	}
+}
+
+var test2 = []byte(`{
+  "services": [
+    {
+      "image": "nginx:alpine",
+      "input-files": [
+        {
+          "destination-path": "/usr/share/nginx/html/index.html",
+          "source-path": "/f/k1"
+        },
+        {
+          "destination-path": "/usr/share/nginx/html/Dockerfile",
+          "source-path": "/f/k0"
+        }
+      ],
+      "name": "nginx",
+      "resources": {
+        "cpus": 1,
+        "memory": "500 MB",
+        "storage": "1 GiB"
+      },
+      "script": {}
+    }
+  ],
+  "task-runners": [
+    {
+      "name": "wait-5-minutes",
+      "resources": {},
+      "script": {
+        "inline": "sleep 600"
+      }
+    }
+  ],
+  "tests": [
+    {
+      "description": "Serve the default static content of the nginx image.",
+      "name": "serve-static-files",
+      "phases": [
+        {
+          "name": "testnet",
+          "system": [
+            {
+              "name": "nginx",
+              "resources": {
+                "networks": [
+                  {
+                    "name": "nginx"
+                  }
+                ]
+              },
+              "type": "nginx"
+            }
+          ],
+          "tasks": [
+            {
+              "timeout": 600000000000,
+              "type": "wait-5-minutes"
+            }
+          ],
+          "timeout": 0
+        }
+      ],
+      "system": [
+        {
+          "count": 1,
+          "name": "nginx",
+          "portMappings": [
+            "80:80"
+          ],
+          "resources": {},
+          "type": "nginx"
+        }
+      ],
+      "timeout": 0
+    }
+  ]
+}`)
+
+func TestJSONSane(t *testing.T) {
+	_, err := SchemaYAML(test2)
+	assert.Error(t, err)
+	defJSON, err := SchemaJSON(test2)
+	require.NoError(t, err)
+	data, err := json.Marshal(defJSON.Spec)
+	require.NoError(t, err)
+	require.NotNil(t, data)
+	defJSON2, err := SchemaJSON(data)
+	require.NoError(t, err)
+
+	assert.Equal(t, defJSON.Spec, defJSON2.Spec)
+	assert.Len(t, defJSON.Spec.Tests[0].System[0].PortMappings, 1)
+
+	tests, err := GetTests(defJSON, Meta{})
+	require.NoError(t, err)
+	ensurePortMapping(t, tests[0])
+}
+
+func ensurePortMapping(t *testing.T, test command.Test) {
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				t.Log(cont.Ports)
+				if strings.Contains(cont.Name, "nginx") {
+					require.True(t, len(cont.Ports) > 0)
+				}
+
 			}
 		}
 	}
