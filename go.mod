@@ -3,7 +3,6 @@ module github.com/whiteblock/definition
 go 1.13
 
 require (
-	github.com/Whiteblock/go-prettyjson v0.0.0-20180920040306-f579f869bbfe
 	github.com/containerd/containerd v1.3.2 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
 	github.com/docker/docker v1.4.2-0.20191106232431-31abc6c089eb
@@ -18,6 +17,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/viper v1.5.0
 	github.com/stretchr/testify v1.4.0
+	github.com/whiteblock/go-prettyjson v0.0.0-20180920040306-f579f869bbfe
 	github.com/whiteblock/utility v0.0.0-20191224222157-30a6d5335ebc
 	github.com/xeipuuv/gojsonschema v1.2.0
 	gopkg.in/yaml.v2 v2.2.7

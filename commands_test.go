@@ -19,15 +19,18 @@
 package definition
 
 import (
+	"encoding/json"
 	"net"
 	"strings"
 	"testing"
 
 	"github.com/whiteblock/definition/command"
 
-	"github.com/Whiteblock/go-prettyjson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/whiteblock/go-prettyjson"
+
+	"gopkg.in/yaml.v2"
 )
 
 func TestAllTheThings(t *testing.T) {
@@ -292,6 +295,39 @@ tests:
 		assertCorrectIPs(t, test)
 	}
 }
+func assertNoDataLoss(t *testing.T, def Definition) {
+	data, err := json.Marshal(def)
+	require.NoError(t, err)
+	require.NotNil(t, data)
+	var defJSON Definition
+	err = json.Unmarshal(data, &defJSON)
+	require.NoError(t, err)
+
+	data, err = yaml.Marshal(def)
+	require.NoError(t, err)
+	require.NotNil(t, data)
+	var defYAML Definition
+	err = yaml.Unmarshal(data, &defJSON)
+	require.NoError(t, err)
+
+	assert.Equal(t, def, defJSON)
+	assert.Equal(t, def, defYAML)
+
+	data, err = json.Marshal(def.Spec)
+	require.NoError(t, err)
+	require.NotNil(t, data)
+	defJSON2, err := SchemaJSON(data)
+	require.NoError(t, err)
+
+	data, err = yaml.Marshal(def.Spec)
+	require.NoError(t, err)
+	require.NotNil(t, data)
+	defYAML2, err := SchemaYAML(data)
+	require.NoError(t, err)
+
+	assert.Equal(t, def.Spec, defJSON2.Spec)
+	assert.Equal(t, def.Spec, defYAML2.Spec)
+}
 
 func assertNoDupNetworks(t *testing.T, test command.Test) {
 	networks := map[string]bool{}
@@ -329,7 +365,7 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 				require.NoError(t, err)
 				env = cont.Environment
 				t.Log(env)
-
+				require.True(t, len(cont.Ports) > 0)
 				_, exists := ips[inner.Target.IP+cont.IP] //sidecar net ips are localized
 				require.False(t, exists)
 				ips[inner.Target.IP+cont.IP] = true

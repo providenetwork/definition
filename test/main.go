@@ -20,8 +20,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/Whiteblock/go-prettyjson"
 	"github.com/whiteblock/definition"
+	"github.com/whiteblock/go-prettyjson"
 	"os"
 	"strconv"
 )
