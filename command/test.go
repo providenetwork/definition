@@ -294,3 +294,18 @@ func (instruct Instructions) Phase() (string, error) {
 	}
 	return out, nil
 }
+
+func (instruct Instructions) Status() common.Status {
+	phase, err := instruct.Phase()
+	if err != nil {
+		phase = ""
+	}
+
+	return common.Status{
+		Test:      instruct.ID,
+		Org:       instruct.OrgID,
+		Def:       instruct.DefinitionID,
+		Phase:     phase,
+		StepsLeft: len(instruct.Commands),
+	}
+}
