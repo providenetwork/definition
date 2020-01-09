@@ -295,10 +295,10 @@ func (instruct Instructions) Phase() (string, error) {
 	return out, nil
 }
 
-func (instruct Instructions) Status() (common.Status, error) {
+func (instruct Instructions) Status() common.Status {
 	phase, err := instruct.Phase()
 	if err != nil {
-		return common.Status{}, err
+		phase = ""
 	}
 
 	return common.Status{
@@ -307,5 +307,5 @@ func (instruct Instructions) Status() (common.Status, error) {
 		Def:       instruct.DefinitionID,
 		Phase:     phase,
 		StepsLeft: len(instruct.Commands),
-	}, nil
+	}
 }
