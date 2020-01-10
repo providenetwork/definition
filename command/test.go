@@ -101,7 +101,14 @@ func (instruct *Test) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(tmp2, &instruct.ProvisionCommand)
 }
 
-func (t *Test) GuessSteps() int64 {
+func (t Test) Status(cnt int) common.Status {
+	status := t.Instructions.Status()
+	status.Phase = "setting up the environment"
+	status.StepsLeft = int(t.GuessSteps()) - cnt
+	return status
+}
+
+func (t Test) GuessSteps() int64 {
 	return int64(len(t.Commands) + len(t.ProvisionCommand.Instances)*2)
 }
 
