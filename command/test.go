@@ -101,6 +101,10 @@ func (instruct *Test) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(tmp2, &instruct.ProvisionCommand)
 }
 
+func (t *Test) GuessSteps() int64 {
+	return int64(len(t.Commands) + len(t.ProvisionCommand.Instances)*2)
+}
+
 // Instructions contains all of the execution based information, for use in anything that executes the
 // Commands
 type Instructions struct {
