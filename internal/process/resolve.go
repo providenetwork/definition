@@ -191,7 +191,7 @@ func (resolver resolve) CreateServices(state *entity.State, spec schema.RootSche
 		if err != nil {
 			return nil, err
 		}
-		out[4] = append(out[4], attachCmds...)
+		out[2] = append(out[2], attachCmds...)
 
 		if !service.IsTask {
 			emulationCmds, err := resolver.deps.Emulation(bucket, service.Name, service.Networks)
