@@ -71,10 +71,10 @@ func Task(task schema.Task, index int) string {
 	return fmt.Sprintf("%s-task%d", task.Type, index)
 }
 
-func InputFileVolume(service entity.Service, dir string) string {
-	return capString(service.Name+dir, 20)
+func InputFileVolume(containerName string, dir string) string {
+	return "input-" + capString(containerName+dir, 14)
 }
 
-func Volume(service entity.Service, dir string) string {
-	return capString(service.Name+dir, 20)
+func LocalVolume(containerName string, volumeName string) string {
+	return "local-" + capString(containerName+volumeName, 14)
 }

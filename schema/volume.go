@@ -18,6 +18,11 @@
 
 package schema
 
+const (
+	LocalScope  = "local"
+	GlobalScope = "singleton"
+)
+
 type Volume struct {
 	Path        string `yaml:"path,omitempty" json:"path,omitempty"`
 	Name        string `yaml:"name,omitempty" json:"name,omitempty"`
@@ -27,7 +32,11 @@ type Volume struct {
 
 func (sv Volume) GetScope() string {
 	if sv.Scope == "" {
-		return "local"
+		return LocalScope
 	}
 	return sv.Scope
+}
+
+func (sv Volume) Local() bool {
+	return sv.GetScope() == LocalScope
 }

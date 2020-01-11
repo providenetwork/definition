@@ -226,7 +226,6 @@ func (dep dependency) SidecarNetwork(bucket int, state *entity.State,
 	service entity.Service) (command.Command, error) {
 
 	return command.NewCommand(
-
 		dep.cmdMaker.CreateSidecarNetwork(service,
 			state.Subnets[service.Name]),
 		fmt.Sprint(bucket))
@@ -238,16 +237,29 @@ func (dep dependency) RemoveContainer(bucket int, name string) (command.Command,
 }
 
 func (dep dependency) Volumes(bucket int, service entity.Service) ([]command.Command, error) {
-	out := []command.Command{}
 
-	dirs := parser.GetServiceDirectories(service)
-	for _, dir := range dirs {
-		order := dep.cmdMaker.Mkdir(namer.InputFileVolume(service, dir))
+	out := []command.Command{}
+	for _, volume := range service.SquashedService.Volumes {
+		if !volume.Local() {
+			continue
+		}
+		order := dep.cmdMaker.Mkdir(namer.LocalVolume(service.Name, volume.Name))
 		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, cmd)
 	}
+
+	dirs := parser.GetDirectories(service.SquashedService.InputFiles)
+	for _, dir := range dirs {
+		order := dep.cmdMaker.Mkdir(namer.InputFileVolume(service.Name, dir))
+		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+
 	return out, nil
 }

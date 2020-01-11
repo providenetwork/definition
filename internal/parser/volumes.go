@@ -19,24 +19,30 @@ package parser
 
 import "github.com/whiteblock/definition/schema"
 
-func ExtractAllVolumes(root schema.RootSchema) []string {
+func ExtractGlobalVolumes(root schema.RootSchema) []string {
 	volumes := map[string]bool{}
 
 	for i := range root.Services {
 		for j := range root.Services[i].Volumes {
-			volumes[root.Services[i].Volumes[j].Name] = false
+			if !root.Services[i].Volumes[j].Local() {
+				volumes[root.Services[i].Volumes[j].Name] = false
+			}
 		}
 	}
 
 	for i := range root.Sidecars {
 		for j := range root.Sidecars[i].Volumes {
-			volumes[root.Sidecars[i].Volumes[j].Name] = false
+			if !root.Sidecars[i].Volumes[j].Local() {
+				volumes[root.Sidecars[i].Volumes[j].Name] = false
+			}
 		}
 	}
 
 	for i := range root.TaskRunners {
 		for j := range root.TaskRunners[i].Volumes {
-			volumes[root.TaskRunners[i].Volumes[j].Name] = false
+			if !root.TaskRunners[i].Volumes[j].Local() {
+				volumes[root.TaskRunners[i].Volumes[j].Name] = false
+			}
 		}
 	}
 	out := []string{}

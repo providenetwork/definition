@@ -189,7 +189,7 @@ func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Com
 }
 
 func volumeCommands(spec schema.RootSchema) ([][]command.Command, error) {
-	volumes := parser.ExtractAllVolumes(spec)
+	volumes := parser.ExtractGlobalVolumes(spec)
 	out := []command.Command{}
 	for _, volume := range volumes {
 		order := maker.CreateVolumeOrder(volume)

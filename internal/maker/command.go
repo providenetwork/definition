@@ -102,7 +102,7 @@ func (cmd commandMaker) CreateVolume(volume schema.Volume) command.Order {
 }
 
 func (cmd commandMaker) Mkdir(name string) command.Order {
-	return cmd.CreateVolume(schema.Volume{Name: name})
+	return MkdirOrder(name)
 }
 
 func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Service) command.Order {
@@ -177,9 +177,9 @@ func (cmd commandMaker) AttachNetwork(service string, network string, ip string)
 	return command.Order{
 		Type: command.Attachnetwork,
 		Payload: command.ContainerNetwork{
-			ContainerName: service,
-			Network:       namer.Network(network),
-			IP:            ip,
+			Container: service,
+			Network:   namer.Network(network),
+			IP:        ip,
 		},
 	}
 }
@@ -188,8 +188,8 @@ func (cmd commandMaker) DetachNetwork(service string, network string) command.Or
 	return command.Order{
 		Type: command.Detachnetwork,
 		Payload: command.ContainerNetwork{
-			ContainerName: service,
-			Network:       namer.Network(network),
+			Container: service,
+			Network:   namer.Network(network),
 		},
 	}
 }
@@ -249,4 +249,8 @@ func CreateVolumeOrder(name string) command.Order {
 			Name: name,
 		},
 	}
+}
+
+func MkdirOrder(name string) command.Order {
+	return CreateVolumeOrder(name)
 }

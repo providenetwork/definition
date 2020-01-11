@@ -296,7 +296,7 @@ tests:
 	assert.NotNil(t, tests)
 
 	for _, test := range tests {
-		assertNoDupNetworks(t, test)
+		assertSanity(t, test)
 		assertCorrectIPs(t, test)
 	}
 }
@@ -335,22 +335,65 @@ func assertNoDataLoss(t *testing.T, def Definition) {
 	assert.Equal(t, def.Spec, defYAML2.Spec)
 }
 
-func assertNoDupNetworks(t *testing.T, test command.Test) {
+func assertSanity(t *testing.T, test command.Test) {
 	networks := map[string]bool{}
 	volumes := map[string]bool{}
+	attachedNetwork := map[string]map[string]bool{}
+
 	for _, outer := range test.Commands {
 		for _, inner := range outer {
-			if inner.Order.Type == command.Createnetwork {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				attachedNetwork[cont.Name] = map[string]bool{}
+
+			case command.Createnetwork:
 				var network command.Network
 				err := inner.ParseOrderPayloadInto(&network)
+				require.NoError(t, err)
 
 				out, _ := prettyjson.Marshal(network)
 				t.Log(string(out))
-				require.NoError(t, err)
 				_, exists := networks[network.Name]
 				assert.False(t, exists, "duplicate network found "+network.Name)
 				networks[network.Name] = true
-			} else if inner.Order.Type == command.Createvolume {
+
+			case command.Attachnetwork:
+				var cn command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cn)
+				require.NoError(t, err)
+
+				_, exists := attachedNetwork[cn.Container]
+				require.True(t, exists, "container has not been created yet: "+cn.Container)
+
+				_, exists = networks[cn.Network]
+				require.True(t, exists, "network has not been created yet: "+cn.Network)
+
+				_, exists = attachedNetwork[cn.Container][cn.Network]
+				require.False(t, exists, "network has already been attached: "+cn.Network)
+
+				attachedNetwork[cn.Container][cn.Network] = true
+
+			case command.Detachnetwork:
+				var cn command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cn)
+				require.NoError(t, err)
+
+				_, exists := attachedNetwork[cn.Container]
+				require.True(t, exists, "container has not been created yet: "+cn.Container)
+
+				_, exists = networks[cn.Network]
+				require.True(t, exists, "network has not been created yet: "+cn.Network)
+
+				_, exists = attachedNetwork[cn.Container][cn.Network]
+				require.True(t, exists, "network is not attached: "+cn.Network)
+
+				delete(attachedNetwork[cn.Container], cn.Network)
+
+			case command.Createvolume:
 				var vol command.Volume
 				err := inner.ParseOrderPayloadInto(&vol)
 				require.NoError(t, err)
@@ -391,7 +434,7 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 				var cont command.ContainerNetwork
 				err := inner.ParseOrderPayloadInto(&cont)
 				require.NoError(t, err)
-				name := cont.ContainerName + "_QUORUM_NETWORK"
+				name := cont.Container + "_QUORUM_NETWORK"
 				name = strings.Replace(name, "-", "_", -1)
 				name = strings.ToUpper(name)
 				t.Log(name)

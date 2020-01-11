@@ -27,7 +27,7 @@ type SimpleName struct {
 // ContainerNetwork is a container and network order payload.
 type ContainerNetwork struct {
 	// Name of the container.
-	ContainerName string `json:"container"`
+	Container string `json:"container"`
 	// Name of the network.
 	Network string `json:"network"`
 	// IP is the IP address of the container in this network

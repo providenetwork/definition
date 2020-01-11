@@ -111,7 +111,7 @@ func getVolumes(service entity.Service, volumes []schema.Volume) []command.Mount
 
 	for _, vol := range volumes {
 		readOnly := false
-		if vol.Permissions == "r" || vol.Permissions == "read" {
+		if vol.Permissions == "r" || vol.Permissions == "read" || vol.Permissions == "ro" {
 			readOnly = true
 		}
 		out = append(out, command.Mount{
@@ -132,11 +132,11 @@ func GetVolumes(service entity.Service, volumes []schema.Volume) []command.Mount
 }
 
 func GetServiceDirMounts(service entity.Service) []command.Mount {
-	dirs := GetServiceDirectories(service)
+	dirs := GetDirectories(service.SquashedService.InputFiles)
 	out := []command.Mount{}
 	for _, dir := range dirs {
 		out = append(out, command.Mount{
-			Name:      namer.InputFileVolume(service, dir),
+			Name:      namer.InputFileVolume(service.Name, dir),
 			Directory: dir,
 			ReadOnly:  false,
 		})
@@ -144,10 +144,10 @@ func GetServiceDirMounts(service entity.Service) []command.Mount {
 	return out
 }
 
-func GetServiceDirectories(service entity.Service) []string {
+func GetDirectories(files []schema.InputFile) []string {
 	dirs := map[string]bool{}
-	for _, inputFiles := range service.SquashedService.InputFiles {
-		dst := inputFiles.Destination()
+	for _, file := range files {
+		dst := file.Destination()
 		if strings.HasSuffix(dst, "/") {
 			dirs[dst] = true
 		} else {
