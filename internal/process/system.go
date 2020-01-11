@@ -63,12 +63,6 @@ func NewSystem(
 	return &system{maker: maker, log: log}
 }
 
-/*
-subnet, err := networkState.GetNextGlobal()
-		if err != nil {
-			return nil, err
-		}
-*/
 func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
 	systems []schema.SystemComponent) (diff *entity.SystemDiff, err error) {
 

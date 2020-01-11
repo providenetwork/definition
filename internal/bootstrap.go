@@ -63,7 +63,6 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 				maker.NewService(
 					conf.Defaults,
 					search.NewSchema(),
-					converter.NewService(),
 					logger,
 				),
 				logger,
@@ -95,7 +94,6 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 					maker.NewService(
 						conf.Defaults,
 						search.NewSchema(),
-						converter.NewService(),
 						logger,
 					),
 					logger,

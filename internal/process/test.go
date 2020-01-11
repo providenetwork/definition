@@ -25,6 +25,8 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/maker"
+	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/sirupsen/logrus"
@@ -183,7 +185,21 @@ func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Com
 		},
 	}
 	cmd, err := command.NewCommand(order, FirstInstance)
-	return [][]command.Command{[]command.Command{cmd}}, err
+	return [][]command.Command{{cmd}}, err
+}
+
+func volumeCommands(spec schema.RootSchema) ([][]command.Command, error) {
+	volumes := parser.ExtractAllVolumes(spec)
+	out := []command.Command{}
+	for _, volume := range volumes {
+		order := maker.CreateVolumeOrder(volume)
+		cmd, err := command.NewCommand(order, FirstInstance)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	return [][]command.Command{out}, nil
 }
 
 func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCommands {
@@ -223,11 +239,19 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 
 	phase := schema.Phase{System: spec.Tests[index].System}
 	out := entity.TestCommands{}
+
 	sCmds, err := calc.swarmInit(dist)
 	if err != nil {
 		return nil, nil, err
 	}
 	out = out.Append(calc.breakUpCommands(sCmds))
+
+	vCmds, err := volumeCommands(spec)
+	if err != nil {
+		return nil, nil, err
+	}
+	out = out.Append(calc.breakUpCommands(vCmds))
+
 	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
 	if err != nil {
 		return nil, nil, err
