@@ -46,17 +46,17 @@ func TestAllTheThings(t *testing.T) {
       memory: 4 GB
       storage: 5 GiB
     input-files:
-      - path: genesis.json
+      - source-path: genesis.json
         destination-path: /data/genesis.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/permissioned-nodes.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/static-nodes.json
-      - path: key1
+      - source-path: key1
         destination-path: /data/keystore/key1
-      - path: nodekey1
+      - source-path: nodekey1
         destination-path: /data/nodekey
-      - path: passwords.txt
+      - source-path: passwords.txt
         destination-path: /data/passwords.txt
     script:
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1                      
@@ -70,17 +70,17 @@ func TestAllTheThings(t *testing.T) {
       memory: 4 GB
       storage: 5 GiB
     input-files:
-      - path: genesis.json
+      - source-path: genesis.json
         destination-path: /data/genesis.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/permissioned-nodes.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/static-nodes.json
-      - path: key2
+      - source-path: key2
         destination-path: /data/keystore/key2
-      - path: nodekey2
+      - source-path: nodekey2
         destination-path: /data/nodekey
-      - path: passwords.txt
+      - source-path: passwords.txt
         destination-path: /data/passwords.txt
     script:
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1                        
@@ -94,17 +94,17 @@ func TestAllTheThings(t *testing.T) {
       memory: 4 GB
       storage: 5 GiB
     input-files:
-      - path: genesis.json
+      - source-path: genesis.json
         destination-path: /data/genesis.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/permissioned-nodes.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/static-nodes.json
-      - path: key3
+      - source-path: key3
         destination-path: /data/keystore/key3
-      - path: nodekey3
+      - source-path: nodekey3
         destination-path: /data/nodekey
-      - path: passwords.txt
+      - source-path: passwords.txt
         destination-path: /data/passwords.txt
     script:
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1   
@@ -118,17 +118,17 @@ func TestAllTheThings(t *testing.T) {
       memory: 4 GB
       storage: 5 GiB
     input-files:
-      - path: genesis.json
+      - source-path: genesis.json
         destination-path: /data/genesis.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/permissioned-nodes.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/static-nodes.json
-      - path: key4
+      - source-path: key4
         destination-path: /data/keystore/key4
-      - path: nodekey4
+      - source-path: nodekey4
         destination-path: /data/nodekey
-      - path: passwords.txt
+      - source-path: passwords.txt
         destination-path: /data/passwords.txt
     script:
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1   
@@ -142,17 +142,17 @@ func TestAllTheThings(t *testing.T) {
       memory: 4 GB
       storage: 5 GiB
     input-files:
-      - path: genesis.json
+      - source-path: genesis.json
         destination-path: /data/genesis.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/permissioned-nodes.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/static-nodes.json
-      - path: key5
+      - source-path: key5
         destination-path: /data/keystore/key5
-      - path: nodekey5
+      - source-path: nodekey5
         destination-path: /data/nodekey
-      - path: passwords.txt
+      - source-path: passwords.txt
         destination-path: /data/passwords.txt
     script:
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
@@ -166,17 +166,17 @@ func TestAllTheThings(t *testing.T) {
       memory: 4 GB
       storage: 5 GiB
     input-files:
-      - path: genesis.json
+      - source-path: genesis.json
         destination-path: /data/genesis.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/permissioned-nodes.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/static-nodes.json
-      - path: key6
+      - source-path: key6
         destination-path: /data/keystore/key6
-      - path: nodekey6
+      - source-path: nodekey6
         destination-path: /data/nodekey
-      - path: passwords.txt
+      - source-path: passwords.txt
         destination-path: /data/passwords.txt
     script:
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
@@ -192,17 +192,17 @@ func TestAllTheThings(t *testing.T) {
       memory: 4 GB
       storage: 5 GiB
     input-files:
-      - path: genesis.json
+      - source-path: genesis.json
         destination-path: /data/genesis.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/permissioned-nodes.json
-      - path: permissioned-nodes.json
+      - source-path: permissioned-nodes.json
         destination-path: /data/static-nodes.json
-      - path: key7
+      - source-path: key7
         destination-path: /data/keystore/key7
-      - path: nodekey7
+      - source-path: nodekey7
         destination-path: /data/nodekey
-      - path: passwords.txt
+      - source-path: passwords.txt
         destination-path: /data/passwords.txt
     script:
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
@@ -211,7 +211,7 @@ func TestAllTheThings(t *testing.T) {
     environment:
       HOST: "0.0.0.0"
     input-files:
-      - path: ws_secret.json
+      - source-path: ws_secret.json
         destination-path: /eth-netstats/ws_secret.json     
 task-runners:
   - name: testnet-expiration
@@ -313,7 +313,7 @@ func assertNoDataLoss(t *testing.T, def Definition) {
 	require.NoError(t, err)
 	require.NotNil(t, data)
 	var defYAML Definition
-	err = yaml.Unmarshal(data, &defJSON)
+	err = yaml.UnmarshalStrict(data, &defJSON)
 	require.NoError(t, err)
 
 	assert.Equal(t, def, defJSON)
