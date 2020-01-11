@@ -114,8 +114,12 @@ func getVolumes(service entity.Service, volumes []schema.Volume) []command.Mount
 		if vol.Permissions == "r" || vol.Permissions == "read" || vol.Permissions == "ro" {
 			readOnly = true
 		}
+		name := vol.Name
+		if vol.Local() {
+			name = namer.LocalVolume(service.Name, vol.Name)
+		}
 		out = append(out, command.Mount{
-			Name:      vol.Name,
+			Name:      name,
 			Directory: vol.Path,
 			ReadOnly:  readOnly,
 		})

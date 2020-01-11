@@ -349,6 +349,10 @@ func assertSanity(t *testing.T, test command.Test) {
 				err := inner.ParseOrderPayloadInto(&cont)
 				require.NoError(t, err)
 				attachedNetwork[cont.Name] = map[string]bool{}
+				for _, mount := range cont.Volumes {
+					_, exists := volumes[mount.Name]
+					require.True(t, exists)
+				}
 
 			case command.Createnetwork:
 				var network command.Network
