@@ -18,7 +18,16 @@
 
 package schema
 
-type SharedVolume struct {
-	SourcePath string `yaml:"source-path,omitempty" json:"source-path,omitempty"`
-	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
+type Volume struct {
+	Path        string `yaml:"path,omitempty" json:"path,omitempty"`
+	Name        string `yaml:"name,omitempty" json:"name,omitempty"`
+	Permissions string `yaml:"permissions,omitempty" json:"permissions,omitempty"`
+	Scope       string `yaml:"scope" json:"scope,omitempty"`
+}
+
+func (sv Volume) GetScope() string {
+	if sv.Scope == "" {
+		return "local"
+	}
+	return sv.Scope
 }

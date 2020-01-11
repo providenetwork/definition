@@ -74,3 +74,7 @@ func Task(task schema.Task, index int) string {
 func InputFileVolume(service entity.Service, dir string) string {
 	return capString(service.Name+dir, 20)
 }
+
+func Volume(service entity.Service, dir string) string {
+	return capString(service.Name+dir, 20)
+}

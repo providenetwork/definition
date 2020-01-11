@@ -19,7 +19,7 @@
 package schema
 
 type InputFile struct {
-	SourcePath      string `yaml:"source-path,omitempty" json:"source-path,omitempty"`
+	Path            string `yaml:"path,omitempty" json:"path,omitempty"`
 	DestinationPath string `yaml:"destination-path,omitempty" json:"destination-path,omitempty"`
 	Template        bool   `yaml:"template,omitempty" json:"template,omitempty"`
 }
@@ -28,7 +28,7 @@ type InputFile struct {
 // expected to change in the near future. (Also, there might be some logic behind it as well in
 // the future)
 func (in InputFile) Source() string {
-	return in.SourcePath
+	return in.Path
 }
 
 // GetDestination makes it easy to change the name of the source member, as it is

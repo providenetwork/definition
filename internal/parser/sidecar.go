@@ -21,7 +21,6 @@ package parser
 import (
 	"fmt"
 
-	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
@@ -40,7 +39,6 @@ type Sidecar interface {
 	GetMemory(sidecar schema.Sidecar) string
 	GetNetwork(parent entity.Service) string
 	GetIP(state *entity.State, parent entity.Service, sidecar schema.Sidecar) string
-	GetVolumes(sidecar schema.Sidecar) []command.Mount
 }
 
 type sidecarParser struct {
@@ -60,8 +58,8 @@ func (sp sidecarParser) GetArgs(sidecar schema.Sidecar) []string {
 }
 
 func (sp sidecarParser) GetEntrypoint(sidecar schema.Sidecar) string {
-	if sidecar.Script.SourcePath != "" {
-		return sidecar.Script.SourcePath
+	if sidecar.Script.Path != "" {
+		return sidecar.Script.Path
 	}
 	if sidecar.Script.Inline != "" {
 		return "/bin/sh"
@@ -106,24 +104,6 @@ func (sp sidecarParser) GetLabels(parent entity.Service, sidecar schema.Sidecar)
 
 func (sp sidecarParser) GetNetwork(parent entity.Service) string {
 	return namer.SidecarNetwork(parent)
-}
-
-func (sp sidecarParser) GetVolumes(sidecar schema.Sidecar) []command.Mount {
-	out := []command.Mount{}
-
-	for _, mntVol := range sidecar.MountedVolumes {
-		readOnly := false
-		if mntVol.Permissions == "r" || mntVol.Permissions == "read" {
-			readOnly = true
-		}
-		out = append(out, command.Mount{
-			Name:      mntVol.VolumeName,
-			Directory: mntVol.DestinationPath,
-			ReadOnly:  readOnly,
-		})
-	}
-
-	return out
 }
 
 func (sp sidecarParser) GetIP(state *entity.State, parent entity.Service,

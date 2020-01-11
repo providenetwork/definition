@@ -23,20 +23,20 @@ func ExtractAllVolumes(root schema.RootSchema) []string {
 	volumes := map[string]bool{}
 
 	for i := range root.Services {
-		for j := range root.Services[i].SharedVolumes {
-			volumes[root.Services[i].SharedVolumes[j].Name] = false
+		for j := range root.Services[i].Volumes {
+			volumes[root.Services[i].Volumes[j].Name] = false
 		}
 	}
 
 	for i := range root.Sidecars {
-		for j := range root.Sidecars[i].MountedVolumes {
-			volumes[root.Sidecars[i].MountedVolumes[j].VolumeName] = false
+		for j := range root.Sidecars[i].Volumes {
+			volumes[root.Sidecars[i].Volumes[j].Name] = false
 		}
 	}
 
 	for i := range root.TaskRunners {
-		for j := range root.TaskRunners[i].SharedVolumes {
-			volumes[root.TaskRunners[i].SharedVolumes[j].Name] = false
+		for j := range root.TaskRunners[i].Volumes {
+			volumes[root.TaskRunners[i].Volumes[j].Name] = false
 		}
 	}
 	out := []string{}
