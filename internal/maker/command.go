@@ -31,7 +31,7 @@ import (
 // Command handles the simple schema -> order conversions
 type Command interface {
 	CreateNetwork(name string, network entity.Network) command.Order
-	CreateVolume(volume schema.SharedVolume) command.Order
+	CreateVolume(volume schema.Volume) command.Order
 	CreateContainer(state *entity.State, service entity.Service) command.Order
 	CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order
 	StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order
@@ -97,12 +97,12 @@ func (cmd commandMaker) CreateSidecarNetwork(service entity.Service,
 	return cmd.createNetwork(namer.SidecarNetwork(service), network, false)
 }
 
-func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
+func (cmd commandMaker) CreateVolume(volume schema.Volume) command.Order {
 	return CreateVolumeOrder(volume.Name)
 }
 
 func (cmd commandMaker) Mkdir(name string) command.Order {
-	return cmd.CreateVolume(schema.SharedVolume{Name: name})
+	return cmd.CreateVolume(schema.Volume{Name: name})
 }
 
 func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Service) command.Order {
@@ -116,7 +116,7 @@ func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Serv
 			Name:        service.Name,
 			Network:     cmd.service.GetNetwork(service),
 			Ports:       service.Ports,
-			Volumes:     cmd.service.GetVolumes(service),
+			Volumes:     parser.GetVolumes(service, service.SquashedService.Volumes),
 			Cpus:        fmt.Sprint(cmd.service.GetCPUs(service)),
 			Memory:      fmt.Sprint(cmd.service.GetMemory(service)),
 			Image:       cmd.service.GetImage(service),
@@ -143,7 +143,7 @@ func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service
 			Labels:      cmd.sidecar.GetLabels(parent, sidecar),
 			Name:        namer.Sidecar(parent, sidecar),
 			Network:     cmd.sidecar.GetNetwork(parent),
-			Volumes:     cmd.sidecar.GetVolumes(sidecar),
+			Volumes:     parser.GetVolumes(parent, sidecar.Volumes),
 			Cpus:        cmd.sidecar.GetCPUs(sidecar),
 			Memory:      cmd.sidecar.GetMemory(sidecar),
 			Image:       cmd.sidecar.GetImage(sidecar),

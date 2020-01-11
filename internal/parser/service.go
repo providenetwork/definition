@@ -27,6 +27,7 @@ import (
 	"github.com/whiteblock/definition/internal/converter"
 	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/namer"
+	"github.com/whiteblock/definition/schema"
 )
 
 type Service interface {
@@ -38,8 +39,6 @@ type Service interface {
 	GetNetwork(service entity.Service) string
 	GetIP(state *entity.State, service entity.Service) string
 	GetMemory(service entity.Service) int64
-	GetVolumes(service entity.Service) []command.Mount
-	GetDirectories(service entity.Service) []command.Mount
 }
 
 type serviceParser struct {
@@ -59,8 +58,8 @@ func (sp *serviceParser) GetArgs(service entity.Service) []string {
 }
 
 func (sp *serviceParser) GetEntrypoint(service entity.Service) string {
-	if service.SquashedService.Script.SourcePath != "" {
-		return service.SquashedService.Script.SourcePath
+	if service.SquashedService.Script.Path != "" {
+		return service.SquashedService.Script.Path
 	}
 	if service.SquashedService.Script.Inline != "" {
 		return "/bin/sh"
@@ -107,24 +106,32 @@ func (sp *serviceParser) GetIP(state *entity.State, service entity.Service) stri
 	return out
 }
 
-func (sp *serviceParser) GetVolumes(service entity.Service) []command.Mount {
-
+func getVolumes(service entity.Service, volumes []schema.Volume) []command.Mount {
 	out := []command.Mount{}
 
-	for _, sharedVol := range service.SquashedService.SharedVolumes {
+	for _, vol := range volumes {
+		readOnly := false
+		if vol.Permissions == "r" || vol.Permissions == "read" {
+			readOnly = true
+		}
 		out = append(out, command.Mount{
-			Name:      sharedVol.Name,
-			Directory: sharedVol.SourcePath,
-			ReadOnly:  false,
+			Name:      vol.Name,
+			Directory: vol.Path,
+			ReadOnly:  readOnly,
 		})
 	}
-
-	out = append(out, sp.GetDirectories(service)...)
 
 	return out
 }
 
-func (sp *serviceParser) GetDirectories(service entity.Service) []command.Mount {
+func GetVolumes(service entity.Service, volumes []schema.Volume) []command.Mount {
+	out := []command.Mount{}
+	out = append(out, getVolumes(service, volumes)...)
+	out = append(out, GetServiceDirMounts(service)...)
+	return out
+}
+
+func GetServiceDirMounts(service entity.Service) []command.Mount {
 	dirs := GetServiceDirectories(service)
 	out := []command.Mount{}
 	for _, dir := range dirs {

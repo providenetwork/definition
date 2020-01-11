@@ -38,8 +38,8 @@ func TestAllTheThings(t *testing.T) {
 	startingPoint := []byte(`services:
   - name: Quorum1
     image: quorumengineering/quorum:2.2.5
-    shared-volumes:
-      - source-path: /output.log
+    volumes:
+      - path: /output.log
         name: eea-logs
     resources:
       cpus: 4
@@ -62,8 +62,8 @@ func TestAllTheThings(t *testing.T) {
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1                      
   - name: Quorum2
     image: quorumengineering/quorum:2.2.5
-    shared-volumes:
-      - source-path: /output.log
+    volumes:
+      - path: /output.log
         name: eea-logs
     resources:
       cpus: 4
@@ -86,8 +86,8 @@ func TestAllTheThings(t *testing.T) {
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1                        
   - name: Quorum3
     image: quorumengineering/quorum:2.2.5
-    shared-volumes:
-      - source-path: /output.log
+    volumes:
+      - path: /output.log
         name: eea-logs
     resources:
       cpus: 4
@@ -110,8 +110,8 @@ func TestAllTheThings(t *testing.T) {
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1   
   - name: Quorum4
     image: quorumengineering/quorum:2.2.5
-    shared-volumes:
-      - source-path: /output.log
+    volumes:
+      - path: /output.log
         name: eea-logs
     resources:
       cpus: 4
@@ -134,8 +134,8 @@ func TestAllTheThings(t *testing.T) {
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1   
   - name: Quorum5
     image: quorumengineering/quorum:2.2.5
-    shared-volumes:
-      - source-path: /output.log
+    volumes:
+      - path: /output.log
         name: eea-logs
     resources:
       cpus: 4
@@ -158,8 +158,8 @@ func TestAllTheThings(t *testing.T) {
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
   - name: Quorum6
     image: quorumengineering/quorum:2.2.5
-    shared-volumes:
-      - source-path: /output.log
+    volumes:
+      - path: /output.log
         name: eea-logs
     resources:
       cpus: 4
@@ -182,10 +182,10 @@ func TestAllTheThings(t *testing.T) {
       inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats Node1:eea_testnet_secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum > /output.log 2>&1
   - name: Quorum7
     image: quorumengineering/quorum:2.2.5
-    shared-volumes:
-      - source-path: /output.log
+    volumes:
+      - path: /output.log
         name: eea-logs
-      - source-path: /etc/apt.d
+      - path: /etc/apt.d
         name: apt
     resources:
       cpus: 4
@@ -217,8 +217,8 @@ task-runners:
   - name: testnet-expiration
     script:
       inline: sleep 7200
-    shared-volumes:
-      - source-path: /etc/apt.d
+    volumes:
+      - path: /etc/apt.d
         name: apt
 tests:
   - name: testnet
@@ -313,7 +313,7 @@ func assertNoDataLoss(t *testing.T, def Definition) {
 	require.NoError(t, err)
 	require.NotNil(t, data)
 	var defYAML Definition
-	err = yaml.Unmarshal(data, &defJSON)
+	err = yaml.UnmarshalStrict(data, &defJSON)
 	require.NoError(t, err)
 
 	assert.Equal(t, def, defJSON)
@@ -414,11 +414,11 @@ var test2 = []byte(`{
       "input-files": [
         {
           "destination-path": "/usr/share/nginx/html/index.html",
-          "source-path": "/f/k1"
+          "path": "/f/k1"
         },
         {
           "destination-path": "/usr/share/nginx/html/Dockerfile",
-          "source-path": "/f/k0"
+          "path": "/f/k0"
         }
       ],
       "name": "nginx",

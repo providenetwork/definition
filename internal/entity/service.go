@@ -48,9 +48,9 @@ func GetDefaultService(def defaults.Defaults) Service {
 		Name:   "",
 		Bucket: -1,
 		SquashedService: schema.Service{
-			Name:          "",
-			Description:   "",
-			SharedVolumes: nil,
+			Name:        "",
+			Description: "",
+			Volumes:     nil,
 			Resources: schema.Resources{
 				Cpus:    def.Resources.CPUs,
 				Memory:  fmt.Sprintf("%dMB", def.Resources.Memory),

@@ -35,6 +35,6 @@ func FromTaskRunner(taskRunner schema.TaskRunner) schema.Service {
 	copier.Copy(&out.Args, taskRunner.Args)
 	copier.Copy(&out.Environment, taskRunner.Environment)
 	copier.Copy(&out.InputFiles, taskRunner.InputFiles)
-	copier.Copy(&out.SharedVolumes, taskRunner.SharedVolumes)
+	copier.Copy(&out.Volumes, taskRunner.Volumes)
 	return out
 }
