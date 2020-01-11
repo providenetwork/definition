@@ -58,8 +58,8 @@ func (sp sidecarParser) GetArgs(sidecar schema.Sidecar) []string {
 }
 
 func (sp sidecarParser) GetEntrypoint(sidecar schema.Sidecar) string {
-	if sidecar.Script.Path != "" {
-		return sidecar.Script.Path
+	if sidecar.Script.SourcePath != "" {
+		return sidecar.Script.SourcePath
 	}
 	if sidecar.Script.Inline != "" {
 		return "/bin/sh"

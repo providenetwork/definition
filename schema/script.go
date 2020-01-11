@@ -19,6 +19,6 @@
 package schema
 
 type Script struct {
-	Path   string `yaml:"path,omitempty" json:"path,omitempty"`
-	Inline string `yaml:"inline,omitempty" json:"inline,omitempty"`
+	SourcePath string `yaml:"source-path,omitempty" json:"path,omitempty"`
+	Inline     string `yaml:"inline,omitempty" json:"inline,omitempty"`
 }

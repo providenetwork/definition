@@ -58,8 +58,8 @@ func (sp *serviceParser) GetArgs(service entity.Service) []string {
 }
 
 func (sp *serviceParser) GetEntrypoint(service entity.Service) string {
-	if service.SquashedService.Script.Path != "" {
-		return service.SquashedService.Script.Path
+	if service.SquashedService.Script.SourcePath != "" {
+		return service.SquashedService.Script.SourcePath
 	}
 	if service.SquashedService.Script.Inline != "" {
 		return "/bin/sh"
