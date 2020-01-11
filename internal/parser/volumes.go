@@ -15,26 +15,33 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+package parser
 
-package converter
+import "github.com/whiteblock/definition/schema"
 
-import (
-	"github.com/whiteblock/definition/schema"
+func ExtractAllVolumes(root schema.RootSchema) []string {
+	volumes := map[string]bool{}
 
-	"github.com/jinzhu/copier"
-)
-
-func FromTaskRunner(taskRunner schema.TaskRunner) schema.Service {
-	out := schema.Service{
-		Name:        taskRunner.Name,
-		Description: taskRunner.Description,
-		Resources:   taskRunner.Resources,
-		Image:       taskRunner.Image,
-		Script:      taskRunner.Script,
+	for i := range root.Services {
+		for j := range root.Services[i].SharedVolumes {
+			volumes[root.Services[i].SharedVolumes[j].Name] = false
+		}
 	}
-	copier.Copy(&out.Args, taskRunner.Args)
-	copier.Copy(&out.Environment, taskRunner.Environment)
-	copier.Copy(&out.InputFiles, taskRunner.InputFiles)
-	copier.Copy(&out.SharedVolumes, taskRunner.SharedVolumes)
+
+	for i := range root.Sidecars {
+		for j := range root.Sidecars[i].MountedVolumes {
+			volumes[root.Sidecars[i].MountedVolumes[j].VolumeName] = false
+		}
+	}
+
+	for i := range root.TaskRunners {
+		for j := range root.TaskRunners[i].SharedVolumes {
+			volumes[root.TaskRunners[i].SharedVolumes[j].Name] = false
+		}
+	}
+	out := []string{}
+	for vol := range volumes {
+		out = append(out, vol)
+	}
 	return out
 }

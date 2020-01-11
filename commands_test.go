@@ -185,6 +185,8 @@ func TestAllTheThings(t *testing.T) {
     shared-volumes:
       - source-path: /output.log
         name: eea-logs
+      - source-path: /etc/apt.d
+        name: apt
     resources:
       cpus: 4
       memory: 4 GB
@@ -214,7 +216,10 @@ func TestAllTheThings(t *testing.T) {
 task-runners:
   - name: testnet-expiration
     script:
-      inline: sleep 7200    
+      inline: sleep 7200
+    shared-volumes:
+      - source-path: /etc/apt.d
+        name: apt
 tests:
   - name: testnet
     timeout: infinite
@@ -332,7 +337,7 @@ func assertNoDataLoss(t *testing.T, def Definition) {
 
 func assertNoDupNetworks(t *testing.T, test command.Test) {
 	networks := map[string]bool{}
-
+	volumes := map[string]bool{}
 	for _, outer := range test.Commands {
 		for _, inner := range outer {
 			if inner.Order.Type == command.Createnetwork {
@@ -345,9 +350,18 @@ func assertNoDupNetworks(t *testing.T, test command.Test) {
 				_, exists := networks[network.Name]
 				assert.False(t, exists, "duplicate network found "+network.Name)
 				networks[network.Name] = true
+			} else if inner.Order.Type == command.Createvolume {
+				var vol command.Volume
+				err := inner.ParseOrderPayloadInto(&vol)
+				require.NoError(t, err)
+				_, exists := volumes[vol.Name]
+				assert.False(t, exists, "duplicate volume found "+vol.Name)
+				volumes[vol.Name] = true
 			}
 		}
 	}
+	assert.True(t, len(volumes) > 0)
+	assert.True(t, len(networks) > 0)
 
 }
 

@@ -98,13 +98,7 @@ func (cmd commandMaker) CreateSidecarNetwork(service entity.Service,
 }
 
 func (cmd commandMaker) CreateVolume(volume schema.SharedVolume) command.Order {
-	return command.Order{
-		Type: command.Createvolume,
-		Payload: command.Volume{
-			Name:   volume.Name,
-			Labels: map[string]string{},
-		},
-	}
+	return CreateVolumeOrder(volume.Name)
 }
 
 func (cmd commandMaker) Mkdir(name string) command.Order {
@@ -244,6 +238,15 @@ func (cmd commandMaker) startContainer(name string, isTask bool,
 			Name:    name,
 			Attach:  isTask,
 			Timeout: timeout,
+		},
+	}
+}
+
+func CreateVolumeOrder(name string) command.Order {
+	return command.Order{
+		Type: command.Createvolume,
+		Payload: command.Volume{
+			Name: name,
 		},
 	}
 }

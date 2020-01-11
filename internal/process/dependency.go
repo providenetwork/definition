@@ -239,14 +239,6 @@ func (dep dependency) RemoveContainer(bucket int, name string) (command.Command,
 
 func (dep dependency) Volumes(bucket int, service entity.Service) ([]command.Command, error) {
 	out := []command.Command{}
-	for _, volume := range service.SquashedService.SharedVolumes {
-		order := dep.cmdMaker.CreateVolume(volume)
-		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, cmd)
-	}
 
 	dirs := parser.GetServiceDirectories(service)
 	for _, dir := range dirs {

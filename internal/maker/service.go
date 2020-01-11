@@ -45,7 +45,6 @@ type Service interface {
 
 type serviceMaker struct {
 	searcher search.Schema
-	convert  converter.Service
 	log      logrus.Ext1FieldLogger
 	defaults defaults.Defaults
 }
@@ -53,10 +52,8 @@ type serviceMaker struct {
 func NewService(
 	defaults defaults.Defaults,
 	searcher search.Schema,
-	convert converter.Service,
 	log logrus.Ext1FieldLogger) Service {
-	return &serviceMaker{searcher: searcher, defaults: defaults,
-		convert: convert, log: log}
+	return &serviceMaker{searcher: searcher, defaults: defaults, log: log}
 }
 
 func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
@@ -231,7 +228,7 @@ func (sp *serviceMaker) FromTask(spec schema.RootSchema,
 		return entity.Service{}, err
 	}
 
-	service := sp.convert.FromTaskRunner(taskRunner)
+	service := converter.FromTaskRunner(taskRunner)
 	if task.Args != nil {
 		copier.Copy(&service.Args, task.Args)
 	}
