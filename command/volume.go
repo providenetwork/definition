@@ -24,6 +24,8 @@ type Volume struct {
 	Name string `json:"name"`
 	// Labels to be attached to the volume
 	Labels map[string]string `json:"labels"`
+
+	Global bool `json:"global"`
 }
 
 // Mount represents the information needed for the mounting of a volume
@@ -33,8 +35,7 @@ type Mount struct {
 	ReadOnly  bool   `json:"readOnly"`
 }
 
-// VolumeShare contains all of the volumes to be shared
+// VolumeShare prepares the environment for global volumes
 type VolumeShare struct {
-	Names []string `json:"names"`
 	Hosts []string `json:"hosts"`
 }

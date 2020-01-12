@@ -25,6 +25,7 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
+	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 
@@ -189,23 +190,40 @@ func (calc testCalculator) swarmInit(dist *entity.ResourceDist) ([][]command.Com
 
 func volumeCommands(spec schema.RootSchema, dist *entity.ResourceDist) ([][]command.Command, error) {
 	volumes := parser.ExtractGlobalVolumes(spec)
-	hosts := make([]string, dist.Size())
+	if len(volumes) == 0 {
+		return nil, nil
+	}
+
+	out := []command.Command{}
+	for _, volume := range volumes {
+		order := maker.CreateVolumeOrder(volume, true)
+		cmd, err := command.NewCommand(order, FirstInstance)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+
+	hosts := make([]string, dist.Size()) //dont initialize glusterfs if there is only one instance
 	for i := range hosts {
 		hosts[i] = fmt.Sprint(i)
+	}
+	if len(hosts) < 2 {
+		return [][]command.Command{out}, nil
 	}
 	order := command.Order{
 		Type: command.Volumeshare,
 		Payload: command.VolumeShare{
-			Names: volumes,
 			Hosts: hosts,
 		},
 	}
 
-	cmd, err := command.NewCommand(order, FirstInstance)
+	initCmd, err := command.NewCommand(order, FirstInstance)
 	if err != nil {
 		return nil, err
 	}
-	return [][]command.Command{{cmd}}, nil
+
+	return [][]command.Command{{initCmd}, out}, nil
 }
 
 func (calc testCalculator) breakUpCommands(in entity.TestCommands) entity.TestCommands {

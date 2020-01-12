@@ -31,7 +31,7 @@ import (
 // Command handles the simple schema -> order conversions
 type Command interface {
 	CreateNetwork(name string, network entity.Network) command.Order
-	CreateVolume(volume schema.Volume) command.Order
+	CreateVolume(volume schema.Volume, global bool) command.Order
 	CreateContainer(state *entity.State, service entity.Service) command.Order
 	CreateSidecarNetwork(service entity.Service, network entity.Network) command.Order
 	StartContainer(service entity.Service, isTask bool, timeout command.Timeout) command.Order
@@ -97,8 +97,8 @@ func (cmd commandMaker) CreateSidecarNetwork(service entity.Service,
 	return cmd.createNetwork(namer.SidecarNetwork(service), network, false)
 }
 
-func (cmd commandMaker) CreateVolume(volume schema.Volume) command.Order {
-	return CreateVolumeOrder(volume.Name)
+func (cmd commandMaker) CreateVolume(volume schema.Volume, global bool) command.Order {
+	return CreateVolumeOrder(volume.Name, global)
 }
 
 func (cmd commandMaker) Mkdir(name string) command.Order {
@@ -242,15 +242,16 @@ func (cmd commandMaker) startContainer(name string, isTask bool,
 	}
 }
 
-func CreateVolumeOrder(name string) command.Order {
+func CreateVolumeOrder(name string, global bool) command.Order {
 	return command.Order{
 		Type: command.Createvolume,
 		Payload: command.Volume{
-			Name: name,
+			Name:   name,
+			Global: global,
 		},
 	}
 }
 
 func MkdirOrder(name string) command.Order {
-	return CreateVolumeOrder(name)
+	return CreateVolumeOrder(name, false)
 }
