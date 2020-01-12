@@ -60,6 +60,9 @@ const (
 
 	// Pullimage pre-emptively pulls the given image
 	Pullimage = OrderType("pullimage")
+
+	// Createvolume creates volume
+	Volumeshare = OrderType("volumeshare")
 )
 
 // OrderPayload is a pointer interface for order payloads.
