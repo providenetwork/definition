@@ -113,6 +113,9 @@ func TestAllTheThings(t *testing.T) {
     volumes:
       - path: /output.log
         name: eea-logs
+      - path: /var/pictures
+        name: pictures
+        scope: global
     resources:
       cpus: 4
       memory: 4 GB

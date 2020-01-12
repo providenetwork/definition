@@ -18,21 +18,16 @@
 
 package command
 
-//VolumeConfig is the configuration options for volumes
-type VolumeConfig struct {
-	// Driver is the docker volume to use
-	Driver string
-	// DriverOpts are the options to supply to the driver
-	DriverOpts map[string]string
-}
-
 //Volume represents a docker volume which may be shared among multiple containers
 type Volume struct {
 	// Name is the name of the docker volume
 	Name string `json:"name"`
 	// Labels to be attached to the volume
 	Labels map[string]string `json:"labels"`
-	VolumeConfig
+
+	Global bool `json:"global"`
+
+	Hosts []string `json:"hosts,omitempty"`
 }
 
 // Mount represents the information needed for the mounting of a volume
@@ -40,4 +35,9 @@ type Mount struct {
 	Name      string `json:"name"`
 	Directory string `json:"directory"`
 	ReadOnly  bool   `json:"readOnly"`
+}
+
+// VolumeShare prepares the environment for global volumes
+type VolumeShare struct {
+	Hosts []string `json:"hosts"`
 }
