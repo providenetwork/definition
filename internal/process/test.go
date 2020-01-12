@@ -25,7 +25,6 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config"
 	"github.com/whiteblock/definition/internal/entity"
-	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/schema"
 
@@ -194,9 +193,21 @@ func volumeCommands(spec schema.RootSchema, dist *entity.ResourceDist) ([][]comm
 		return nil, nil
 	}
 
+	hosts := make([]string, dist.Size()) //dont initialize glusterfs if there is only one instance
+	for i := range hosts {
+		hosts[i] = fmt.Sprint(i)
+	}
+
 	out := []command.Command{}
 	for _, volume := range volumes {
-		order := maker.CreateVolumeOrder(volume, true)
+		order := command.Order{
+			Type: command.Createvolume,
+			Payload: command.Volume{
+				Name:   volume,
+				Global: true,
+				Hosts:  hosts,
+			},
+		}
 		cmd, err := command.NewCommand(order, FirstInstance)
 		if err != nil {
 			return nil, err
@@ -204,10 +215,6 @@ func volumeCommands(spec schema.RootSchema, dist *entity.ResourceDist) ([][]comm
 		out = append(out, cmd)
 	}
 
-	hosts := make([]string, dist.Size()) //dont initialize glusterfs if there is only one instance
-	for i := range hosts {
-		hosts[i] = fmt.Sprint(i)
-	}
 	if len(hosts) < 2 {
 		return [][]command.Command{out}, nil
 	}

@@ -26,6 +26,8 @@ type Volume struct {
 	Labels map[string]string `json:"labels"`
 
 	Global bool `json:"global"`
+
+	Hosts []string `json:"hosts,omitempty"`
 }
 
 // Mount represents the information needed for the mounting of a volume
