@@ -268,7 +268,7 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 
 	network.GetNextGlobal() // don't use the first entry
 
-	phase := schema.Phase{System: spec.Tests[index].System}
+	phase := schema.Phase{System: spec.Tests[index].System, Name: "init"}
 	out := entity.TestCommands{}
 
 	sCmds, err := calc.swarmInit(dist)
