@@ -31,6 +31,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const FirstPhaseName = "init"
+
 type TestCalculator interface {
 	Commands(spec schema.RootSchema, dist *entity.ResourceDist, index int) (entity.TestCommands, error)
 	Env(spec schema.RootSchema, dist *entity.ResourceDist, index int) (map[string]string, error)
@@ -268,7 +270,7 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 
 	network.GetNextGlobal() // don't use the first entry
 
-	phase := schema.Phase{System: spec.Tests[index].System, Name: "init"}
+	phase := schema.Phase{System: spec.Tests[index].System, Name: FirstPhaseName}
 	out := entity.TestCommands{}
 
 	sCmds, err := calc.swarmInit(dist)
@@ -282,6 +284,7 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 		return nil, nil, err
 	}
 	out = out.Append(calc.breakUpCommands(vCmds))
+	out.MetaInject(command.PhaseKey, FirstPhaseName)
 
 	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
 	if err != nil {
@@ -295,7 +298,7 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 		}
 		out = out.Append(calc.breakUpCommands(cmds))
 	}
-	out.MetaInject("test", spec.Tests[index].Name)
+	out.MetaInject(command.TestNameKey, spec.Tests[index].Name)
 
 	envVars := map[string]string{}
 	for name, ip := range state.IPs {

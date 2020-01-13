@@ -42,6 +42,9 @@ const (
 	// TestIDKey is the location of the test id in the meta
 	TestIDKey = "testRun"
 
+	// TestNameKey is the location of the test name in the meta
+	TestNameKey = "test"
+
 	// DefinitionIDKey is the location of the definition in the meta
 	DefinitionIDKey = "definition"
 )
