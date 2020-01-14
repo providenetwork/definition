@@ -19,7 +19,6 @@
 package process
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/whiteblock/definition/command"
@@ -46,10 +45,6 @@ type Resolve interface {
 	UpdateServices(state *entity.State, dist entity.PhaseDist,
 		services []entity.ServiceDiff) ([][]command.Command, error)
 }
-
-var (
-	ErrBucketNotFound = errors.New("could not find bucket")
-)
 
 const (
 	FirstInstance = "0"
@@ -140,7 +135,7 @@ func (resolver resolve) CreateServices(state *entity.State, spec schema.RootSche
 	for _, service := range services {
 		bucket := dist.FindBucket(service.Name)
 		if bucket == -1 {
-			return nil, ErrBucketNotFound
+			return nil, fmt.Errorf(`service "%s" does not exist`, service.Name)
 		}
 
 		if _, ok := state.Subnets[service.Name]; !ok {
@@ -231,7 +226,7 @@ func (resolver resolve) RemoveServices(dist entity.PhaseDist,
 	for _, service := range services {
 		bucket := dist.FindBucket(service.Name)
 		if bucket == -1 {
-			return nil, ErrBucketNotFound
+			return nil, fmt.Errorf(`cannot remove service "%s", does not exist`, service.Name)
 		}
 
 		order := resolver.cmdMaker.RemoveContainer(service.Name)
@@ -254,7 +249,7 @@ func (resolver resolve) UpdateServices(state *entity.State, dist entity.PhaseDis
 	for _, service := range services {
 		bucket := dist.FindBucket(service.Name)
 		if bucket == -1 {
-			return nil, ErrBucketNotFound
+			return nil, fmt.Errorf(`cannot update service "%s", does not exist`, service.Name)
 		}
 
 		if len(service.AddNetworks) > 0 {
