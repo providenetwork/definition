@@ -210,7 +210,7 @@ func volumeCommands(spec schema.RootSchema, dist *entity.ResourceDist) ([][]comm
 			Type: command.Createvolume,
 			Payload: command.Volume{
 				Name:   volume,
-				Global: true,
+				Global: len(hosts) > 1,
 				Hosts:  hosts,
 			},
 		}
