@@ -65,7 +65,10 @@ func (calc testCalculator) handlePhase(state *entity.State,
 
 	out := [][]command.Command{}
 	changedSystems, systems, _ := calc.sys.GetAlreadyExists(state, phase.System)
-	calc.log.WithField("systems", systems).Info("adding these systems")
+	calc.log.WithFields(logrus.Fields{
+		"systems": systems,
+		"phase":phase.Name,
+		"index":index}).Info("adding these systems")
 
 	networkCommands, err := calc.resolver.CreateSystemNetworks(state, phase.System)
 	if err != nil {
@@ -270,7 +273,6 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 
 	network.GetNextGlobal() // don't use the first entry
 
-	phase := schema.Phase{System: spec.Tests[index].System, Name: FirstPhaseName}
 	out := entity.TestCommands{}
 
 	sCmds, err := calc.swarmInit(dist)
@@ -286,7 +288,9 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 	out = out.Append(calc.breakUpCommands(vCmds))
 	out.MetaInject(command.PhaseKey, FirstPhaseName)
 
-	cmds, err := calc.handlePhase(state, spec, phase, dist, 0)
+	cmds, err := calc.handlePhase(state, spec, schema.Phase{
+		System: spec.Tests[index].System, 
+		Name: FirstPhaseName}, dist, 0)
 	if err != nil {
 		return nil, nil, err
 	}

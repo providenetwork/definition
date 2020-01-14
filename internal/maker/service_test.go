@@ -145,3 +145,54 @@ func TestService_FromTask(t *testing.T) {
 	assert.Equal(t, 10*time.Minute, res.Timeout.Duration)
 	searcher.AssertExpectations(t)
 }
+
+func TestService_NOOP(t *testing.T) {
+	testSystemComp := schema.SystemComponent{
+		Count: 0,
+		Type:  "foo",
+		Args:  nil,
+		Environment: map[string]string{
+			"bar": "baz",
+		},
+		Sidecars: []schema.SystemComponentSidecar{
+			schema.SystemComponentSidecar{
+				Type: "sidecar",
+				Name: "sidecar",
+				Resources: schema.Resources{
+					Cpus:    13,
+					Memory:  "",
+					Storage: "3233",
+				},
+				Args: []string{"barfoo"},
+				Environment: map[string]string{
+					"bar": "baz",
+				},
+			},
+		},
+		Resources: schema.SystemComponentResources{
+			Cpus:     1,
+			Memory:   "",
+			Storage:  "20GB",
+			Networks: nil,
+		},
+	}
+
+	testService := schema.Service{}
+
+	testSidecar := schema.Sidecar{}
+
+	searcher := new(mockSearch.Schema)
+	searcher.On("FindServiceByType", mock.Anything, testSystemComp.Type).Return(
+		testService, nil).Once()
+	searcher.On("FindSidecarByType", mock.Anything, mock.Anything).Return(
+		testSidecar, nil).Once()
+
+	searcher.On("FindSidecarsByService", mock.Anything, mock.Anything).Return(nil).Once()
+
+	serv := NewService(defaults.Defaults{}, searcher, logrus.New())
+	require.NotNil(t, serv)
+
+	results, err := serv.FromSystem(schema.RootSchema{}, testSystemComp)
+	assert.Len(t, results, 0)
+	assert.NoError(t, err)
+}

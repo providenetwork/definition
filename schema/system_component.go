@@ -18,6 +18,7 @@
 
 package schema
 
+import "fmt"
 type SystemComponentSidecar struct {
 	Type        string            `yaml:"type,omitempty" json:"type,omitempty"`
 	Name        string            `yaml:"name,omitempty" json:"name,omitempty"`
@@ -42,4 +43,9 @@ type SystemComponent struct {
 	Sidecars     []SystemComponentSidecar `yaml:"sidecars,omitempty" json:"sidecars,omitempty"`
 	Args         []string                 `yaml:"args,omitempty" json:"args,omitempty"`
 	Environment  map[string]string        `yaml:"environment,omitempty" json:"environment,omitempty"`
+}
+
+func (sc SystemComponent) String() string {
+	type tmp SystemComponent
+	return fmt.Sprintf("%+v", tmp(sc))
 }

@@ -570,3 +570,77 @@ func ensurePortMapping(t *testing.T, test command.Test) {
 		}
 	}
 }
+
+var test3 = []byte(`services:
+  - name: nginx
+    image: nginx:alpine
+    resources:
+      cpus: 1
+      memory: 500 MB
+      storage: 1 GiB
+    volumes:
+      - name: test
+        path: /var/hello 
+        scope: global
+task-runners:
+  - name: wait-5-minutes
+    script:
+      inline: sleep 600
+tests:
+  - name: serve-static-files
+    description: Serve the default static content of the nginx image.
+    system:
+      - name: nginx
+        type: nginx
+        count: 2
+        port-mappings:
+          - "80:80"
+    phases:
+      - name: testnet
+        system:
+          - type: nginx
+            name: nginx
+            resources:
+              networks:
+                - name: nginx
+        tasks:
+          - type: wait-5-minutes
+            timeout: 100s
+`)
+
+func TestPhaseChangesSane(t *testing.T) {
+	def, err := SchemaYAML(test3)
+	assert.NoError(t, err)
+
+	tests, err := GetTests(def, Meta{})
+	require.NoError(t, err)
+	require.Len(t, tests, 1)
+	test := tests[0]
+	netCount := 0
+	cntrCount := 0
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+				cntrCount ++
+			case command.Attachnetwork:
+				var cont command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				if strings.HasPrefix(cont.Network, "net"){
+					netCount++
+				}
+				
+			case command.Detachnetwork:
+				var cont command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				if strings.HasPrefix(cont.Network, "net"){
+					netCount--
+				}
+			}
+		}
+	}
+	assert.Equal(t,2, netCount)
+	assert.Equal(t,2, cntrCount)
+}
