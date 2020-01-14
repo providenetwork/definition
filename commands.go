@@ -27,6 +27,7 @@ import (
 	"github.com/whiteblock/definition/internal/distribute"
 	parse "github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/internal/process"
+	"github.com/whiteblock/definition/pkg/entity"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
@@ -46,6 +47,9 @@ type Commands interface {
 
 	// GetEnvs gets the environment variables which will be supplied to each of the containers
 	GetEnvs(def Definition) ([]map[string]string, error)
+
+	// GetDist gets the resource distribution
+	GetDist(def Definition) ([]*entity.ResourceDist, error)
 }
 
 type commands struct {
@@ -69,6 +73,11 @@ type Meta struct {
 func NewCommands(conf config.Config) (Commands, error) {
 	proc, dist, err := internal.GetFunctionality(conf)
 	return &commands{conf: conf, proc: proc, dist: dist}, err
+}
+
+// GetDist gets the resource distribution
+func (cmdParser commands) GetDist(def Definition) ([]*entity.ResourceDist, error) {
+	return cmdParser.dist.Distribute(def.Spec)
 }
 
 // GetTests gets all of the commands, for both provisioner and genesis.
@@ -161,6 +170,11 @@ func GetTests(def Definition, meta Meta) ([]command.Test, error) {
 // GetEnvs gets the environment variables which will be supplied to each of the containers
 func GetEnvs(def Definition) ([]map[string]string, error) {
 	return globalCommands.GetEnvs(def)
+}
+
+// GetDist gets the resource distribution
+func GetDist(def Definition) ([]*entity.ResourceDist, error) {
+	return globalCommands.GetDist(def)
 }
 
 func init() {

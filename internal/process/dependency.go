@@ -22,10 +22,10 @@ import (
 	"fmt"
 
 	"github.com/whiteblock/definition/command"
-	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/maker"
 	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/pkg/entity"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/imdario/mergo"

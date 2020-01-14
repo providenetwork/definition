@@ -24,8 +24,8 @@ import (
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/internal/entity"
 	"github.com/whiteblock/definition/internal/parser"
+	"github.com/whiteblock/definition/pkg/entity"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/sirupsen/logrus"

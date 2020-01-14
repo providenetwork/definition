@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/internal/entity"
 	mockParser "github.com/whiteblock/definition/internal/mocks/parser"
+	"github.com/whiteblock/definition/pkg/entity"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/sirupsen/logrus"
