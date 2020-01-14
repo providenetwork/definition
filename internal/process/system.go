@@ -73,7 +73,7 @@ func (sys system) UpdateChanged(state *entity.State, spec schema.RootSchema,
 		if !exists {
 			return nil, ErrSystemNotFound
 		}
-		system := merger.MergeSystemLeft(systemUpdate, old)
+		system := merger.MergeSystemLeft(old, systemUpdate)
 		sys.log.WithField("system", system).Debug("merged the systems")
 		sysDiff, err := sys.maker.FromSystemDiff(spec, old, system)
 		if err != nil {

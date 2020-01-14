@@ -618,29 +618,47 @@ func TestPhaseChangesSane(t *testing.T) {
 	test := tests[0]
 	netCount := 0
 	cntrCount := 0
+	volCount := 0
 	for _, outer := range test.Commands {
 		for _, inner := range outer {
 			switch inner.Order.Type {
 			case command.Createcontainer:
-				cntrCount ++
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				if !strings.Contains(cont.Name, "service") {
+					continue
+				}
+				require.NoError(t, err)
+				assert.Len(t, cont.Volumes, 1, "the services should have a volume attached here")
+				cntrCount++
+
+			case command.Createvolume:
+				var vol command.Volume
+				err := inner.ParseOrderPayloadInto(&vol)
+				require.NoError(t, err)
+				assert.Len(t, vol.Hosts, 2, "there should be two hosts")
+				assert.True(t, vol.Global, "the volume should be flagged as global")
+				volCount++
 			case command.Attachnetwork:
 				var cont command.ContainerNetwork
 				err := inner.ParseOrderPayloadInto(&cont)
 				require.NoError(t, err)
-				if strings.HasPrefix(cont.Network, "net"){
+				if strings.HasPrefix(cont.Network, "net") {
 					netCount++
 				}
-				
+
 			case command.Detachnetwork:
 				var cont command.ContainerNetwork
 				err := inner.ParseOrderPayloadInto(&cont)
 				require.NoError(t, err)
-				if strings.HasPrefix(cont.Network, "net"){
+				if strings.HasPrefix(cont.Network, "net") {
 					netCount--
 				}
 			}
 		}
 	}
-	assert.Equal(t,2, netCount)
-	assert.Equal(t,2, cntrCount)
+
+	assert.Equal(t, 1, volCount, "singleton volume should be just a single command")
+	assert.Equal(t, 2, netCount, "The two containers should end with just one network attached")
+	assert.Equal(t, 2, cntrCount, "There should only be two containers created")
 }

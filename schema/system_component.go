@@ -19,6 +19,7 @@
 package schema
 
 import "fmt"
+
 type SystemComponentSidecar struct {
 	Type        string            `yaml:"type,omitempty" json:"type,omitempty"`
 	Name        string            `yaml:"name,omitempty" json:"name,omitempty"`

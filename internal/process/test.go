@@ -67,8 +67,9 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	changedSystems, systems, _ := calc.sys.GetAlreadyExists(state, phase.System)
 	calc.log.WithFields(logrus.Fields{
 		"systems": systems,
-		"phase":phase.Name,
-		"index":index}).Info("adding these systems")
+		"changed": changedSystems,
+		"phase":   phase.Name,
+		"index":   index}).Info("adding these systems")
 
 	networkCommands, err := calc.resolver.CreateSystemNetworks(state, phase.System)
 	if err != nil {
@@ -289,8 +290,8 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 	out.MetaInject(command.PhaseKey, FirstPhaseName)
 
 	cmds, err := calc.handlePhase(state, spec, schema.Phase{
-		System: spec.Tests[index].System, 
-		Name: FirstPhaseName}, dist, 0)
+		System: spec.Tests[index].System,
+		Name:   FirstPhaseName}, dist, 0)
 	if err != nil {
 		return nil, nil, err
 	}

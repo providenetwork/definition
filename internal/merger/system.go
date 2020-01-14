@@ -28,7 +28,11 @@ import (
 func MergeSystemLeft(sys schema.SystemComponent, systems ...schema.SystemComponent) (system schema.SystemComponent) {
 	copier.Copy(&system, sys)
 	for _, merging := range systems {
+		cnt := system.Count
 		mergo.Map(&system, merging, mergo.WithOverride)
+		if system.Count == 0 {
+			system.Count = cnt
+		}
 	}
 	return
 }
