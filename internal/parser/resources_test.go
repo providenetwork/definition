@@ -21,9 +21,9 @@ package parser
 import (
 	"testing"
 
-	"github.com/whiteblock/definition/internal/entity"
 	mockConverter "github.com/whiteblock/definition/internal/mocks/converter"
 	mockSearch "github.com/whiteblock/definition/internal/mocks/search"
+	"github.com/whiteblock/definition/pkg/entity"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/stretchr/testify/assert"
