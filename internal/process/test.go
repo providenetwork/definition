@@ -159,9 +159,22 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	}
 
 	tmp := entity.TestCommands(out)
+	if !phase.Duration.Empty() {
+		order := command.Order{
+			Type:    command.Pauseexecution,
+			Payload: phase.Duration,
+		}
+		pauseCmd, err := command.NewCommand(order, FirstInstance)
+		if err != nil {
+			return nil, err
+		}
+		tmp = tmp.Append([][]command.Command{{pauseCmd}})
+	}
+
 	tmp.MetaInject(
 		"phase", phase.Name,
 		"phaseNum", fmt.Sprint(index))
+
 	return [][]command.Command(tmp), nil
 }
 
@@ -278,8 +291,11 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 	out.MetaInject(command.PhaseKey, FirstPhaseName)
 
 	cmds, err := calc.handlePhase(state, spec, schema.Phase{
-		System: spec.Tests[index].System,
-		Name:   FirstPhaseName}, dist, 0)
+		System:   spec.Tests[index].System,
+		Name:     FirstPhaseName,
+		Duration: spec.Tests[index].Duration,
+	}, dist, 0)
+
 	if err != nil {
 		return nil, nil, err
 	}

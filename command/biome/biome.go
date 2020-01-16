@@ -29,6 +29,8 @@ type CreateBiome struct {
 
 // DestroyBiome represents the destroy biome command
 type DestroyBiome struct {
+	// WaitUntil is thes unix time to wait until before destroying the biome
+	WaitUntil    int64  `json:"waitUntil"`
 	DefinitionID string `json:"definitionID"`
 	TestID       string `json:"testID"`
 }

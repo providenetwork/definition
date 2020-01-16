@@ -43,7 +43,10 @@ var (
 	NoExpiration = time.Unix(0, 0)
 
 	// NoTimeout indicates that there is no timeout duration provided
-	NoTimeout time.Duration = 1<<63 - 1
+	NoTimeout time.Duration = -1
+
+	// NoDuration indicates that duration is not set
+	NoDuration time.Duration = 0
 
 	// ErrNoCommands is when commands are needed but there are none
 	ErrNoCommands = errors.New("there are no commands")
@@ -117,6 +120,8 @@ type Instructions struct {
 	GlobalExpiration time.Time            `json:"globalExpiration,omitempty"`
 	PhaseTimeouts    map[string]Timeout   `json:"phaseTimeouts,omitempty"`
 	PhaseExpirations map[string]time.Time `json:"phaseExpirations,omitempty"`
+
+	WaitUntil int64 `json:"waitUntil,omitempty"`
 }
 
 // handle the meta changes for next

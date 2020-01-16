@@ -51,6 +51,9 @@ const (
 
 	// Createvolume creates volume
 	Volumeshare = OrderType("volumeshare")
+
+	// Pauseexecution means wait a certain amount of time before continuing
+	Pauseexecution = OrderType("pauseexecution") //Payload will be Duration
 )
 
 // OrderPayload is a pointer interface for order payloads.

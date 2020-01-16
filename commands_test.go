@@ -585,6 +585,7 @@ tests:
           - "80:80"
     phases:
       - name: testnet
+        duration: 100s
         system:
           - type: nginx
             name: nginx
@@ -607,9 +608,12 @@ func TestPhaseChangesSane(t *testing.T) {
 	netCount := 0
 	cntrCount := 0
 	volCount := 0
+	pauseCount := 0
 	for _, outer := range test.Commands {
 		for _, inner := range outer {
 			switch inner.Order.Type {
+			case command.Pauseexecution:
+				pauseCount++
 			case command.Createcontainer:
 				var cont command.Container
 				err := inner.ParseOrderPayloadInto(&cont)
@@ -645,7 +649,7 @@ func TestPhaseChangesSane(t *testing.T) {
 			}
 		}
 	}
-
+	assert.Equal(t, 1, pauseCount, "there should only be one pause command in this case")
 	assert.Equal(t, 1, volCount, "singleton volume should be just a single command")
 	assert.Equal(t, 2, netCount, "The two containers should end with just one network attached")
 	assert.Equal(t, 2, cntrCount, "There should only be two containers created")
