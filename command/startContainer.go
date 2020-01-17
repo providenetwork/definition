@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -32,6 +34,13 @@ func (to Timeout) MarshalJSON() ([]byte, error) {
 		return json.Marshal(InfiniteTimeoutTerm)
 	}
 	return json.Marshal(to.Duration)
+}
+
+func (to Timeout) MarshalYAML() ([]byte, error) {
+	if to.IsInfinite() {
+		return yaml.Marshal(InfiniteTimeoutTerm)
+	}
+	return yaml.Marshal(to.Duration)
 }
 
 func (to *Timeout) UnmarshalJSON(data []byte) error {
