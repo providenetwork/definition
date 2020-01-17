@@ -149,7 +149,7 @@ func (cmd commandMaker) File(name string, input schema.InputFile) command.Order 
 		Payload: command.FileAndContainer{
 			ContainerName: name,
 			File: command.File{
-				Mode:        0644,
+				Mode:        0777,
 				Destination: input.Destination(),
 				ID:          input.Source(),
 			},
