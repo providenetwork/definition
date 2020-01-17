@@ -13,5 +13,5 @@ type Test struct {
 	Description string            `yaml:"description,omitempty" json:"description,omitempty"`
 	System      []SystemComponent `yaml:"system,omitempty" json:"system,omitempty"`
 	Phases      []Phase           `yaml:"phases,omitempty" json:"phases,omitempty"`
-	Timeout     command.Timeout   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Timeout     command.Timeout   `yaml:"timeout" json:"timeout"`
 }
