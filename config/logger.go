@@ -23,19 +23,21 @@ func NewLogger(v *viper.Viper) (Logger, error) {
 }
 
 //  GetLogger gets a logger according to the config
-func (l Logger) GetLogger() (*logrus.Logger, error) {
+func (l Logger) GetLogger() *logrus.Logger {
 	logger := logrus.New()
 	lvl, err := logrus.ParseLevel(l.Verbosity)
 	if err != nil {
-		return nil, err
+		logger.SetLevel(logrus.InfoLevel)
+	} else {
+		logger.SetLevel(lvl)
 	}
-	logger.SetLevel(lvl)
+
 	logger.SetReportCaller(true)
 	if l.FluentDLogging {
 		logger.SetFormatter(joonix.NewFormatter())
 	}
 
-	return logger, nil
+	return logger
 }
 
 func setLoggerBindings(v *viper.Viper) error {

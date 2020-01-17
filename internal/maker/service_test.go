@@ -21,61 +21,62 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestService_FromSystem(t *testing.T) {
-	testSystemComp := schema.SystemComponent{
-		Count: 5,
-		Type:  "foo",
-		Args:  nil,
-		Environment: map[string]string{
-			"bar": "baz",
-		},
-		Sidecars: []schema.SystemComponentSidecar{
-			schema.SystemComponentSidecar{
-				Type: "sidecar",
-				Name: "sidecar",
-				Resources: schema.Resources{
-					Cpus:    13,
-					Memory:  "",
-					Storage: "3233",
-				},
-				Args: []string{"barfoo"},
-				Environment: map[string]string{
-					"bar": "baz",
-				},
+var testSystemComp = schema.SystemComponent{
+	Count: 5,
+	Type:  "foo",
+	Args:  nil,
+	Environment: map[string]string{
+		"bar": "baz",
+	},
+	Sidecars: []schema.SystemComponentSidecar{
+		schema.SystemComponentSidecar{
+			Type: "sidecar",
+			Name: "sidecar",
+			Resources: schema.Resources{
+				Cpus:    13,
+				Memory:  "",
+				Storage: "3233",
+			},
+			Args: []string{"barfoo"},
+			Environment: map[string]string{
+				"bar": "baz",
 			},
 		},
-		Resources: schema.SystemComponentResources{
-			Cpus:     1,
-			Memory:   "",
-			Storage:  "20GB",
-			Networks: nil,
-		},
-	}
+	},
+	Resources: schema.SystemComponentResources{
+		Cpus:     1,
+		Memory:   "",
+		Storage:  "20GB",
+		Networks: nil,
+	},
+}
 
-	testService := schema.Service{
-		Args: []string{"hello"},
-		Environment: map[string]string{
-			"foo": "bar",
-			"bar": "foo",
-		},
-		Resources: schema.Resources{
-			Cpus:    12,
-			Memory:  "10GB",
-			Storage: "2",
-		},
-	}
+var testService = schema.Service{
+	Args: []string{"hello"},
+	Environment: map[string]string{
+		"foo": "bar",
+		"bar": "foo",
+	},
+	Resources: schema.Resources{
+		Cpus:    12,
+		Memory:  "10GB",
+		Storage: "2",
+	},
+}
 
-	testSidecar := schema.Sidecar{
-		Resources: schema.Resources{
-			Cpus:    0,
-			Memory:  "foobar",
-			Storage: "",
-		},
-		Environment: map[string]string{
-			"foo": "bar",
-			"bar": "foo",
-		},
-	}
+var testSidecar = schema.Sidecar{
+	Resources: schema.Resources{
+		Cpus:    0,
+		Memory:  "foobar",
+		Storage: "",
+	},
+	Environment: map[string]string{
+		"foo": "bar",
+		"bar": "foo",
+	},
+}
+
+func TestService_FromSystem(t *testing.T) {
 
 	searcher := new(mockSearch.Schema)
 	searcher.On("FindServiceByType", mock.Anything, testSystemComp.Type).Return(
@@ -118,6 +119,62 @@ func TestService_FromSystem(t *testing.T) {
 	searcher.AssertExpectations(t)
 }
 
+func TestService_FromSystemDiff_NOOP(t *testing.T) {
+
+	testSystemComp2 := schema.SystemComponent{
+		Count: 5,
+		Type:  "foo",
+		Args:  nil,
+		Environment: map[string]string{
+			"bar": "baz",
+		},
+		Sidecars: []schema.SystemComponentSidecar{
+			schema.SystemComponentSidecar{
+				Type: "sidecar",
+				Name: "sidecar",
+				Resources: schema.Resources{
+					Cpus:    13,
+					Memory:  "",
+					Storage: "3233",
+				},
+				Args: []string{"barfoo"},
+				Environment: map[string]string{
+					"bar": "baz",
+				},
+			},
+		},
+		Resources: schema.SystemComponentResources{
+			Cpus:     1,
+			Memory:   "",
+			Storage:  "20GB",
+			Networks: nil,
+		},
+	}
+
+	searcher := new(mockSearch.Schema)
+	searcher.On("FindServiceByType", mock.Anything, testSystemComp.Type).Return(
+		testService, nil).Twice()
+	searcher.On("FindSidecarByType", mock.Anything, mock.Anything).Return(
+		testSidecar, nil).Twice()
+
+	searcher.On("FindSidecarsByService", mock.Anything, mock.Anything).Return(nil).Twice()
+
+	serv := NewService(defaults.Defaults{}, searcher, logrus.New())
+	require.NotNil(t, serv)
+
+	results, err := serv.FromSystemDiff(schema.RootSchema{}, testSystemComp, testSystemComp2)
+	assert.NoError(t, err)
+	require.NotNil(t, results)
+
+	require.Len(t, results.Added, 0)
+	t.Logf("%+v", results.Removed)
+	require.Len(t, results.Removed, 0)
+	t.Logf("%+v", results.Modified)
+	require.Len(t, results.Modified, 0)
+
+	searcher.AssertExpectations(t)
+}
+
 func TestService_FromTask(t *testing.T) {
 	testTaskRunner := schema.TaskRunner{}
 
@@ -134,7 +191,7 @@ func TestService_FromTask(t *testing.T) {
 	searcher.AssertExpectations(t)
 }
 
-func TestService_NOOP(t *testing.T) {
+func TestService_Defaults(t *testing.T) {
 	testSystemComp := schema.SystemComponent{
 		Count: 0,
 		Type:  "foo",
@@ -181,6 +238,6 @@ func TestService_NOOP(t *testing.T) {
 	require.NotNil(t, serv)
 
 	results, err := serv.FromSystem(schema.RootSchema{}, testSystemComp)
-	assert.Len(t, results, 0)
+	assert.Len(t, results, 1)
 	assert.NoError(t, err)
 }

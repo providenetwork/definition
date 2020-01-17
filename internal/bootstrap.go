@@ -14,13 +14,11 @@ import (
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/internal/process"
 	"github.com/whiteblock/definition/internal/search"
+
+	"github.com/sirupsen/logrus"
 )
 
-func GetFunctionality(conf config.Config) (process.Commands, distribute.Distributor, error) {
-	logger, err := conf.Logger.GetLogger()
-	if err != nil {
-		return nil, nil, err
-	}
+func GetFunctionality(conf config.Config, logger logrus.Ext1FieldLogger) (process.Commands, distribute.Distributor) {
 	//  Distribute
 	dist := distribute.NewDistributor(
 		conf.Bucket,
@@ -92,5 +90,5 @@ func GetFunctionality(conf config.Config) (process.Commands, distribute.Distribu
 			logger,
 		),
 	)
-	return cmds, dist, nil
+	return cmds, dist
 }

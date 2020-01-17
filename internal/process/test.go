@@ -149,9 +149,8 @@ func (calc testCalculator) handlePhase(state *entity.State,
 	if len(addCommands) > 0 {
 		for i, set := range addCommands {
 			calc.log.WithFields(logrus.Fields{
-				"count": len(set),
-				"set":   i,
-			}).Trace("got the add commands set")
+				"count": len(set), "set": i,
+			}).Trace("got an add commands set")
 			if len(set) > 0 {
 				out = append(out, set)
 			}
