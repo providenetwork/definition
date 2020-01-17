@@ -77,7 +77,6 @@ func (sp *serviceMaker) FromSystemDiff(spec schema.RootSchema,
 			out.RemovedNetworks = append(out.RemovedNetworks, networks[networkName])
 		}
 	}
-
 	services, err := sp.FromSystem(spec, merged)
 	if err != nil {
 		return nil, err
@@ -199,7 +198,7 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		base.Sidecars = append(base.Sidecars, realSidecar)
 	}
 
-	out := make([]entity.Service, system.Count)
+	out := make([]entity.Service, system.GetCount())
 
 	for i := range out {
 		copier.Copy(&out[i], base)

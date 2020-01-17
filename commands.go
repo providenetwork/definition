@@ -19,6 +19,7 @@ import (
 	"github.com/whiteblock/definition/pkg/entity"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/whiteblock/utility/common"
 	"github.com/whiteblock/utility/utils"
@@ -59,9 +60,9 @@ type Meta struct {
 }
 
 // NewCommands creates a new command extractor from the given viper config
-func NewCommands(conf config.Config) (Commands, error) {
-	proc, dist, err := internal.GetFunctionality(conf)
-	return &commands{conf: conf, proc: proc, dist: dist}, err
+func NewCommands(conf config.Config, logger logrus.Ext1FieldLogger) Commands {
+	proc, dist := internal.GetFunctionality(conf, logger)
+	return &commands{conf: conf, proc: proc, dist: dist}
 }
 
 // GetDist gets the resource distribution
@@ -84,10 +85,8 @@ func (cmdParser commands) GetTests(def Definition, meta Meta) ([]command.Test, e
 	if err != nil {
 		return nil, errors.Wrap(err, "interpret")
 	}
-	logger, err := cmdParser.conf.Logger.GetLogger()
-	if err != nil {
-		return nil, err
-	}
+	logger := cmdParser.conf.Logger.GetLogger()
+
 	out := make([]command.Test, len(testCmds))
 	for i := range testCmds {
 		domain := ""
@@ -131,7 +130,13 @@ func (cmdParser commands) GetEnvs(def Definition) ([]map[string]string, error) {
 
 // ConfigureGlobal allows you to provide the global config for this library
 func ConfigureGlobal(conf config.Config) (err error) {
-	globalCommands, err = NewCommands(conf)
+	globalCommands = NewCommands(conf, conf.Logger.GetLogger())
+	return
+}
+
+// ConfigureGlobalLogger allows you to provide the global config for this library
+func ConfigureGlobalLogger(conf config.Config, logger logrus.Ext1FieldLogger) (err error) {
+	globalCommands = NewCommands(conf, logger)
 	return
 }
 

@@ -13,13 +13,25 @@ import (
 	"testing"
 
 	"github.com/whiteblock/definition/command"
+	"github.com/whiteblock/definition/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/whiteblock/go-prettyjson"
+	"github.com/whiteblock/utility/utils"
 
+	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
+
+func getTestCommands(t *testing.T) Commands {
+	v := viper.New()
+	err := config.SetupViper(v)
+	require.NoError(t, err)
+	conf, err := config.New(v)
+	require.NoError(t, err)
+	return NewCommands(conf, utils.NewTestingLogger(t))
+}
 
 func TestAllTheThings(t *testing.T) {
 
@@ -282,7 +294,8 @@ tests:
 
 	def, err := SchemaYAML(startingPoint)
 	require.NoError(t, err)
-	tests, err := GetTests(def, Meta{})
+	cmds := getTestCommands(t)
+	tests, err := cmds.GetTests(def, Meta{})
 	assert.NoError(t, err)
 	assert.NotNil(t, tests)
 
@@ -536,7 +549,8 @@ func TestJSONSane(t *testing.T) {
 	assert.Equal(t, defJSON.Spec, defJSON2.Spec)
 	assert.Len(t, defJSON.Spec.Tests[0].System[0].PortMappings, 1)
 
-	tests, err := GetTests(defJSON, Meta{})
+	cmds := getTestCommands(t)
+	tests, err := cmds.GetTests(defJSON, Meta{})
 	require.NoError(t, err)
 	ensurePortMapping(t, tests[0])
 }
@@ -600,7 +614,8 @@ func TestPhaseChangesSane(t *testing.T) {
 	def, err := SchemaYAML(test3)
 	assert.NoError(t, err)
 
-	tests, err := GetTests(def, Meta{})
+	cmds := getTestCommands(t)
+	tests, err := cmds.GetTests(def, Meta{})
 	require.NoError(t, err)
 	require.Len(t, tests, 1)
 	test := tests[0]
@@ -649,4 +664,129 @@ func TestPhaseChangesSane(t *testing.T) {
 	assert.Equal(t, 1, volCount, "singleton volume should be just a single command")
 	assert.Equal(t, 2, netCount, "The two containers should end with just one network attached")
 	assert.Equal(t, 2, cntrCount, "There should only be two containers created")
+}
+
+var composeTest = []byte(`services:
+- name: web
+  environment:
+    API_URL: /api
+  image: web3labs/epirus-free-web:latest
+- name: nginx
+  image: nginx:latest
+  input-files:
+  - source-path: ./nginx.conf
+    destination-path: /etc/nginx/nginx.conf
+  - source-path: ./5xx.html
+    destination-path: /www/error_pages/5xx.html
+- name: api
+  environment:
+    ENABLE_PRIVATE_QUORUM: enabled
+    MONGO_CLIENT_URI: mongodb://mongodb:27017
+    MONGO_DB_NAME: epirus
+    NODE_ENDPOINT: ${NODE_ENDPOINT}
+  image: web3labs/epirus-free-api:latest
+- name: mongodb
+  image: mongo:latest
+tests:
+- name: compose
+  description: This was auto-generated from a docker compose file
+  system:
+  - type: mongodb
+    name: mongodb
+    resources:
+      networks:
+      - name: epirus
+    port-mappings:
+    - 27017:27017
+  phases:
+  - name: phase1
+    system:
+    - type: api
+      name: api
+      resources:
+        networks:
+        - name: epirus
+  - name: phase2
+    system:
+    - type: web
+      name: web
+      resources:
+        networks:
+        - name: epirus
+  - name: phase3
+    system:
+    - type: nginx
+      name: nginx
+      resources:
+        networks:
+        - name: epirus
+      port-mappings:
+      - 80:80
+`)
+
+func TestComposeLikeSpec(t *testing.T) {
+	def, err := SchemaYAML(composeTest)
+	require.NoError(t, err)
+
+	cmds := getTestCommands(t)
+	dists, err := cmds.GetDist(def)
+	require.NoError(t, err)
+	require.NotNil(t, dists)
+	require.Len(t, dists, 1)
+	require.NotNil(t, dists[0])
+
+	for i := range dists {
+		require.True(t, len(*dists[i]) > 0)
+		for j := range *dists[i] {
+			require.True(t, len((*dists[i])[j]) > 0, "distributions should not be empty")
+
+		}
+	}
+
+	tests, err := cmds.GetTests(def, Meta{})
+	require.NoError(t, err)
+	require.Len(t, tests, 1)
+	test := tests[0]
+	netCount := 0
+	cntrCount := 0
+	volCount := 0
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				if !strings.Contains(cont.Name, "service") {
+					continue
+				}
+				require.NoError(t, err)
+				cntrCount++
+
+			case command.Createvolume:
+				var vol command.Volume
+				err := inner.ParseOrderPayloadInto(&vol)
+				require.NoError(t, err)
+				volCount++
+			case command.Attachnetwork:
+				var cont command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				if strings.HasPrefix(cont.Network, "net") {
+					netCount++
+				}
+
+			case command.Detachnetwork:
+				var cont command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				if strings.HasPrefix(cont.Network, "net") {
+					netCount--
+				}
+			}
+		}
+	}
+
+	assert.Equal(t, 2, volCount, "there should be 2 volumes")
+	assert.Equal(t, 4, netCount, "The 4 containers should end with just one network attached")
+	assert.Equal(t, 4, cntrCount, "There should only be 4 containers created")
 }

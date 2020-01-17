@@ -38,3 +38,10 @@ func (sc SystemComponent) String() string {
 	type tmp SystemComponent
 	return fmt.Sprintf("%+v", tmp(sc))
 }
+
+func (sc SystemComponent) GetCount() int64 {
+	if sc.Count == 0 {
+		return 1
+	}
+	return sc.Count
+}
