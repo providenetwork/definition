@@ -71,7 +71,7 @@ func LocalVolume(containerName string, volumeName string) string {
 	return "local-" + capString(containerName+volumeName, 14)
 }
 
-func toEnv(name string) string {
+func ToEnv(name string) string {
 	name = strings.Replace(name, "-", "_", -1)
 	name = strings.ToUpper(name)
 	return name
@@ -82,13 +82,13 @@ func IPEnvSidecar(parent entity.Service, sidecar schema.Sidecar) string {
 }
 
 func IPEnvSidecarS(parent, sidecar string) string {
-	return toEnv(SidecarS(parent, sidecar) + "_" + parent)
+	return ToEnv(SidecarS(parent, sidecar) + "_" + parent)
 }
 
 func IPEnvService(name string) string {
-	return toEnv(name)
+	return ToEnv(name)
 }
 
 func IPEnvServiceNet(container, network string) string {
-	return toEnv(container + "_" + network)
+	return ToEnv(container + "_" + network)
 }
