@@ -104,6 +104,9 @@ func (sp sidecarParser) GetIP(state *entity.State, parent entity.Service,
 
 func GetSidecarEnv(sidecar schema.Sidecar, parent entity.Service, state *entity.State) map[string]string {
 	out := sidecar.Environment
+	if out == nil {
+		out = map[string]string{}
+	}
 	out["SERVICE"] = state.IPs[parent.Name]
 	return out
 }
