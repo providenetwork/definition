@@ -6,9 +6,23 @@
 
 package schema
 
+import "strconv"
+
+const DefaultMode int64 = 0777
+
 type InputFile struct {
 	SourcePath      string `yaml:"source-path,omitempty" json:"path,omitempty"`
 	DestinationPath string `yaml:"destination-path,omitempty" json:"destination-path,omitempty"`
+	FileMode        string `yaml:"mode,omitempty" json:"mode,omitempty"`
+}
+
+// Mode gets the Unix mode bits
+func (in InputFile) Mode() int64 {
+	val, err := strconv.ParseInt(in.FileMode, 0, 64)
+	if err != nil {
+		return DefaultMode
+	}
+	return val
 }
 
 // GetSource makes it easy to change the name of the source member, as it is
