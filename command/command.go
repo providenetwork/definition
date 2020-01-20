@@ -54,6 +54,9 @@ const (
 
 	// Pauseexecution means wait a certain amount of time before continuing
 	Pauseexecution = OrderType("pauseexecution") //Payload will be Duration
+
+	// Resumeexecution contains the instructions for preparing for the next phase
+	Resumeexecution = OrderType("pauseexecution")
 )
 
 // OrderPayload is a pointer interface for order payloads.
