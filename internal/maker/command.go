@@ -127,7 +127,7 @@ func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service
 		Type: command.Createcontainer,
 		Payload: command.Container{
 			EntryPoint:  cmd.sidecar.GetEntrypoint(sidecar),
-			Environment: sidecar.Environment,
+			Environment: parser.GetSidecarEnv(sidecar, parent, state),
 			Labels:      cmd.sidecar.GetLabels(parent, sidecar),
 			Name:        namer.Sidecar(parent, sidecar),
 			Network:     cmd.sidecar.GetNetwork(parent),
@@ -141,20 +141,8 @@ func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service
 		},
 	}
 }
-
 func (cmd commandMaker) File(name string, input schema.InputFile) command.Order {
-	return command.Order{
-
-		Type: command.Putfileincontainer,
-		Payload: command.FileAndContainer{
-			ContainerName: name,
-			File: command.File{
-				Mode:        0644,
-				Destination: input.Destination(),
-				ID:          input.Source(),
-			},
-		},
-	}
+	return FileOrder(name, input)
 }
 
 func (cmd commandMaker) StartSidecar(parent entity.Service, sidecar schema.Sidecar) command.Order {
@@ -226,6 +214,20 @@ func (cmd commandMaker) startContainer(name string, isTask bool,
 			Name:    name,
 			Attach:  isTask,
 			Timeout: timeout,
+		},
+	}
+}
+
+func FileOrder(name string, input schema.InputFile) command.Order {
+	return command.Order{
+		Type: command.Putfileincontainer,
+		Payload: command.FileAndContainer{
+			ContainerName: name,
+			File: command.File{
+				Mode:        input.Mode(),
+				Destination: input.Destination(),
+				ID:          input.Source(),
+			},
 		},
 	}
 }

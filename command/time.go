@@ -34,8 +34,20 @@ func (to Time) MarshalJSON() ([]byte, error) {
 	return json.Marshal(to.Duration)
 }
 
+func (to Time) MarshalYAML() (interface{}, error) {
+	if to.IsInfinite() {
+		return InfiniteTimeTerm, nil
+	}
+	return to.Duration, nil
+}
+
 type Timeout struct {
 	Time
+}
+
+func (to Timeout) SetInfinite() Timeout {
+	to.isInfinite = true
+	return to
 }
 
 func (to *Timeout) UnmarshalJSON(data []byte) error {

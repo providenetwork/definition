@@ -74,6 +74,7 @@ func (bc *biomeCalculator) AddNextPhase(sp *entity.StatePack, phase schema.Phase
 		"adding":   addSysSegs,
 		"removing": toRemove,
 		"systems":  systems,
+		"changed":  changedSystems,
 	}).Debug("calculating distribution diff")
 	err = sp.Buckets.Remove(toRemove)
 	if err != nil {

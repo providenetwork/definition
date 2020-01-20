@@ -46,12 +46,12 @@ func NewResources(
 func (res *resources) FromSystemDiff(spec schema.RootSchema,
 	system schema.SystemComponent, merged schema.SystemComponent) ([]entity.Segment, error) {
 
-	if merged.Count == system.Count {
+	if merged.GetCount() == system.GetCount() {
 		return nil, nil
 	}
-	if merged.Count < system.Count {
+	if merged.GetCount() < system.GetCount() {
 		out := []entity.Segment{} //We are removing nodes, so only need name
-		for i := merged.Count; i < system.Count; i++ {
+		for i := merged.GetCount(); i < system.GetCount(); i++ {
 			out = append(out, entity.Segment{Name: namer.SystemService(merged, int(i))})
 		}
 		return out, nil
@@ -61,7 +61,7 @@ func (res *resources) FromSystemDiff(spec schema.RootSchema,
 	if err != nil {
 		return nil, err
 	}
-	services = services[int(merged.Count-system.Count):]
+	services = services[int(merged.GetCount()-system.GetCount()):]
 	return services, nil
 }
 
@@ -72,7 +72,7 @@ func (res *resources) SystemComponent(spec schema.RootSchema,
 	if err != nil {
 		return nil, err
 	}
-	out := make([]entity.Segment, sys.Count)
+	out := make([]entity.Segment, sys.GetCount())
 	for i := range out {
 		out[i].Name = namer.SystemService(sys, i)
 		resource, err := res.conv.FromResources(service.Resources)
@@ -126,7 +126,7 @@ func (res *resources) Tasks(spec schema.RootSchema, tasks []schema.Task) ([]enti
 }
 
 func (res *resources) SystemComponentNamesOnly(sys schema.SystemComponent) []entity.Segment {
-	out := make([]entity.Segment, sys.Count)
+	out := make([]entity.Segment, sys.GetCount())
 	for i := range out {
 		out[i] = entity.Segment{Name: namer.SystemService(sys, i)}
 	}

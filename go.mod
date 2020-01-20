@@ -18,7 +18,7 @@ require (
 	github.com/spf13/viper v1.5.0
 	github.com/stretchr/testify v1.4.0
 	github.com/whiteblock/go-prettyjson v0.0.0-20180920040306-f579f869bbfe
-	github.com/whiteblock/utility v0.0.0-20200109190149-7fa592041d65
+	github.com/whiteblock/utility v0.0.0-20200117171911-d78e6f0dd169
 	github.com/xeipuuv/gojsonschema v1.2.0
 	gopkg.in/yaml.v2 v2.2.7
 	gotest.tools v2.2.0+incompatible // indirect
