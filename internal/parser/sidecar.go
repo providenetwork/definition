@@ -11,8 +11,8 @@ import (
 
 	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
-	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/pkg/entity"
+	"github.com/whiteblock/definition/pkg/namer"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/jinzhu/copier"
@@ -98,7 +98,7 @@ func (sp sidecarParser) GetIP(state *entity.State, parent entity.Service,
 	sidecar schema.Sidecar) string {
 
 	out := state.Subnets[parent.Name].Next().String()
-	state.IPs[namer.Sidecar(parent, sidecar)+"_"+parent.Name] = out
+	state.IPs[namer.IPEnvSidecar(parent, sidecar)] = out
 	return out
 }
 
@@ -107,7 +107,7 @@ func GetSidecarEnv(sidecar schema.Sidecar, parent entity.Service, state *entity.
 	if out == nil {
 		out = map[string]string{}
 	}
-	out["SERVICE"] = state.IPs[parent.Name]
+	out["SERVICE"] = state.IPs[namer.IPEnvService(service.Name)]
 	out["NAME"] = namer.Sidecar(parent, sidecar)
 	return out
 }

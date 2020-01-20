@@ -37,7 +37,11 @@ func Network(name string) string {
 }
 
 func Sidecar(parent entity.Service, sidecar schema.Sidecar) string {
-	return fmt.Sprintf("%s-%s", parent.Name, sidecar.Name)
+	return SidecarS(parent.Name, sidecar.Name)
+}
+
+func SidecarS(parent, sidecar string) string {
+	return fmt.Sprintf("%s-%s", parent, sidecar)
 }
 
 func SidecarNetwork(parent entity.Service) string {
@@ -65,4 +69,26 @@ func InputFileVolume(containerName string, dir string) string {
 
 func LocalVolume(containerName string, volumeName string) string {
 	return "local-" + capString(containerName+volumeName, 14)
+}
+
+func toEnv(name string) {
+	name = strings.Replace(name, "-", "_", -1)
+	name = strings.ToUpper(name)
+	return name
+}
+
+func IPEnvSidecar(parent entity.Service, sidecar schema.Sidecar) string {
+	return IPEnvSidecarS(parent.Name, sidecar.Name)
+}
+
+func IPEnvSidecarS(parent, sidecar string) string {
+	return toEnv(SidecarS(parent, sidecar) + "_" + parent)
+}
+
+func IPEnvService(name string) string {
+	return toEnv(name)
+}
+
+func IPEnvServiceNet(container, network string) string {
+	return toEnv(container + "_" + network.Name)
 }
