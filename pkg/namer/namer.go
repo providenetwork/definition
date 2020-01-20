@@ -71,7 +71,7 @@ func LocalVolume(containerName string, volumeName string) string {
 	return "local-" + capString(containerName+volumeName, 14)
 }
 
-func toEnv(name string) {
+func toEnv(name string) string {
 	name = strings.Replace(name, "-", "_", -1)
 	name = strings.ToUpper(name)
 	return name
@@ -90,5 +90,5 @@ func IPEnvService(name string) string {
 }
 
 func IPEnvServiceNet(container, network string) string {
-	return toEnv(container + "_" + network.Name)
+	return toEnv(container + "_" + network)
 }
