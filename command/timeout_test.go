@@ -16,14 +16,12 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-
 func TestTimeoutMarshal(t *testing.T) {
-	to := Timeout{Duration:0,isInfinite:true}
+	to := Timeout{Duration: 0, isInfinite: true}
 	data, err := yaml.Marshal(to)
 	require.NoError(t, err)
-	assert.Equal(t,"infinite",strings.TrimSpace(string(data)))
+	assert.Equal(t, "infinite", strings.TrimSpace(string(data)))
 }
-
 
 func TestTimeoutJSONUnmarshal(t *testing.T) {
 	var to Timeout

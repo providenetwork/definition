@@ -127,7 +127,7 @@ func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service
 		Type: command.Createcontainer,
 		Payload: command.Container{
 			EntryPoint:  cmd.sidecar.GetEntrypoint(sidecar),
-			Environment: sidecar.Environment,
+			Environment: parser.GetSidecarEnv(sidecar, parent, state),
 			Labels:      cmd.sidecar.GetLabels(parent, sidecar),
 			Name:        namer.Sidecar(parent, sidecar),
 			Network:     cmd.sidecar.GetNetwork(parent),
