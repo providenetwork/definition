@@ -108,5 +108,6 @@ func GetSidecarEnv(sidecar schema.Sidecar, parent entity.Service, state *entity.
 		out = map[string]string{}
 	}
 	out["SERVICE"] = state.IPs[parent.Name]
+	out["NAME"] = namer.Sidecar(parent, sidecar)
 	return out
 }

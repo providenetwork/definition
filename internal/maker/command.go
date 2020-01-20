@@ -99,7 +99,7 @@ func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Serv
 		Payload: command.Container{
 			BoundCPUs:   nil, //NYI
 			EntryPoint:  cmd.service.GetEntrypoint(service),
-			Environment: service.SquashedService.Environment,
+			Environment: parser.GetServiceEnv(service),
 			Labels:      service.Labels,
 			Name:        service.Name,
 			Network:     cmd.service.GetNetwork(service),

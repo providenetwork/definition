@@ -154,3 +154,13 @@ func GetDirectories(files []schema.InputFile) []string {
 
 	return out
 }
+
+func GetServiceEnv(service entity.Service) map[string]string {
+	out := service.SquashedService.Environment
+	if out == nil {
+		out = map[string]string{}
+	}
+	out["NAME"] = service.Name
+	return out
+
+}
