@@ -8,6 +8,7 @@ require (
 	github.com/docker/docker v1.4.2-0.20191106232431-31abc6c089eb
 	github.com/docker/go-connections v0.4.0
 	github.com/dspinhirne/netaddr-go v0.0.0-20191108211343-62b9d4ee894e
+	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/google/uuid v1.1.1
 	github.com/imdario/mergo v0.3.8
 	github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a

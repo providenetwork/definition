@@ -217,19 +217,31 @@ func TestAllTheThings(t *testing.T) {
     input-files:
       - source-path: ws_secret.json
         destination-path: /eth-netstats/ws_secret.json     
-task-runners:
-  - name: testnet-expiration
+sidecars:
+  - name: side
+    sidecar-to:
+      - Quorum1
+      - Quorum2
+      - Quorum3
+      - Quorum4
+      - Quorum5
+      - Quorum6
+      - Quorum7
+    image: side
     script:
-      inline: sleep 7200
-    volumes:
-      - path: /etc/apt.d
-        name: apt
+      inline:
+        "yes"
+    resources:
+      cpus: 2
+      memory: 4 GB
+      storage: 30 GiB
+    environment:
+      NETWORK_NAME: quorem
 tests:
   - name: testnet
     timeout: infinite
     system:
       - type: Quorum1
-        count: 1
         port-mappings:
           - "30303:30303"
           - "8545:8545"
@@ -237,7 +249,6 @@ tests:
             networks:
               - name: quorum_network
       - type: Quorum2
-        count: 1
         port-mappings:
           - "30304:30303"
           - "8546:8545"
@@ -245,7 +256,6 @@ tests:
             networks:
               - name: quorum_network
       - type: Quorum3
-        count: 1
         port-mappings:
           - "30305:30303"
           - "8547:8545"
@@ -253,7 +263,6 @@ tests:
             networks:
               - name: quorum_network
       - type: Quorum4
-        count: 1
         port-mappings:
           - "30306:30303"
           - "8548:8545"
@@ -261,7 +270,6 @@ tests:
             networks:
               - name: quorum_network
       - type: Quorum5
-        count: 1
         port-mappings:
           - "30307:30303"
           - "8549:8545"
@@ -269,7 +277,6 @@ tests:
             networks:
               - name: quorum_network
       - type: Quorum6
-        count: 1
         port-mappings:
           - "30308:30303"
           - "8550:8545"
@@ -277,7 +284,6 @@ tests:
             networks:
               - name: quorum_network
       - type: Quorum7
-        count: 1
         port-mappings:
           - "30308:30303"
           - "8551:8545"
@@ -285,7 +291,6 @@ tests:
             networks:
               - name: quorum_network
       - type: ethstats
-        count: 1
         port-mappings:
           - "80:3000"
         resources: 
@@ -439,22 +444,38 @@ func assertSanity(t *testing.T, test command.Test) {
 func assertCorrectIPs(t *testing.T, test command.Test) {
 	var env map[string]string
 	ips := map[string]bool{}
+	sidecarIPs := map[string]bool{}
+	scCount := 0
+	targets := map[string]bool{}
 	for _, outer := range test.Commands {
 		for _, inner := range outer {
+			targets[inner.Target.IP] = true
 			switch inner.Order.Type {
 			case command.Createcontainer:
 				var cont command.Container
 				err := inner.ParseOrderPayloadInto(&cont)
 				require.NoError(t, err)
+				require.NotNil(t, cont.Environment)
 				env = cont.Environment
-				t.Log(env)
-				require.True(t, len(cont.Ports) > 0)
-				_, exists := ips[inner.Target.IP+cont.IP] //sidecar net ips are localized
-				require.False(t, exists)
-				ips[inner.Target.IP+cont.IP] = true
+				t.Log(cont.Environment)
+				require.True(t, len(cont.Ports) > 0 || strings.Contains(cont.Name, "side"))
 
-				require.NotNil(t, net.ParseIP(cont.IP)) //ensure IP is valid
+				if strings.Contains(cont.Name, "side") {
+					require.Equal(t, "quorem", cont.Environment["NETWORK_NAME"])
+					scCount++
+					scKey := inner.Target.IP + cont.Environment["SERVICE"]
+					_, exists := sidecarIPs[scKey]
+					require.False(t, exists)
+					sidecarIPs[scKey] = true
 
+					_, exists = ips[scKey]
+					require.True(t, exists)
+				} else {
+					_, exists := ips[inner.Target.IP+cont.IP] //sidecar net ips are localized
+					require.False(t, exists, fmt.Sprintf("duplicate entry of %s-%s", inner.Target.IP, cont.IP))
+					ips[inner.Target.IP+cont.IP] = true
+					require.NotNil(t, net.ParseIP(cont.IP)) //ensure IP is valid
+				}
 			case command.Attachnetwork:
 				var cont command.ContainerNetwork
 				err := inner.ParseOrderPayloadInto(&cont)
@@ -473,6 +494,9 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 			}
 		}
 	}
+	require.Equal(t, 7, scCount)
+	require.Equal(t, 7, len(sidecarIPs))
+	require.Equal(t, 2, len(targets), "there should only be two instances")
 }
 
 var test2 = []byte(`{
@@ -820,7 +844,6 @@ var sidecarTest = []byte(`services:
     image: "ethereum/client-go:alltools-latest"
     script: 
       inline: geth
-
 sidecars:
   - name: bash
     sidecar-to:
@@ -830,7 +853,6 @@ sidecars:
     script:
       inline:
         tail -f /var/log/syslog
-
 task-runners:
   - name: geth-staticpeers-helper
     image: "gcr.io/whiteblock/helpers/besu/staticpeers:master"

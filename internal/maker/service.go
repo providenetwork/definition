@@ -18,6 +18,7 @@ import (
 	"github.com/whiteblock/definition/pkg/namer"
 	"github.com/whiteblock/definition/schema"
 
+	"github.com/getlantern/deepcopy"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
 	"github.com/sirupsen/logrus"
@@ -181,7 +182,6 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		if err != nil {
 			return nil, err
 		}
-
 		err = mergo.Map(&realSidecar.Environment, sidecar.Environment, mergo.WithOverride)
 		if err != nil {
 			return nil, err
@@ -201,7 +201,7 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 	out := make([]entity.Service, system.GetCount())
 
 	for i := range out {
-		copier.Copy(&out[i], base)
+		deepcopy.Copy(&out[i], base)
 		out[i].Name = namer.SystemService(system, i)
 	}
 	return out, nil
