@@ -456,11 +456,13 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 				var cont command.Container
 				err := inner.ParseOrderPayloadInto(&cont)
 				require.NoError(t, err)
+				require.NotNil(t, cont.Environment)
 				env = cont.Environment
-				t.Log(env)
+				t.Log(cont.Environment)
 				require.True(t, len(cont.Ports) > 0 || strings.Contains(cont.Name, "side"))
 
 				if strings.Contains(cont.Name, "side") {
+					require.Equal(t, "quorem", cont.Environment["NETWORK_NAME"])
 					scCount++
 					scKey := inner.Target.IP + cont.Environment["SERVICE"]
 					_, exists := sidecarIPs[scKey]

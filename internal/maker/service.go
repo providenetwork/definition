@@ -18,6 +18,7 @@ import (
 	"github.com/whiteblock/definition/pkg/namer"
 	"github.com/whiteblock/definition/schema"
 
+	"github.com/getlantern/deepcopy"
 	"github.com/imdario/mergo"
 	"github.com/jinzhu/copier"
 	"github.com/sirupsen/logrus"
@@ -181,34 +182,26 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		if err != nil {
 			return nil, err
 		}
-		var ogSidecar schema.Sidecar
-		copier.Copy(&ogSidecar, realSidecar)
-
-		err = mergo.Map(&ogSidecar.Environment, sidecar.Environment, mergo.WithOverride)
+		err = mergo.Map(&realSidecar.Environment, sidecar.Environment, mergo.WithOverride)
 		if err != nil {
 			return nil, err
 		}
 
-		err = mergo.Map(&ogSidecar.Resources, sidecar.Resources, mergo.WithOverride)
+		err = mergo.Map(&realSidecar.Resources, sidecar.Resources, mergo.WithOverride)
 		if err != nil {
 			return nil, err
 		}
 
 		if sidecar.Args != nil {
-			ogSidecar.Args = sidecar.Args
+			realSidecar.Args = sidecar.Args
 		}
-		base.Sidecars = append(base.Sidecars, ogSidecar)
+		base.Sidecars = append(base.Sidecars, realSidecar)
 	}
 
 	out := make([]entity.Service, system.GetCount())
 
 	for i := range out {
-		copier.Copy(&out[i], base)
-		for j := range out[i].Sidecars {
-			out[i].Sidecars[j].Environment = map[string]string{}
-			mergo.Merge(&out[i].Sidecars[j].Environment, base.Sidecars[j].Environment)
-		}
-
+		deepcopy.Copy(&out[i], base)
 		out[i].Name = namer.SystemService(system, i)
 	}
 	return out, nil
