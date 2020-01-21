@@ -112,11 +112,23 @@ type Instructions struct {
 	Timestamp    time.Time   `json:"timestamp,omitempty"`
 	Commands     [][]Command `json:"commands,omitempty"`
 
-	Round            int                  `json:"round,omitempty"`
-	GlobalTimeout    Timeout              `json:"globalTimeout,omitempty"`
-	GlobalExpiration time.Time            `json:"globalExpiration,omitempty"`
-	PhaseTimeouts    map[string]Timeout   `json:"phaseTimeouts,omitempty"`
-	PhaseExpirations map[string]time.Time `json:"phaseExpirations,omitempty"`
+	Round            int                    `json:"round,omitempty"`
+	GlobalTimeout    Timeout                `json:"globalTimeout,omitempty"`
+	GlobalExpiration time.Time              `json:"globalExpiration,omitempty"`
+	PhaseTimeouts    map[string]Timeout     `json:"phaseTimeouts,omitempty"`
+	PhaseExpirations map[string]time.Time   `json:"phaseExpirations,omitempty"`
+	Meta             map[string]interface{} `json:"meta,omitempty"`
+}
+
+// MetaTo takes the given meta fields and puts them into the given struct ptr.
+// Should be easier than having to do lots of type conversions directly on the meta.
+// This uses json marshalling to accomplish it
+func (instruct *Instructions) MetaTo(out interface{}) error {
+	data, err := json.Marshal(instruct.Meta)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, out)
 }
 
 // handle the meta changes for next
