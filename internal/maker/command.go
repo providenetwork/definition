@@ -136,7 +136,6 @@ func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service
 			Memory:      cmd.sidecar.GetMemory(sidecar),
 			Image:       cmd.sidecar.GetImage(sidecar),
 			Args:        cmd.sidecar.GetArgs(sidecar),
-			Ports:       parent.Ports,
 			IP:          cmd.sidecar.GetIP(state, parent, sidecar),
 		},
 	}
