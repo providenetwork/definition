@@ -13,8 +13,8 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config/defaults"
 	"github.com/whiteblock/definition/internal/converter"
-	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/pkg/entity"
+	"github.com/whiteblock/definition/pkg/namer"
 	"github.com/whiteblock/definition/schema"
 )
 
@@ -90,7 +90,7 @@ func (sp *serviceParser) GetIP(state *entity.State, service entity.Service) stri
 		return ""
 	}
 	out := state.Subnets[service.Name].Next().String()
-	state.IPs[service.Name] = out
+	state.IPs[namer.IPEnvService(service.Name)] = out
 	return out
 }
 
@@ -153,4 +153,14 @@ func GetDirectories(files []schema.InputFile) []string {
 	}
 
 	return out
+}
+
+func GetServiceEnv(service entity.Service) map[string]string {
+	out := service.SquashedService.Environment
+	if out == nil {
+		out = map[string]string{}
+	}
+	out["NAME"] = service.Name
+	return out
+
 }

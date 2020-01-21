@@ -12,9 +12,9 @@ import (
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/maker"
-	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/pkg/entity"
+	"github.com/whiteblock/definition/pkg/namer"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/imdario/mergo"
@@ -108,7 +108,7 @@ func (dep dependency) AttachNetworks(bucket int, state *entity.State, container 
 		if ip == nil {
 			return nil, ErrNoFreeIP
 		}
-		state.IPs[container+"_"+network.Name] = ip.String()
+		state.IPs[namer.IPEnvServiceNet(container, network.Name)] = ip.String()
 		order := dep.cmdMaker.AttachNetwork(container, network.Name, ip.String())
 		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {

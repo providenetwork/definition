@@ -303,6 +303,7 @@ tests:
 	for _, test := range tests {
 		assertSanity(t, test)
 		assertCorrectIPs(t, test)
+		assertNamed(t, test)
 	}
 }
 
@@ -338,6 +339,22 @@ func assertNoDataLoss(t *testing.T, def Definition) {
 
 	assert.Equal(t, def.Spec, defJSON2.Spec)
 	assert.Equal(t, def.Spec, defYAML2.Spec)
+}
+
+func assertNamed(t *testing.T, test command.Test) {
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				require.NotNil(t, cont.Environment)
+				assert.Equal(t, cont.Name, cont.Environment["NAME"])
+			}
+		}
+	}
 }
 
 func assertSanity(t *testing.T, test command.Test) {

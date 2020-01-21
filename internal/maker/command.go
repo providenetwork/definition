@@ -10,9 +10,9 @@ import (
 	"fmt"
 
 	"github.com/whiteblock/definition/command"
-	"github.com/whiteblock/definition/internal/namer"
 	"github.com/whiteblock/definition/internal/parser"
 	"github.com/whiteblock/definition/pkg/entity"
+	"github.com/whiteblock/definition/pkg/namer"
 	"github.com/whiteblock/definition/schema"
 )
 
@@ -99,7 +99,7 @@ func (cmd commandMaker) CreateContainer(state *entity.State, service entity.Serv
 		Payload: command.Container{
 			BoundCPUs:   nil, //NYI
 			EntryPoint:  cmd.service.GetEntrypoint(service),
-			Environment: service.SquashedService.Environment,
+			Environment: parser.GetServiceEnv(service),
 			Labels:      service.Labels,
 			Name:        service.Name,
 			Network:     cmd.service.GetNetwork(service),
@@ -136,7 +136,6 @@ func (cmd commandMaker) CreateSidecar(state *entity.State, parent entity.Service
 			Memory:      cmd.sidecar.GetMemory(sidecar),
 			Image:       cmd.sidecar.GetImage(sidecar),
 			Args:        cmd.sidecar.GetArgs(sidecar),
-			Ports:       parent.Ports,
 			IP:          cmd.sidecar.GetIP(state, parent, sidecar),
 		},
 	}
