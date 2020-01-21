@@ -8,6 +8,7 @@ package definition
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"strings"
 	"testing"
@@ -793,4 +794,126 @@ func TestComposeLikeSpec(t *testing.T) {
 	assert.Equal(t, 2, volCount, "there should be 2 volumes")
 	assert.Equal(t, 4, netCount, "The 4 containers should end with just one network attached")
 	assert.Equal(t, 4, cntrCount, "There should only be 4 containers created")
+}
+
+var sidecarTest = []byte(`services: 
+  - name: geth1
+    image: "ethereum/client-go:alltools-latest" 
+    script:
+      inline: geth
+  - name: geth2 
+    image: "ethereum/client-go:alltools-latest"
+    script: 
+      inline: geth
+
+sidecars:
+  - name: bash
+    sidecar-to:
+      - geth1
+      - geth2
+    image: ubuntu
+    script:
+      inline:
+        tail -f /var/log/syslog
+
+task-runners:
+  - name: geth-staticpeers-helper
+    image: "gcr.io/whiteblock/helpers/besu/staticpeers:master"
+    script: 
+      inline: help me
+tests: 
+  - name: geth_network_2_nodes 
+    phases:
+      - name: create
+        tasks: 
+        - type: geth-staticpeers-helper
+      - name: start
+        description: start the remaining node(s)
+        system: 
+        - type: geth1 
+          resources: 
+            networks: 
+              - name: common-network
+        - type: geth2 
+          resources: 
+            networks: 
+              - name: common-network
+`)
+
+func TestSidecarSpec(t *testing.T) {
+	def, err := SchemaYAML(sidecarTest)
+	require.NoError(t, err)
+
+	cmds := getTestCommands(t)
+	dists, err := cmds.GetDist(def)
+	require.NoError(t, err)
+	require.NotNil(t, dists)
+	require.Len(t, dists, 1)
+	require.NotNil(t, dists[0])
+
+	for i := range dists {
+		require.True(t, len(*dists[i]) > 0)
+		for j := range *dists[i] {
+			require.True(t, len((*dists[i])[j]) > 0 || j == 0, fmt.Sprintf("distributions should not be empty %d", j))
+
+		}
+	}
+
+	tests, err := cmds.GetTests(def, Meta{})
+	require.NoError(t, err)
+	require.Len(t, tests, 1)
+	test := tests[0]
+	netCount := 0
+	cntrCount := 0
+	scCount := 0
+	volCount := 0
+	ips := map[string]bool{}
+	parentIPs := map[string]bool{}
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				cntrCount++
+				if strings.Contains(cont.Name, "bash") {
+					scCount++
+					_, exists := ips[cont.Environment["SERVICE"]]
+					require.False(t, exists)
+					ips[cont.Environment["SERVICE"]] = true
+					_, exists = parentIPs[cont.Environment["SERVICE"]]
+					require.True(t, exists)
+				} else {
+					parentIPs[cont.IP] = true
+				}
+
+			case command.Createvolume:
+				var vol command.Volume
+				err := inner.ParseOrderPayloadInto(&vol)
+				require.NoError(t, err)
+				volCount++
+			case command.Attachnetwork:
+				var cont command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				if strings.HasPrefix(cont.Network, "net") {
+					netCount++
+				}
+
+			case command.Detachnetwork:
+				var cont command.ContainerNetwork
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				if strings.HasPrefix(cont.Network, "net") {
+					netCount--
+				}
+			}
+		}
+	}
+
+	assert.Equal(t, 0, volCount, "there should be 0 volumes")
+	assert.Equal(t, 2, netCount, "The 2 containers should end with just one network attached")
+	assert.Equal(t, 5, cntrCount, "There should only be 5 containers created")
+	assert.Equal(t, 2, scCount, "There should be 2 sidecars created")
 }

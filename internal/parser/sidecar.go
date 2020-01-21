@@ -16,6 +16,7 @@ import (
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/jinzhu/copier"
+	"github.com/sirupsen/logrus"
 )
 
 type Sidecar interface {
@@ -107,6 +108,7 @@ func GetSidecarEnv(sidecar schema.Sidecar, parent entity.Service, state *entity.
 	if out == nil {
 		out = map[string]string{}
 	}
-	out["SERVICE"] = state.IPs[parent.Name]
+	out["SERVICE"] = state.IPs[namer.IPEnvService(parent.Name)]
+	out["NAME"] = namer.Sidecar(parent, sidecar)
 	return out
 }
