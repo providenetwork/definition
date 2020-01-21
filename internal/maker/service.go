@@ -181,27 +181,34 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 		if err != nil {
 			return nil, err
 		}
+		var ogSidecar schema.Sidecar
+		copier.Copy(&ogSidecar, realSidecar)
 
-		err = mergo.Map(&realSidecar.Environment, sidecar.Environment, mergo.WithOverride)
+		err = mergo.Map(&ogSidecar.Environment, sidecar.Environment, mergo.WithOverride)
 		if err != nil {
 			return nil, err
 		}
 
-		err = mergo.Map(&realSidecar.Resources, sidecar.Resources, mergo.WithOverride)
+		err = mergo.Map(&ogSidecar.Resources, sidecar.Resources, mergo.WithOverride)
 		if err != nil {
 			return nil, err
 		}
 
 		if sidecar.Args != nil {
-			realSidecar.Args = sidecar.Args
+			ogSidecar.Args = sidecar.Args
 		}
-		base.Sidecars = append(base.Sidecars, realSidecar)
+		base.Sidecars = append(base.Sidecars, ogSidecar)
 	}
 
 	out := make([]entity.Service, system.GetCount())
 
 	for i := range out {
 		copier.Copy(&out[i], base)
+		for j := range out[i].Sidecars {
+			out[i].Sidecars[j].Environment = map[string]string{}
+			mergo.Merge(&out[i].Sidecars[j].Environment, base.Sidecars[j].Environment)
+		}
+
 		out[i].Name = namer.SystemService(system, i)
 	}
 	return out, nil

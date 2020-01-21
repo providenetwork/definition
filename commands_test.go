@@ -231,6 +231,12 @@ sidecars:
     script:
       inline:
         "yes"
+    resources:
+      cpus: 2
+      memory: 4 GB
+      storage: 30 GiB
+    environment:
+      NETWORK_NAME: quorem
 tests:
   - name: testnet
     timeout: infinite
@@ -441,8 +447,10 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 	ips := map[string]bool{}
 	sidecarIPs := map[string]bool{}
 	scCount := 0
+	targets := map[string]bool{}
 	for _, outer := range test.Commands {
 		for _, inner := range outer {
+			targets[inner.Target.IP] = true
 			switch inner.Order.Type {
 			case command.Createcontainer:
 				var cont command.Container
@@ -454,10 +462,12 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 
 				if strings.Contains(cont.Name, "side") {
 					scCount++
-					_, exists := sidecarIPs[inner.Target.IP+cont.Environment["SERVICE"]]
+					scKey := inner.Target.IP + cont.Environment["SERVICE"]
+					_, exists := sidecarIPs[scKey]
 					require.False(t, exists)
-					sidecarIPs[inner.Target.IP+cont.Environment["SERVICE"]] = true
-					_, exists = ips[inner.Target.IP+cont.Environment["SERVICE"]]
+					sidecarIPs[scKey] = true
+
+					_, exists = ips[scKey]
 					require.True(t, exists)
 				} else {
 					_, exists := ips[inner.Target.IP+cont.IP] //sidecar net ips are localized
@@ -484,6 +494,8 @@ func assertCorrectIPs(t *testing.T, test command.Test) {
 		}
 	}
 	require.Equal(t, 7, scCount)
+	require.Equal(t, 7, len(sidecarIPs))
+	require.Equal(t, 2, len(targets), "there should only be two instances")
 }
 
 var test2 = []byte(`{
