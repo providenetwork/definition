@@ -6,11 +6,7 @@
 
 package command
 
-import (
-	"strings"
-	"time"
-)
-
+// ResumeExecution contains the tasks to kill before resuming execution if there are any
 type ResumeExecution struct {
 	Tasks []string `json:"tasks,omitempty"`
 }

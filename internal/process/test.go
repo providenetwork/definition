@@ -157,18 +157,15 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		}
 	}
 
-	tmp := entity.TestCommands(out)
-	if !phase.Duration.Empty() {
-		order := command.Order{
-			Type:    command.Pauseexecution,
-			Payload: phase.Duration,
-		}
-		pauseCmd, err := command.NewCommand(order, FirstInstance)
-		if err != nil {
-			return nil, err
-		}
-		tmp = tmp.Append([][]command.Command{{pauseCmd}})
+	phaseTransitionCommands, err := calc.resolver.PhaseTransition(state, phaseDist, phase)
+	if err != nil {
+		return nil, err
 	}
+	if len(phaseTransitionCommands) > 0 {
+		out = append(out, phaseTransitionCommands...)
+	}
+
+	tmp := entity.TestCommands(out)
 
 	tmp.MetaInject(
 		"phase", phase.Name,

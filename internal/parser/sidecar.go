@@ -16,7 +16,6 @@ import (
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/jinzhu/copier"
-	"github.com/sirupsen/logrus"
 )
 
 type Sidecar interface {

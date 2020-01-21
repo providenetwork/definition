@@ -113,7 +113,7 @@ func (to *Duration) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if dat == nil {
-		to.Duration = DefaultTimeout
+		to.Duration = NoDuration
 		return nil
 	}
 	if floatVal, ok := dat.(float64); ok {
