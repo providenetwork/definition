@@ -184,7 +184,7 @@ func TestService_FromTask(t *testing.T) {
 	require.NotNil(t, serv)
 
 	res, err := serv.FromTask(schema.RootSchema{}, schema.Task{
-		Timeout: command.Timeout{Duration: 10 * time.Minute},
+		Timeout: command.Timeout{command.Time{Duration: 10 * time.Minute}},
 	}, 0)
 	assert.NoError(t, err)
 	assert.Equal(t, 10*time.Minute, res.Timeout.Duration)
@@ -200,7 +200,7 @@ func TestService_Defaults(t *testing.T) {
 			"bar": "baz",
 		},
 		Sidecars: []schema.SystemComponentSidecar{
-			schema.SystemComponentSidecar{
+			{
 				Type: "sidecar",
 				Name: "sidecar",
 				Resources: schema.Resources{

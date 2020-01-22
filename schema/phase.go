@@ -15,4 +15,5 @@ type Phase struct {
 	Remove      []string          `yaml:"remove,omitempty" json:"remove,omitempty"`
 	Tasks       []Task            `yaml:"tasks,omitempty" json:"tasks,omitempty"`
 	Timeout     command.Timeout   `yaml:"timeout,omitempty" json:"timeout,omitempty"`
+	Duration    command.Duration  `yaml:"duration,omitempty" json:"duration,omitempty"`
 }

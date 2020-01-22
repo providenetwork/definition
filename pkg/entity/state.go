@@ -9,6 +9,7 @@ package entity
 import "github.com/whiteblock/definition/schema"
 
 type State struct {
+	Tasks       []Service
 	SystemState map[string]schema.SystemComponent
 	Subnets     map[string]Network
 	Network     NetworkState

@@ -9,12 +9,17 @@ package command
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/whiteblock/definition/command/biome"
 )
+
+func TestTest_NoDurationValue(t *testing.T) {
+	assert.Equal(t, time.Duration(-1), NoTimeout)
+}
 
 func TestTest_UnmarshalJSON(t *testing.T) {
 	var test2 Test

@@ -157,10 +157,20 @@ func (calc testCalculator) handlePhase(state *entity.State,
 		}
 	}
 
+	phaseTransitionCommands, err := calc.resolver.PhaseTransition(state, phaseDist, phase)
+	if err != nil {
+		return nil, err
+	}
+	if len(phaseTransitionCommands) > 0 {
+		out = append(out, phaseTransitionCommands...)
+	}
+
 	tmp := entity.TestCommands(out)
+
 	tmp.MetaInject(
 		"phase", phase.Name,
 		"phaseNum", fmt.Sprint(index))
+
 	return [][]command.Command(tmp), nil
 }
 
@@ -277,8 +287,11 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 	out.MetaInject(command.PhaseKey, FirstPhaseName)
 
 	cmds, err := calc.handlePhase(state, spec, schema.Phase{
-		System: spec.Tests[index].System,
-		Name:   FirstPhaseName}, dist, 0)
+		System:   spec.Tests[index].System,
+		Name:     FirstPhaseName,
+		Duration: spec.Tests[index].WaitFor,
+	}, dist, 0)
+
 	if err != nil {
 		return nil, nil, err
 	}

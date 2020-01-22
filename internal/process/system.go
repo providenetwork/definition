@@ -142,13 +142,15 @@ func (sys system) Remove(state *entity.State, spec schema.RootSchema,
 func (sys system) Tasks(state *entity.State, spec schema.RootSchema,
 	tasks []schema.Task) ([]entity.Service, error) {
 
-	out := []entity.Service{}
+	out := make([]entity.Service, len(tasks))
+	state.Tasks = make([]entity.Service, len(tasks))
 	for i, task := range tasks {
 		service, err := sys.maker.FromTask(spec, task, i)
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, service)
+		out[i] = service
+		state.Tasks[i] = service
 	}
 	return out, nil
 }

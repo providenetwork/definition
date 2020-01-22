@@ -18,7 +18,12 @@ func Timeouts(test schema.Test) (phaseTOs map[string]command.Timeout, global com
 		phaseTOs = map[string]command.Timeout{}
 	}
 	for _, phase := range test.Phases {
-		phaseTOs[phase.Name] = phase.Timeout
+		if !phase.Duration.Empty() { // Duration overrides the timeout
+			phaseTOs[phase.Name] = command.Timeout{Time: phase.Duration.Time}
+		} else {
+			phaseTOs[phase.Name] = phase.Timeout
+		}
+
 	}
 	return
 }

@@ -32,6 +32,8 @@ type Resolve interface {
 
 	UpdateServices(state *entity.State, dist entity.PhaseDist,
 		services []entity.ServiceDiff) ([][]command.Command, error)
+
+	PhaseTransition(state *entity.State, dist entity.PhaseDist, phase schema.Phase) ([][]command.Command, error)
 }
 
 const (
@@ -310,4 +312,44 @@ func (resolver resolve) UpdateServices(state *entity.State, dist entity.PhaseDis
 		}
 	}
 	return out, nil
+}
+
+func (resolver resolve) PhaseTransition(state *entity.State, dist entity.PhaseDist,
+	phase schema.Phase) ([][]command.Command, error) {
+
+	if phase.Duration.Empty() {
+		return nil, nil
+	}
+	resolver.log.WithField("duration", phase.Duration).Trace("duration has been set")
+	pause, err := command.NewCommand(command.Order{
+		Type:    command.Pauseexecution,
+		Payload: phase.Duration,
+	}, FirstInstance)
+	if err != nil {
+		return nil, err
+	}
+	tasks := map[int][]string{}
+	for _, task := range state.Tasks {
+		bucket := dist.FindBucket(task.Name)
+		if bucket == -1 {
+			return nil, fmt.Errorf(`task "%s", does not exist`, task.Name)
+		}
+
+		tasks[bucket] = append(tasks[bucket], task.Name)
+
+	}
+	out := []command.Command{}
+	for host, taskNames := range tasks {
+		cmd, err := command.NewCommand(command.Order{
+			Type: command.Resumeexecution,
+			Payload: command.ResumeExecution{
+				Tasks: taskNames,
+			},
+		}, fmt.Sprint(host))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
+	return [][]command.Command{{pause}, out}, nil
 }
