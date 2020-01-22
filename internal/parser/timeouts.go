@@ -14,9 +14,6 @@ import (
 // Timeouts extracts the global and phase timeouts from a test
 func Timeouts(test schema.Test) (phaseTOs map[string]command.Timeout, global command.Timeout) {
 	global = test.Timeout
-	if !test.Duration.Empty() { //Duration overrides the timeout
-		global.Time = test.Duration.Time
-	}
 	if len(test.Phases) > 0 {
 		phaseTOs = map[string]command.Timeout{}
 	}

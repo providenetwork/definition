@@ -289,7 +289,7 @@ func (calc testCalculator) processTest(spec schema.RootSchema,
 	cmds, err := calc.handlePhase(state, spec, schema.Phase{
 		System:   spec.Tests[index].System,
 		Name:     FirstPhaseName,
-		Duration: spec.Tests[index].Duration,
+		Duration: spec.Tests[index].WaitUntil,
 	}, dist, 0)
 
 	if err != nil {
