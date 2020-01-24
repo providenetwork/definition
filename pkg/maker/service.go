@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/whiteblock/definition/config/defaults"
-	"github.com/whiteblock/definition/internal/converter"
-	"github.com/whiteblock/definition/internal/search"
+	"github.com/whiteblock/definition/pkg/converter"
+	"github.com/whiteblock/definition/pkg/search"
 	"github.com/whiteblock/definition/pkg/entity"
 	"github.com/whiteblock/definition/pkg/namer"
 	"github.com/whiteblock/definition/schema"

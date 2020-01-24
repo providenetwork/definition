@@ -12,7 +12,7 @@ import (
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/config/defaults"
-	mockSearch "github.com/whiteblock/definition/internal/mocks/search"
+	mockSearch "github.com/whiteblock/definition/pkg/mocks/search"
 	"github.com/whiteblock/definition/schema"
 
 	"github.com/sirupsen/logrus"

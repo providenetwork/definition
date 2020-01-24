@@ -9,7 +9,7 @@ package process
 import (
 	"testing"
 
-	"github.com/whiteblock/definition/internal/mocks/process"
+	"github.com/whiteblock/definition/pkg/mocks/process"
 	"github.com/whiteblock/definition/pkg/entity"
 	"github.com/whiteblock/definition/schema"
 

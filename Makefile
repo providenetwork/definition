@@ -5,8 +5,8 @@ DIRECTORIES=$(sort $(dir $(wildcard command/*/) ))
 DIRECTORIES += $(sort $(dir $(wildcard schema/*/) $(wildcard validator/*/)))
 MOCKS=$(foreach x, $(DIRECTORIES), mocks/$(x))
 
-INTERNAL_DIRECTORIES=$(shell find ./internal -type d | sed -e 's/\.\/internal\///g' | grep -v internal)
-INTERNAL_MOCKS=$(foreach x, $(INTERNAL_DIRECTORIES), internal/mocks/$(x)/)
+INTERNAL_DIRECTORIES=$(shell find ./pkg -type d | sed -e 's/\.\/pkg\///g' | grep -v pkg)
+INTERNAL_MOCKS=$(foreach x, $(INTERNAL_DIRECTORIES), pkg/mocks/$(x)/)
 
 .PHONY: build test test_race lint vet install-deps coverage mocks clean-mocks
 
@@ -21,12 +21,12 @@ vet:
 
 clean-mocks:
 	rm -rf mocks
-	rm -rf internal/mocks
+	rm -rf pkg/mocks
 
 mocks: $(MOCKS) $(INTERNAL_MOCKS)
 
 $(MOCKS): mocks/% : %
 	mockery -output=$@ -dir=$^ -all
 
-$(INTERNAL_MOCKS):  internal/mocks/% : internal/%
+$(INTERNAL_MOCKS):  pkg/mocks/% : pkg/%
 	mockery -output=$@ -dir=$^ -all

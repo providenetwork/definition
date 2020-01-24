@@ -4,16 +4,16 @@
  * license that can be found in the LICENSE file.
  */
 
-package internal
+package pkg
 
 import (
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/internal/converter"
-	"github.com/whiteblock/definition/internal/distribute"
-	"github.com/whiteblock/definition/internal/maker"
-	"github.com/whiteblock/definition/internal/parser"
-	"github.com/whiteblock/definition/internal/process"
-	"github.com/whiteblock/definition/internal/search"
+	"github.com/whiteblock/definition/pkg/converter"
+	"github.com/whiteblock/definition/pkg/distribute"
+	"github.com/whiteblock/definition/pkg/maker"
+	"github.com/whiteblock/definition/pkg/parser"
+	"github.com/whiteblock/definition/pkg/process"
+	"github.com/whiteblock/definition/pkg/search"
 
 	"github.com/sirupsen/logrus"
 )

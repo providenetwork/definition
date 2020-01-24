@@ -12,10 +12,10 @@ import (
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/command/biome"
 	"github.com/whiteblock/definition/config"
-	"github.com/whiteblock/definition/internal"
-	"github.com/whiteblock/definition/internal/distribute"
-	parse "github.com/whiteblock/definition/internal/parser"
-	"github.com/whiteblock/definition/internal/process"
+	"github.com/whiteblock/definition/pkg"
+	"github.com/whiteblock/definition/pkg/distribute"
+	parse "github.com/whiteblock/definition/pkg/parser"
+	"github.com/whiteblock/definition/pkg/process"
 	"github.com/whiteblock/definition/pkg/entity"
 
 	"github.com/pkg/errors"
@@ -61,7 +61,7 @@ type Meta struct {
 
 // NewCommands creates a new command extractor from the given viper config
 func NewCommands(conf config.Config, logger logrus.Ext1FieldLogger) Commands {
-	proc, dist := internal.GetFunctionality(conf, logger)
+	proc, dist := pkg.GetFunctionality(conf, logger)
 	return &commands{conf: conf, proc: proc, dist: dist}
 }
 
