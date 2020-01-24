@@ -351,5 +351,17 @@ func (resolver resolve) PhaseTransition(state *entity.State, dist entity.PhaseDi
 		}
 		out = append(out, cmd)
 	}
+	if len(out) == 0 {
+		cmd, err := command.NewCommand(command.Order{
+			Type: command.Resumeexecution,
+			Payload: command.ResumeExecution{
+				Tasks: []string{},
+			},
+		}, FirstInstance)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, cmd)
+	}
 	return [][]command.Command{{pause}, out}, nil
 }
