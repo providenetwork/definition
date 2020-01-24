@@ -357,7 +357,7 @@ func (resolver resolve) PhaseTransition(state *entity.State, dist entity.PhaseDi
 			Payload: command.ResumeExecution{
 				Tasks: []string{},
 			},
-		}, fmt.Sprint(host))
+		}, FirstInstance)
 		if err != nil {
 			return nil, err
 		}
