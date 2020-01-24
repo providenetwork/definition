@@ -203,6 +203,7 @@ func (sp *serviceMaker) FromSystem(spec schema.RootSchema,
 	for i := range out {
 		deepcopy.Copy(&out[i], base)
 		out[i].Name = namer.SystemService(system, i)
+		out[i].Index = i
 	}
 	return out, nil
 }

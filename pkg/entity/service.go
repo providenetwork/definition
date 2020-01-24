@@ -19,6 +19,7 @@ import (
 
 type Service struct {
 	Name            string
+	Index           int
 	Bucket          int64
 	SquashedService schema.Service
 	Networks        []schema.Network

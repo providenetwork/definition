@@ -9,6 +9,7 @@ package process
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/whiteblock/definition/command"
 	"github.com/whiteblock/definition/internal/maker"
@@ -150,6 +151,8 @@ func (dep dependency) files(bucket int, service entity.Service, name string,
 
 	out := []command.Command{}
 	for _, input := range inputs {
+		input.SourcePath = strings.Replace(input.SourcePath, "$_n", fmt.Sprint(service.Index), -1)
+		input.DestinationPath = strings.Replace(input.DestinationPath, "$_n", fmt.Sprint(service.Index), -1)
 		order := dep.cmdMaker.File(name, input)
 		cmd, err := command.NewCommand(order, fmt.Sprint(bucket))
 		if err != nil {

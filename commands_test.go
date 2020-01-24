@@ -954,3 +954,107 @@ func TestSidecarSpec(t *testing.T) {
 	assert.Equal(t, 5, cntrCount, "There should only be 5 containers created")
 	assert.Equal(t, 2, scCount, "There should be 2 sidecars created")
 }
+
+var substitutionExample = []byte(`services:
+  - name: Quorum
+    image: quorumengineering/quorum:2.2.5
+    resources:
+      cpus: 4
+      memory: 4 GB
+      storage: 5 GiB
+    input-files:
+      - source-path: genesis.json
+        destination-path: /data/genesis.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/permissioned-nodes.json
+      - source-path: permissioned-nodes.json
+        destination-path: /data/static-nodes.json
+      - source-path: key$_n
+        destination-path: /data/keystore/key$_n
+      - source-path: nodekey$_n
+        destination-path: /data/nodekey
+      - source-path: passwords.txt
+        destination-path: /data/passwords.txt
+    script:
+      inline: geth --datadir /data init data/genesis.json && geth --datadir /data --unlock 0 --password /data/passwords.txt --ethstats $NAME:secret@eea:80 --syncmode full --mine --minerthreads 1 --rpc --rpcaddr 0.0.0.0 --rpcapi admin,db,eth,debug,miner,net,shh,txpool,personal,web3,quorum                   
+  - name: ethstats
+    image: gcr.io/whiteblock/ethstats:master
+    environment:
+      HOST: "0.0.0.0"
+    input-files:
+      - source-path: ws_secret.json
+        destination-path: /eth-netstats/ws_secret.json     
+sidecars:
+  - name: side
+    sidecar-to:
+      - Quorum
+    image: side
+    script:
+      inline:
+        "yes"
+    resources:
+      cpus: 2
+      memory: 4 GB
+      storage: 30 GiB
+    environment:
+      NETWORK_NAME: quorem
+tests:
+  - name: testnet
+    wait-for: infinite
+    system:
+      - type: Quorum
+        count: 7
+        port-mappings:
+          - "30303:30303"
+          - "8545:8545"
+      - type: ethstats
+        port-mappings:
+          - "80:3000"
+`)
+
+func TestBasicSubstitution(t *testing.T) {
+	def, err := SchemaYAML(substitutionExample)
+	require.NoError(t, err)
+
+	cmds := getTestCommands(t)
+	dists, err := cmds.GetDist(def)
+	require.NoError(t, err)
+	require.NotNil(t, dists)
+	require.Len(t, dists, 1)
+	require.NotNil(t, dists[0])
+
+	for i := range dists {
+		require.True(t, len(*dists[i]) > 0)
+		for j := range *dists[i] {
+			require.True(t, len((*dists[i])[j]) > 0 || j == 0, fmt.Sprintf("distributions should not be empty %d", j))
+
+		}
+	}
+
+	tests, err := cmds.GetTests(def, Meta{})
+	require.NoError(t, err)
+	require.Len(t, tests, 1)
+	test := tests[0]
+	cntrCount := 0
+	inputs := map[string]bool{}
+	for _, outer := range test.Commands {
+		for _, inner := range outer {
+			switch inner.Order.Type {
+			case command.Createcontainer:
+				var cont command.Container
+				err := inner.ParseOrderPayloadInto(&cont)
+				require.NoError(t, err)
+				cntrCount++
+
+			case command.Putfileincontainer:
+				var fc command.FileAndContainer
+				err := inner.ParseOrderPayloadInto(&fc)
+				require.NoError(t, err)
+				inputs[fc.File.ID] = true
+			}
+		}
+	}
+
+	assert.Len(t, inputs, 18, "Expected 18 unique inputs")
+	assert.Equal(t, 15, cntrCount, "There should only be 15 containers created")
+}
