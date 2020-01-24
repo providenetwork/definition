@@ -239,7 +239,7 @@ sidecars:
       NETWORK_NAME: quorem
 tests:
   - name: testnet
-    timeout: infinite
+    wait-for: infinite
     system:
       - type: Quorum1
         port-mappings:
