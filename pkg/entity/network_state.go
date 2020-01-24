@@ -25,7 +25,7 @@ var (
 
 const (
 	IPv4Len     uint   = 32
-	ReservedIPs uint32 = 4
+	ReservedIPs uint32 = 5
 )
 
 type networkState struct {
